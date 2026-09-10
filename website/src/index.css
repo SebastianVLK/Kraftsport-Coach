@@ -13,7 +13,7 @@
   }
 
   html {
-    background-color: #332e24;
+    background-color: #3b3427;
   }
 
   body {
@@ -36,7 +36,7 @@
     pointer-events: none;
     background-image:
       radial-gradient(80rem 40rem at 15% -10%, var(--bd-glow), transparent 60%),
-      radial-gradient(60rem 34rem at 92% 4%, rgba(226, 85, 60, 0.05), transparent 62%),
+      radial-gradient(60rem 34rem at 92% 4%, rgba(239, 69, 38, 0.055), transparent 62%),
       linear-gradient(to right, var(--bd-grid) 1px, transparent 1px),
       linear-gradient(to bottom, var(--bd-grid) 1px, transparent 1px);
     background-size:
@@ -90,11 +90,11 @@
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #524a39;
+  background: #5c5240;
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #625a47;
+  background: #6e6450;
 }
 
 .markdown-body p {
@@ -122,5 +122,5 @@
   letter-spacing: -0.02em;
 }
 .markdown-body strong {
-  color: #e2553c;
+  color: #faf6ef;
 }
