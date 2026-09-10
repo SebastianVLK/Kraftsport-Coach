@@ -86,6 +86,41 @@ abgesunkene. Die Klassenmediane lagen bei 161° (korrekt), 147° (zu tief) und
 | Arme unten nicht gestreckt | Ellenbogen max < 130° | Referenzwert 160°, minus Toleranz |
 | Ausfallschritt zu flach | Knie > 145° | Referenzbereich 60–125°, plus Toleranz |
 
+## Wiederholungen
+
+Gezählt mit einem Zwei-Zustands-Automaten über das führende Gelenk (Ellenbogen
+oder Knie, je nachdem welches sich in dieser Übung tatsächlich bewegt):
+
+| Tor | Wert | Herkunft |
+| --- | --- | --- |
+| unten | < 90° + Gelenktoleranz | Ultralytics-Zähler |
+| oben | > 145° | Ultralytics-Zähler |
+
+Beide Tore müssen durchlaufen werden, sonst zählt die Wiederholung nicht — das
+verwirft die halbe Wiederholung, die nie wieder hochkam. Aus den Tiefstwerten
+je Wiederholung folgt ausserdem der Befund „Tiefe nimmt über den Satz ab" ab
+15° Unterschied zwischen erster und letzter.
+
+Vorher beschrieb das Modell Wiederholungen, die niemand gezählt hatte. Der
+Prompt sagt jetzt ausdrücklich, dass diese Zahlen gemessen sind und keine
+weiteren erfunden werden dürfen.
+
+## Drei Beispiele im Prompt
+
+Aus [arXiv:2505.18412](https://arxiv.org/abs/2505.18412) (IJCAI 2025), das
+genau diese Aufgabe untersucht — Bewegungsqualität per LLM aus Skelettmerkmalen:
+
+| Beispiele im Prompt | Genauigkeit | F1 |
+| --- | --- | --- |
+| keine | 0.57 | 0.64 |
+| **drei** | **0.68** | **0.76** |
+| vier | 0.42 | 0.46 |
+
+Deshalb genau drei — ein viertes verschlechtert das Ergebnis deutlich. Die
+Beispielwerte sind Klassenmediane aus den gelabelten Daten, keine erfundenen
+Zahlen. Dasselbe Paper bestätigt, dass Merkmale (Winkel) besser funktionieren
+als rohe Gelenkkoordinaten, was hier ohnehin schon so gemacht wurde.
+
 ## Messtoleranz
 
 Aus [arXiv:2306.06117](https://arxiv.org/abs/2306.06117), einem Vergleich von
@@ -135,3 +170,9 @@ Das ist Absicht: Ein erfundener Befund wäre schlimmer als ein fehlender.
 | [Labellerr Pull-up Counter](https://www.labellerr.com/blog/ai-pull-up-counter-yolo11-pose/) | **Bestätigend.** 160° volle Streckung |
 | [arXiv:2406.17443](https://arxiv.org/abs/2406.17443) | **Methodisch.** Gelenkwinkel nach ISB-Standard, unabhängig von Kamerawinkel und Person. Keine Grenzwerte; der beschriebene Weg wäre die saubere Ablösung der Bildebene, wenn die Grenzwerte dazu passend neu erhoben würden |
 | [HuggingFace TrainingDataPro](https://huggingface.co/datasets/TrainingDataPro/pose_estimation) | **Unbrauchbar.** Generische Pose-Daten ohne Qualitätslabels, kommerziell gesperrt |
+| [ExerciseLLM / arXiv:2505.18412](https://github.com/jessicaxtang/ExerciseLLM) | **Sehr brauchbar.** Drei Beispiele im Prompt sind das Optimum; Merkmale schlagen Rohkoordinaten |
+| [arXiv:2304.09735](https://arxiv.org/abs/2304.09735) | **Brauchbar.** Wiederholungs-Segmentierung als erster Schritt — führte zum Zähler |
+| [avakanski Rehab-Framework](https://github.com/avakanski/A-Deep-Learning-Framework-for-Assessing-Physical-Rehabilitation-Exercises) | **Nicht übertragbar.** Trainiert ein neuronales Netz auf Qualitätsnoten; braucht gelabelte Trainingsdaten, die wir nicht haben |
+| [REHAB24-6 / Zenodo](https://zenodo.org/records/13305826) | **Möglicher Kalibrierungsvorrat.** Reha-Übungen inkl. Kniebeugen mit mehreren Ansichten; noch nicht ausgewertet |
+| [mm-fit](https://github.com/KDMStromback/mm-fit) | **Nicht ausgewertet.** Multimodale Fitnessdaten, Schwerpunkt Aktivitätserkennung |
+| [UI-PRMD-Port](https://github.com/tejas1904/UI-PRMD-Visualize-python-port) | **Nur Visualisierung.** Keine Grenzwerte |
