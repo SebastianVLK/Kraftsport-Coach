@@ -182,11 +182,13 @@ export default function App() {
           rep counter, form-quality card — so nothing of ours is laid over it
           beyond the scroll cue; the headline sits in the band underneath. */}
       <section className="relative w-full">
-        <div className="relative w-full h-[calc(100svh-4rem)] sm:h-[calc(100svh-4.5rem)] min-h-[380px] overflow-hidden bg-[#000000]">
+        {/* Deliberately short of the fold: the headline underneath has to peek
+            into view before you scroll, the way oace shows its banner. */}
+        <div className="relative w-full aspect-[1698/600] max-h-[68svh] min-h-[220px] overflow-hidden bg-[#000000]">
           <img
             src="/hero.png"
             width={1698}
-            height={926}
+            height={600}
             fetchPriority="high"
             alt="Liegestütze in der Seitenansicht, mit eingeblendeter Technikanalyse: Kopfhaltung, Körperlinie, Ellenbogenwinkel und Beinstreckung"
             className="absolute inset-0 w-full h-full object-cover object-center"
@@ -218,10 +220,10 @@ export default function App() {
           <button
             type="button"
             onClick={() => goToTab("video")}
-            className="mt-7 px-6 py-3 rounded-full bg-[#2e2c27] hover:bg-[#1f1d19] text-[#faf6ef] text-sm font-semibold transition inline-flex items-center gap-2 shadow-sm active:scale-95"
+            className="mt-8 px-9 py-4 sm:px-10 sm:py-[18px] rounded-full bg-[#2e2c27] hover:bg-[#1f1d19] text-[#faf6ef] text-base sm:text-lg font-semibold transition inline-flex items-center gap-2.5 shadow-sm active:scale-95"
           >
             <span>Analyse starten</span>
-            <ArrowRight className="w-4 h-4" />
+            <ArrowRight className="w-5 h-5" />
           </button>
         </div>
       </section>
