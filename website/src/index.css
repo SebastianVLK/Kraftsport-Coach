@@ -3,85 +3,23 @@
 @layer base {
   :root {
     --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
-
-    /* Backdrop dials — cream and terracotta at a low alpha, so the verdict colours
-       (olive / ochre / brick) stay the only saturated colour on the page. */
-    --bd-grid: rgba(250, 246, 239, 0.038); /* blueprint grid */
-    --bd-grid-size: 68px;
-    --bd-ring: rgba(250, 246, 239, 0.07); /* weight-plate rings */
-    --bd-glow: rgba(250, 246, 239, 0.06); /* soft depth from above */
   }
 
   html {
-    background-color: #3b3427;
+    background-color: #faf6ef;
   }
 
   body {
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    /* transparent so the fixed backdrop layers below body can show through */
-    background-color: transparent;
-    color: #faf6ef;
+    background-color: #faf6ef;
+    color: #2e2c27;
     letter-spacing: -0.011em;
-  }
-
-  /* Layer 1: overhead glow + blueprint grid, fading out towards the bottom
-     so text further down the page never fights the pattern. */
-  body::before {
-    content: "";
-    position: fixed;
-    inset: 0;
-    z-index: -1;
-    pointer-events: none;
-    background-image:
-      radial-gradient(80rem 40rem at 15% -10%, var(--bd-glow), transparent 60%),
-      radial-gradient(60rem 34rem at 92% 4%, rgba(239, 69, 38, 0.055), transparent 62%),
-      linear-gradient(to right, var(--bd-grid) 1px, transparent 1px),
-      linear-gradient(to bottom, var(--bd-grid) 1px, transparent 1px);
-    background-size:
-      100% 100%,
-      100% 100%,
-      var(--bd-grid-size) var(--bd-grid-size),
-      var(--bd-grid-size) var(--bd-grid-size);
-    -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 42%, transparent 88%);
-    mask-image: linear-gradient(to bottom, #000 0%, #000 42%, transparent 88%);
-  }
-
-  /* Layer 2: two sets of concentric rings — weight plates seen head on —
-     plus a fine grain so the black never looks like flat paint. */
-  body::after {
-    content: "";
-    position: fixed;
-    inset: 0;
-    z-index: -1;
-    pointer-events: none;
-    opacity: 0.55;
-    background-image:
-      repeating-radial-gradient(circle at center, var(--bd-ring) 0 1px, transparent 1px 30px),
-      repeating-radial-gradient(circle at center, var(--bd-ring) 0 1px, transparent 1px 26px),
-      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.28'/%3E%3C/svg%3E");
-    background-size:
-      620px 620px,
-      430px 430px,
-      240px 240px;
-    background-position:
-      -190px -150px,
-      calc(100% + 130px) calc(100% + 90px),
-      0 0;
-    background-repeat: no-repeat, no-repeat, repeat;
-  }
-
-  /* The rings are decoration, not information — drop them when the viewer
-     asked for less motion/effect or is on a small screen. */
-  @media (prefers-reduced-motion: reduce), (max-width: 640px) {
-    body::after {
-      opacity: 0.28;
-    }
   }
 }
 
-/* Apple-style smooth scrollbars */
+/* Smooth scrollbars */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -90,11 +28,11 @@
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #5c5240;
+  background: #d8d0c0;
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #6e6450;
+  background: #c2b8a5;
 }
 
 .markdown-body p {
@@ -118,9 +56,9 @@
   font-weight: 600;
   margin-top: 0.75rem;
   margin-bottom: 0.35rem;
-  color: #faf6ef;
+  color: #2e2c27;
   letter-spacing: -0.02em;
 }
 .markdown-body strong {
-  color: #faf6ef;
+  color: #2e2c27;
 }
