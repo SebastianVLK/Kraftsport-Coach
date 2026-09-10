@@ -195,7 +195,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-[#f5f5f7] flex flex-col font-sans selection:bg-[#0071e3]/30 selection:text-white">
+    <div className="min-h-screen text-[#f5f5f7] flex flex-col font-sans selection:bg-[#0071e3]/30 selection:text-white">
       {/* Apple-style Global Nav Bar */}
       <header className="sticky top-0 z-50 bg-black/80 backdrop-blur-xl border-b border-white/[0.08] transition-all">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 sm:h-18 flex items-center justify-between gap-4">
@@ -421,7 +421,7 @@ export default function App() {
       )}
 
       {/* Apple.com/chde Style Clean Footer */}
-      <footer className="border-t border-white/[0.08] py-8 bg-black text-[#86868b] text-xs mt-10">
+      <footer className="border-t border-white/[0.08] py-8 bg-black/50 backdrop-blur-sm text-[#86868b] text-xs mt-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-4">
           <div className="border-b border-white/[0.06] pb-4 text-[11px] leading-relaxed text-[#86868b]">
             <p>
