@@ -180,6 +180,17 @@ app.post("/api/analyze-exercise-video", async (req, res) => {
 
     const ai = getGeminiClient();
 
+    // Diagnostics: without this it is guesswork whether a weak verdict came
+    // from a weak model answer or from material that never arrived.
+    const frameBytes = hasFrames
+      ? videoFrames.reduce((n: number, f: string) => n + (f?.length ?? 0), 0)
+      : 0;
+    console.log(
+      `[analyse] Übung="${exerciseHint || "?"}" | Video: ${
+        hasVideo ? `${(videoBase64.length / 1024 / 1024).toFixed(1)} MB base64, ${mimeType}` : "keins"
+      } | Schlüsselbilder: ${hasFrames ? videoFrames.length : 0} (${(frameBytes / 1024 / 1024).toFixed(1)} MB)`
+    );
+
     // Comprehensive System prompt for the Kraftsport-Coach KI Agent
     const systemPrompt = `Du bist ein autonomer, kompromisslos ehrlicher Kraftsport-Coach KI-Agent.
 Du beurteilst die technische Ausführung einer Kraftsport-Übung (z.B. Liegestütze / Push-ups, Kniebeuge, Kreuzheben, Bankdrücken, Dips, Klimmzüge, Schulterdrücken, RDL, Rudern) anhand des übermittelten Videomaterials bzw. der Schlüsselbilder.
@@ -199,7 +210,23 @@ AGENTEN-ARBEITSWEISE (IN 5 PHASEN DURCHFÜHREN):
    - Bei DIPS: Brust geöffnet, kein Vorstürzen der Schulterköpfe im tiefsten Punkt (Depression halten), 90°-Armbeugung.
 4. Schiedsrichter-Urteil — ZUERST JEDEN BEFUND EINSTUFEN, DANN ENTSCHEIDEN:
 
-   Stufe jeden einzelnen Befund in genau eine Schwere ein:
+   VERBINDLICHE EINSTUFUNG HÄUFIGER BEFUNDE — diese Liste gilt, deine Einschätzung
+   darf sie nicht abschwächen:
+   - Hüfte hängt durch / Hohlkreuz bei Liegestütze, Planke, Dips  -> KRITISCH
+   - Hintern hochgestreckt, Körper knickt in der Hüfte ab          -> KRITISCH
+   - Lendenwirbelsäule rundet bei Kreuzheben oder Kniebeuge ein    -> KRITISCH
+   - Knie kippt nach innen (Valgus)                                 -> KRITISCH
+   - Schulterköpfe stürzen im tiefsten Punkt vor (Dips, Bank)      -> KRITISCH
+   - Nachfedern / Abprallen im Umkehrpunkt                          -> KRITISCH
+   - Ellenbogen flügeln auf ~90° zum Rumpf (T-Form)                 -> KRITISCH
+   - Bewegungsumfang klar verkürzt (halbe Tiefe)                    -> RELEVANT
+   - Tempo bricht ein, Wiederholungen werden hektisch               -> RELEVANT
+   - Sichtbare Seitenasymmetrie                                     -> RELEVANT
+   - Kopfhaltung leicht vorgeneigt, Blickrichtung                   -> KOSMETISCH
+   - Fussstellung minimal ungleich, Griffbreite leicht asymmetrisch -> KOSMETISCH
+   - Letzte Wiederholung etwas langsamer als die erste              -> KOSMETISCH
+
+   Stufe jeden weiteren Befund in genau eine Schwere ein:
    - KRITISCH: Verletzungsrisiko. Wirbelsäule rundet unter Last ein, Knie kippt deutlich
      nach innen, Schulter stürzt im tiefsten Punkt vor, Nachfedern aus dem Gelenk.
    - RELEVANT: Kein Risiko, kostet aber spürbar Kraft oder Bewegungsumfang.
@@ -452,6 +479,15 @@ Gib ausschließlich ein JSON-Objekt mit folgenden Feldern zurück:
     if (!parsed.rawOutputText) {
       parsed.rawOutputText = `URTEIL: ${parsed.urteil || "brauchbar"}\n\nBEGRÜNDUNG: ${parsed.begruendung || ""}\n\nDER WICHTIGSTE FEHLER: ${parsed.derWichtigsteFehler || "Keiner identifiziert."}\n\nKORREKTUR: ${parsed.korrektur || ""}\n\nGEWICHT: ${parsed.gewicht?.empfehlung || "gleich bleiben"} – ${parsed.gewicht?.begruendung || ""}\n\nWAS ICH NICHT BEURTEILEN KONNTE: ${parsed.wasNichtBeurteilbar || ""}`;
     }
+
+    console.log(
+      `[analyse] Urteil=${parsed.urteil} | Hauptfehler="${String(
+        parsed.derWichtigsteFehler ?? ""
+      ).slice(0, 90)}" | Zeitmarken=${parsed.fehlerZeitpunkte?.length ?? 0} | gut daran=${
+        parsed.wasGutWar?.length ?? 0
+      }`
+    );
+    console.log(`[analyse] Begründung: ${String(parsed.begruendung ?? "").slice(0, 200)}`);
 
     res.json({ success: true, data: parsed });
   } catch (error: any) {
