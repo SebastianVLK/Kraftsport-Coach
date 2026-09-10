@@ -282,10 +282,7 @@ export default function App() {
             onClick={() => goToTab("video")}
             className="justify-self-center flex items-center gap-2 group"
           >
-            <span className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-[#2e2c27] flex items-center justify-center text-[#faf6ef] group-hover:bg-[#1f1d19] transition">
-              <Dumbbell className="w-4 h-4 sm:w-[18px] sm:h-[18px]" strokeWidth={2.5} />
-            </span>
-            <span className="text-sm sm:text-lg font-black uppercase tracking-[-0.02em] leading-none text-[#2e2c27] whitespace-nowrap">
+            <span className="text-sm sm:text-lg font-black uppercase tracking-[-0.02em] leading-none text-[#2e2c27] whitespace-nowrap group-hover:text-[#1f1d19] transition">
               Kraftsport Coach
             </span>
           </button>
@@ -324,7 +321,7 @@ export default function App() {
 
       {/* Opening slot. On the landing side it is the stock shot; once a verdict
           exists it becomes the athlete's own clip, annotated and looping. */}
-      {showAnalysedClip ? (
+      {activeTab === "account" ? null : showAnalysedClip ? (
         <AnalysedVideoStage videoUrl={analysedVideoUrl!} data={exerciseAnalysis!} />
       ) : (
       <section className="relative w-full">
@@ -441,6 +438,7 @@ export default function App() {
               onOpen={handleOpenCoaching}
               onDelete={handleDeleteCoaching}
               onLogout={handleLogout}
+              onUpdated={setUser}
               openingId={openingId}
             />
           ) : (

@@ -10,6 +10,7 @@ import {
   loginUser,
   logoutUser,
   meHandler,
+  updateProfile,
   requireUser,
 } from "./server/auth";
 
@@ -62,6 +63,7 @@ app.post("/api/auth/register", registerUser);
 app.post("/api/auth/login", loginUser);
 app.post("/api/auth/logout", logoutUser);
 app.get("/api/auth/me", meHandler);
+app.patch("/api/auth/me", updateProfile);
 
 // --- Saved coachings ------------------------------------------------------
 app.post("/api/coachings", requireUser, (req, res) => {

@@ -146,6 +146,16 @@ export const users = {
   rename(id: string, name: string) {
     db.prepare("UPDATE users SET display_name = ? WHERE id = ?").run(name, id);
   },
+  changeEmail(id: string, email: string) {
+    db.prepare("UPDATE users SET email = ? WHERE id = ?").run(email.toLowerCase(), id);
+  },
+  changePassword(id: string, passwordHash: string, salt: string) {
+    db.prepare("UPDATE users SET password_hash = ?, salt = ? WHERE id = ?").run(
+      passwordHash,
+      salt,
+      id
+    );
+  },
 };
 
 export const sessions = {
@@ -169,6 +179,10 @@ export const sessions = {
   },
   remove(tokenHash: string) {
     db.prepare("DELETE FROM sessions WHERE token_hash = ?").run(tokenHash);
+  },
+  /** After a password change: every other device has to sign in again. */
+  removeAllForUser(userId: string) {
+    db.prepare("DELETE FROM sessions WHERE user_id = ?").run(userId);
   },
   pruneExpired() {
     db.prepare("DELETE FROM sessions WHERE expires_at <= ?").run(new Date().toISOString());

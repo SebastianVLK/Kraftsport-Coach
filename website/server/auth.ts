@@ -161,6 +161,72 @@ export function logoutUser(req: Request, res: Response) {
   res.json({ success: true });
 }
 
+/**
+ * Change name, email or password. Email and password changes require the
+ * current password — otherwise a borrowed, still-open session could quietly
+ * take the account over.
+ */
+export function updateProfile(req: Request, res: Response) {
+  const user = currentUser(req);
+  if (!user) {
+    res.status(401).json({ success: false, error: "Nicht angemeldet." });
+    return;
+  }
+
+  const name = req.body?.name !== undefined
+    ? String(req.body.name).trim().replace(/\s+/g, " ")
+    : null;
+  const email = req.body?.email !== undefined
+    ? String(req.body.email).trim().toLowerCase()
+    : null;
+  const newPassword = req.body?.newPassword ? String(req.body.newPassword) : null;
+  const currentPassword = String(req.body?.currentPassword ?? "");
+
+  const wantsEmail = email !== null && email !== user.email;
+  const wantsPassword = Boolean(newPassword);
+
+  if ((wantsEmail || wantsPassword) &&
+      !verifyPassword(currentPassword, user.salt, user.password_hash)) {
+    res.status(403).json({
+      success: false,
+      error: "Zum Ändern von E-Mail oder Passwort das aktuelle Passwort eingeben.",
+    });
+    return;
+  }
+
+  if (name !== null && (name.length < 2 || name.length > 40)) {
+    res.status(400).json({ success: false, error: "Der Benutzername braucht 2 bis 40 Zeichen." });
+    return;
+  }
+  if (wantsEmail) {
+    if (!EMAIL_RE.test(email!)) {
+      res.status(400).json({ success: false, error: "Bitte eine gültige E-Mail-Adresse angeben." });
+      return;
+    }
+    if (users.byEmail(email!)) {
+      res.status(409).json({ success: false, error: "Diese E-Mail wird bereits verwendet." });
+      return;
+    }
+  }
+  if (wantsPassword && newPassword!.length < 8) {
+    res.status(400).json({ success: false, error: "Das Passwort braucht mindestens 8 Zeichen." });
+    return;
+  }
+
+  if (name !== null && name !== user.display_name) users.rename(user.id, name);
+  if (wantsEmail) users.changeEmail(user.id, email!);
+  if (wantsPassword) {
+    const salt = randomBytes(16).toString("hex");
+    users.changePassword(user.id, hashPassword(newPassword!, salt), salt);
+    // Sign every device out, then re-issue for the one making the change.
+    sessions.removeAllForUser(user.id);
+    startSession(res, user.id);
+  }
+
+  const updated = users.byId(user.id)!;
+  res.json({ success: true, user: toPublic(updated) });
+}
+
 export function meHandler(req: Request, res: Response) {
   const user = currentUser(req);
   res.json({ success: true, user: user ? toPublic(user) : null });
