@@ -182,13 +182,14 @@ export default function App() {
           rep counter, form-quality card — so nothing of ours is laid over it
           beyond the scroll cue; the headline sits in the band underneath. */}
       <section className="relative w-full">
-        {/* Deliberately short of the fold: the headline underneath has to peek
-            into view before you scroll, the way oace shows its banner. */}
-        <div className="relative w-full aspect-[1698/600] max-h-[68svh] min-h-[220px] overflow-hidden bg-[#000000]">
+        {/* Height is the viewport minus the header minus exactly the headline,
+            so the picture fills everything else and only "Präzision am
+            Umkehrpunkt." shows below it before you scroll. */}
+        <div className="relative w-full h-[calc(100svh-4rem-8rem)] sm:h-[calc(100svh-4.5rem-12.5rem)] md:h-[calc(100svh-4.5rem-14rem)] min-h-[240px] overflow-hidden bg-[#000000]">
           <img
             src="/hero.png"
             width={1698}
-            height={600}
+            height={680}
             fetchPriority="high"
             alt="Liegestütze in der Seitenansicht, mit eingeblendeter Technikanalyse: Kopfhaltung, Körperlinie, Ellenbogenwinkel und Beinstreckung"
             className="absolute inset-0 w-full h-full object-cover object-center"
