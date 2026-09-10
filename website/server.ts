@@ -8,6 +8,7 @@ import { coachings } from "./server/store";
 import {
   findingsFromMetrics,
   metricsBlock,
+  fewShotBlock,
   enforceVerdict,
 } from "./server/poseFindings";
 import {
@@ -355,7 +356,7 @@ Gib ausschließlich ein JSON-Objekt mit folgenden Feldern zurück:
   "rawOutputText": "URTEIL: ...\\n\\nBEGRÜNDUNG: ...\\n\\nDER WICHTIGSTE FEHLER: ...\\n\\nKORREKTUR: ...\\n\\nGEWICHT: ...\\n\\nWAS ICH NICHT BEURTEILEN KONNTE: ..."
 }`;
 
-    const promptText = `${systemPrompt}\n\n${metricsBlock(poseMetrics, measured)}\n\n${
+    const promptText = `${systemPrompt}\n\n${fewShotBlock()}\n\n${metricsBlock(poseMetrics, measured)}\n\n${
       exerciseHint ? `Athleten-Angabe zur Übung: "${exerciseHint}"` : "Analysiere die gezeigte Kraftsport-Übung im Bild- und Videomaterial."
     }`;
 

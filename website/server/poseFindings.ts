@@ -209,6 +209,48 @@ export function findingsFromMetrics(
   return out;
 }
 
+/**
+ * Three worked examples, appended to the prompt ahead of the real measurement.
+ *
+ * From "Rehabilitation Exercise Quality Assessment and Feedback Generation
+ * Using Large Language Models with Prompt Engineering" (arXiv:2505.18412),
+ * which measured this exact trade-off on two labelled rehabilitation datasets:
+ * accuracy climbed from 0.57 at zero examples to 0.68 at three, with F1 going
+ * 0.64 to 0.76, then collapsed to 0.42 at four. Three is the peak, and more is
+ * actively worse — hence exactly three, never a fourth.
+ *
+ * The numbers are the class medians from the 28,500 labelled plank frames and
+ * the squat reference, so the examples describe real executions rather than
+ * invented ones.
+ */
+export function fewShotBlock(): string {
+  return `BEISPIELE — SO WIRD AUS MESSWERTEN EIN URTEIL:
+
+Beispiel 1
+  Beckenlage: -8% tiefster Ausschlag | Ellenbogen min 88° | Oberarm/Rumpf max 48°
+  Abgeleitete Befunde: keine
+  Urteil: gut
+  Begründung: Kein kritischer und kein relevanter Befund — die Linie steht, die
+  Tiefe stimmt. Der Cue zielt auf Halten, nicht auf eine erfundene Korrektur.
+
+Beispiel 2
+  Beckenlage: +14% tiefster Ausschlag | Ellenbogen min 92° | Oberarm/Rumpf max 51°
+  Abgeleitete Befunde: [KRITISCH] Hüfte hängt durch
+  Urteil: mangelhaft
+  Begründung: Ein kritischer Befund genügt. Die Tiefe war in Ordnung, das ändert
+  nichts — Sicherheit geht vor Bewegungsumfang.
+
+Beispiel 3
+  Beckenlage: -6% tiefster Ausschlag | Ellenbogen min 138° | Oberarm/Rumpf max 55°
+  Abgeleitete Befunde: [RELEVANT] Bewegungsumfang verkürzt
+  Urteil: brauchbar
+  Begründung: Kein kritischer Befund, aber die Tiefe fehlt deutlich. Ein einzelner
+  relevanter Befund liesse "gut" grundsätzlich zu; hier ist der Bewegungsumfang
+  aber das Trainingsziel selbst, deshalb "brauchbar".
+
+Beurteile die folgende Aufnahme nach demselben Muster.`;
+}
+
 /** Human-readable block for the prompt. */
 export function metricsBlock(
   m: PoseMetrics | null | undefined,
