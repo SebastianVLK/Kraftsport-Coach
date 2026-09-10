@@ -292,7 +292,7 @@ export const CoachFeedbackView: React.FC<CoachFeedbackViewProps> = ({
                   `Mein Urteil war '${data.urteil}'. Der Hauptfehler war: '${data.derWichtigsteFehler}'. Wie kann ich meine Hebel und Gelenkachsen gezielt verbessern?`
                 )
               }
-              className="px-4 py-2 rounded-full bg-[#d54242] hover:bg-[#be3838] text-[#faf6ef] text-xs font-semibold transition flex items-center gap-1.5 shadow-sm active:scale-95"
+              className="px-4 py-2 rounded-full bg-[#faf6ef] hover:bg-[#e8e2d6] text-[#2e2c27] text-xs font-semibold transition flex items-center gap-1.5 shadow-sm active:scale-95"
             >
               <MessageSquare className="w-3.5 h-3.5" />
               <span>Coach fragen</span>
@@ -545,7 +545,7 @@ export const CoachFeedbackView: React.FC<CoachFeedbackViewProps> = ({
                   onStartNextSet(data.exerciseName, data.korrektur);
                 }
               }}
-              className="w-full py-3 rounded-full bg-[#d54242] hover:bg-[#be3838] text-[#faf6ef] text-xs font-semibold transition flex items-center justify-center gap-2 shadow-lg shadow-[#d54242]/20 active:scale-95"
+              className="w-full py-3 rounded-full bg-[#faf6ef] hover:bg-[#e8e2d6] text-[#2e2c27] text-xs font-semibold transition flex items-center justify-center gap-2 shadow-lg shadow-[#1a1815]/40 active:scale-95"
             >
               <span>Satz 2 jetzt analysieren</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -853,7 +853,7 @@ export const CoachFeedbackView: React.FC<CoachFeedbackViewProps> = ({
                 onStartNextSet(data.exerciseName, data.korrektur);
               }
             }}
-            className="px-4 py-2 rounded-full bg-[#d54242] hover:bg-[#be3838] text-[#faf6ef] text-xs font-medium shrink-0 transition flex items-center gap-1 shadow-md shadow-[#d54242]/20 active:scale-95"
+            className="px-4 py-2 rounded-full bg-[#faf6ef] hover:bg-[#e8e2d6] text-[#2e2c27] text-xs font-medium shrink-0 transition flex items-center gap-1 shadow-md shadow-[#1a1815]/40 active:scale-95"
           >
             <span>Satz 2 starten</span>
             <ArrowRight className="w-3 h-3" />

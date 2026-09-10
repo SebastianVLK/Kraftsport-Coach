@@ -161,7 +161,7 @@ export const GeminiChatBot: React.FC<GeminiChatBotProps> = ({
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1.5">
-                    <Icon className={`w-3.5 h-3.5 ${isSelected ? "text-[#d54242]" : "text-[#a69c8a]"}`} />
+                    <Icon className={`w-3.5 h-3.5 ${isSelected ? "text-[#2e2c27]" : "text-[#a69c8a]"}`} />
                     <span className={`text-xs font-semibold ${isSelected ? "text-[#2e2c27]" : "text-[#faf6ef]"}`}>
                       {role.title.split(" ")[0]}
                     </span>
@@ -242,7 +242,7 @@ export const GeminiChatBot: React.FC<GeminiChatBotProps> = ({
                 <div
                   className={`max-w-[85%] rounded-2xl p-4 text-xs sm:text-sm leading-relaxed ${
                     isUser
-                      ? "bg-[#d54242] text-[#faf6ef] rounded-br-sm shadow-md"
+                      ? "bg-[#faf6ef] text-[#2e2c27] rounded-br-sm shadow-md"
                       : "bg-[#3d3931] text-[#faf6ef] border border-[#faf6ef]/[0.06] rounded-bl-sm shadow-sm"
                   }`}
                 >
@@ -298,13 +298,13 @@ export const GeminiChatBot: React.FC<GeminiChatBotProps> = ({
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
             placeholder={`Frage an den ${currentRoleConfig.title}...`}
-            className="flex-1 bg-[#3d3931] border border-[#faf6ef]/10 rounded-full px-4 py-2.5 text-xs sm:text-sm text-[#faf6ef] placeholder-[#a69c8a] focus:outline-none focus:border-[#d54242] transition"
+            className="flex-1 bg-[#3d3931] border border-[#faf6ef]/10 rounded-full px-4 py-2.5 text-xs sm:text-sm text-[#faf6ef] placeholder-[#a69c8a] focus:outline-none focus:border-[#c98a6b] transition"
           />
           <button
             id="btn-chat-send"
             type="submit"
             disabled={!inputText.trim() || isLoading}
-            className="w-9 h-9 rounded-full bg-[#d54242] hover:bg-[#be3838] disabled:opacity-40 text-[#faf6ef] transition flex items-center justify-center shadow-md shrink-0 active:scale-95"
+            className="w-9 h-9 rounded-full bg-[#faf6ef] hover:bg-[#e8e2d6] disabled:opacity-40 text-[#2e2c27] transition flex items-center justify-center shadow-md shrink-0 active:scale-95"
           >
             <Send className="w-4 h-4 ml-0.5" />
           </button>

@@ -438,7 +438,7 @@ export const VideoRecorderAndUploader: React.FC<VideoRecorderAndUploaderProps> =
                   type="button"
                   onClick={handleSubmitForAnalysis}
                   disabled={isAnalyzing || isVideoProcessing}
-                  className="px-6 py-2.5 bg-[#d54242] hover:bg-[#be3838] disabled:opacity-50 text-[#faf6ef] rounded-full text-xs sm:text-sm font-semibold transition flex items-center gap-2 shadow-lg shadow-[#d54242]/25 active:scale-95"
+                  className="px-6 py-2.5 bg-[#faf6ef] hover:bg-[#e8e2d6] disabled:opacity-50 text-[#2e2c27] rounded-full text-xs sm:text-sm font-semibold transition flex items-center gap-2 shadow-lg shadow-[#1a1815]/40 active:scale-95"
                 >
                   {isAnalyzing ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
@@ -525,7 +525,7 @@ export const VideoRecorderAndUploader: React.FC<VideoRecorderAndUploaderProps> =
               }}
               className={`px-3 py-1 rounded-full transition text-[11px] font-medium ${
                 selectedExerciseHint === ex && !showCustomInput
-                  ? "bg-[#d54242] text-[#faf6ef] font-semibold shadow-sm"
+                  ? "bg-[#faf6ef] text-[#2e2c27] font-semibold shadow-sm"
                   : "bg-[#3d3931] text-[#a69c8a] hover:text-[#faf6ef] border border-[#faf6ef]/[0.06]"
               }`}
             >
@@ -538,7 +538,7 @@ export const VideoRecorderAndUploader: React.FC<VideoRecorderAndUploaderProps> =
             onClick={() => setShowCustomInput(!showCustomInput)}
             className={`px-3 py-1 rounded-full transition text-[11px] font-medium flex items-center gap-1 ${
               showCustomInput
-                ? "bg-[#d54242] text-[#faf6ef]"
+                ? "bg-[#faf6ef] text-[#2e2c27]"
                 : "bg-[#3d3931] text-[#a69c8a] hover:text-[#faf6ef] border border-[#faf6ef]/[0.06]"
             }`}
           >
@@ -554,7 +554,7 @@ export const VideoRecorderAndUploader: React.FC<VideoRecorderAndUploaderProps> =
                 value={customExerciseText}
                 onChange={(e) => setCustomExerciseText(e.target.value)}
                 placeholder="z. B. Frontkniebeuge..."
-                className="bg-[#3d3931] border border-[#faf6ef]/20 rounded-full px-3 py-1 text-xs text-[#faf6ef] placeholder-[#a69c8a] focus:outline-none focus:border-[#d54242]"
+                className="bg-[#3d3931] border border-[#faf6ef]/20 rounded-full px-3 py-1 text-xs text-[#faf6ef] placeholder-[#a69c8a] focus:outline-none focus:border-[#c98a6b]"
               />
               <button
                 type="button"
@@ -563,7 +563,7 @@ export const VideoRecorderAndUploader: React.FC<VideoRecorderAndUploaderProps> =
                     onChangeExerciseHint(customExerciseText.trim());
                   }
                 }}
-                className="px-3 py-1 bg-[#d54242] hover:bg-[#be3838] text-[#faf6ef] text-[11px] font-semibold rounded-full shadow-sm"
+                className="px-3 py-1 bg-[#faf6ef] hover:bg-[#e8e2d6] text-[#2e2c27] text-[11px] font-semibold rounded-full shadow-sm"
               >
                 Setzen
               </button>
@@ -605,7 +605,7 @@ export const VideoRecorderAndUploader: React.FC<VideoRecorderAndUploaderProps> =
                   Unterstützt MP4, WebM, MOV. Ideal sind 1–5 saubere Wiederholungen (5–20 Sekunden), gefilmt aus 45° bis 90° Blickwinkel.
                 </p>
               </div>
-              <span className="text-xs text-[#faf6ef] font-medium bg-[#d54242] hover:bg-[#be3838] px-4 py-2 rounded-full transition shadow-sm">
+              <span className="text-xs text-[#2e2c27] bg-[#faf6ef] hover:bg-[#e8e2d6] px-4 py-2 rounded-full transition shadow-sm">
                 Video-Datei auswählen
               </span>
             </div>
@@ -646,7 +646,7 @@ export const VideoRecorderAndUploader: React.FC<VideoRecorderAndUploaderProps> =
                 type="button"
                 onClick={() => startCamera()}
                 disabled={isStartingCamera}
-                className="text-xs text-[#faf6ef] font-medium bg-[#d54242] hover:bg-[#be3838] disabled:opacity-50 px-4 py-2 rounded-full transition shadow-sm flex items-center gap-2"
+                className="text-xs text-[#2e2c27] bg-[#faf6ef] hover:bg-[#e8e2d6] disabled:opacity-50 px-4 py-2 rounded-full transition shadow-sm flex items-center gap-2"
               >
                 {isStartingCamera ? (
                   <Loader2 className="w-3.5 h-3.5 animate-spin" />

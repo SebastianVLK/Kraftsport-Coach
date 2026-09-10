@@ -195,7 +195,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen text-[#faf6ef] flex flex-col font-sans selection:bg-[#d54242]/30 selection:text-[#faf6ef]">
+    <div className="min-h-screen text-[#faf6ef] flex flex-col font-sans selection:bg-[#c98a6b]/30 selection:text-[#faf6ef]">
       {/* Apple-style Global Nav Bar */}
       <header className="sticky top-0 z-50 bg-[#1a1815]/80 backdrop-blur-xl border-b border-[#faf6ef]/[0.08] transition-all">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 sm:h-18 flex items-center justify-between gap-4">
@@ -375,7 +375,7 @@ export default function App() {
                 <button
                   type="button"
                   onClick={() => setActiveTab("video")}
-                  className="px-5 py-2.5 bg-[#d54242] hover:bg-[#be3838] text-[#faf6ef] rounded-full text-xs font-semibold shadow-sm transition flex items-center gap-1.5"
+                  className="px-5 py-2.5 bg-[#faf6ef] hover:bg-[#e8e2d6] text-[#2e2c27] rounded-full text-xs font-semibold shadow-sm transition flex items-center gap-1.5"
                 >
                   <span>Video aufnehmen oder hochladen</span>
                   <ArrowRight className="w-3.5 h-3.5" />
