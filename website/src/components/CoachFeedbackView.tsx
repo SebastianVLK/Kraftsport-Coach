@@ -158,24 +158,24 @@ export const CoachFeedbackView: React.FC<CoachFeedbackViewProps> = ({
         return {
           label: "Gut",
           title: "Technisch saubere Ausführung",
-          ringColor: "text-[#30d158]",
-          pillBg: "bg-[#30d158]/10 text-[#30d158] border-[#30d158]/30",
+          ringColor: "text-[#7c8a45]",
+          pillBg: "bg-[#7c8a45]/10 text-[#7c8a45] border-[#7c8a45]/30",
           icon: CheckCircle2,
         };
       case "brauchbar":
         return {
           label: "Brauchbar",
           title: "Verbesserungsbedarf am tiefsten Punkt",
-          ringColor: "text-[#ffd60a]",
-          pillBg: "bg-[#ffd60a]/10 text-[#ffd60a] border-[#ffd60a]/30",
+          ringColor: "text-[#d9a441]",
+          pillBg: "bg-[#d9a441]/10 text-[#d9a441] border-[#d9a441]/30",
           icon: AlertCircle,
         };
       case "mangelhaft":
         return {
           label: "Mangelhaft",
           title: "Kritischer Formverlust oder Kompensation",
-          ringColor: "text-[#ff453a]",
-          pillBg: "bg-[#ff453a]/10 text-[#ff453a] border-[#ff453a]/30",
+          ringColor: "text-[#b23a2f]",
+          pillBg: "bg-[#b23a2f]/10 text-[#b23a2f] border-[#b23a2f]/30",
           icon: XCircle,
         };
       case "nicht_beurteilbar":
@@ -183,8 +183,8 @@ export const CoachFeedbackView: React.FC<CoachFeedbackViewProps> = ({
         return {
           label: "Nicht beurteilbar",
           title: "Kamerawinkel oder Licht unzureichend",
-          ringColor: "text-[#86868b]",
-          pillBg: "bg-[#1d1d1f] text-[#86868b] border-white/10",
+          ringColor: "text-[#a69c8a]",
+          pillBg: "bg-[#3d3931] text-[#a69c8a] border-[#faf6ef]/10",
           icon: HelpCircle,
         };
     }
@@ -195,20 +195,20 @@ export const CoachFeedbackView: React.FC<CoachFeedbackViewProps> = ({
       case "hochgehen":
         return {
           label: "Steigern",
-          pillBg: "bg-[#30d158]/10 text-[#30d158] border-[#30d158]/20",
+          pillBg: "bg-[#7c8a45]/10 text-[#7c8a45] border-[#7c8a45]/20",
           icon: TrendingUp,
         };
       case "runtergehen":
         return {
           label: "Reduzieren",
-          pillBg: "bg-[#ff453a]/10 text-[#ff453a] border-[#ff453a]/20",
+          pillBg: "bg-[#b23a2f]/10 text-[#b23a2f] border-[#b23a2f]/20",
           icon: TrendingDown,
         };
       case "gleich bleiben":
       default:
         return {
           label: "Beibehalten",
-          pillBg: "bg-[#ffd60a]/10 text-[#ffd60a] border-[#ffd60a]/20",
+          pillBg: "bg-[#d9a441]/10 text-[#d9a441] border-[#d9a441]/20",
           icon: Minus,
         };
     }
@@ -233,11 +233,11 @@ export const CoachFeedbackView: React.FC<CoachFeedbackViewProps> = ({
   return (
     <div id="coach-feedback-container" className="space-y-6 max-w-5xl mx-auto">
       {/* 1. HERO CARD: Apple Fitness+ style Verdict & Summary */}
-      <div className="relative overflow-hidden rounded-3xl bg-[#161617] border border-white/[0.08] p-6 sm:p-8 transition-all shadow-xl">
+      <div className="relative overflow-hidden rounded-3xl bg-[#35322c] border border-[#faf6ef]/[0.08] p-6 sm:p-8 transition-all shadow-xl">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
           <div className="flex items-start sm:items-center gap-4 sm:gap-5">
             {/* Apple Activity Ring Icon Container */}
-            <div className="w-16 h-16 sm:w-18 sm:h-18 rounded-2xl bg-[#1d1d1f] border border-white/10 flex items-center justify-center shrink-0 shadow-inner">
+            <div className="w-16 h-16 sm:w-18 sm:h-18 rounded-2xl bg-[#3d3931] border border-[#faf6ef]/10 flex items-center justify-center shrink-0 shadow-inner">
               <VerdictIcon className={`w-8 h-8 sm:w-9 sm:h-9 ${verdict.ringColor}`} />
             </div>
 
@@ -254,10 +254,10 @@ export const CoachFeedbackView: React.FC<CoachFeedbackViewProps> = ({
                 </span>
               </div>
 
-              <h2 className="text-xl sm:text-2xl font-semibold tracking-tight text-[#f5f5f7]">
+              <h2 className="text-xl sm:text-2xl font-semibold tracking-tight text-[#faf6ef]">
                 {data.exerciseName || "Übungsbeurteilung"}
               </h2>
-              <p className="text-xs sm:text-sm text-[#86868b] font-normal">
+              <p className="text-xs sm:text-sm text-[#a69c8a] font-normal">
                 {verdict.title}
               </p>
             </div>
@@ -269,17 +269,17 @@ export const CoachFeedbackView: React.FC<CoachFeedbackViewProps> = ({
               id="btn-copy-verbatim-report"
               type="button"
               onClick={handleCopyRaw}
-              className="px-3.5 py-2 rounded-full bg-[#1d1d1f] hover:bg-[#2c2c2e] text-[#f5f5f7] border border-white/10 text-xs font-medium transition flex items-center gap-1.5 shadow-sm active:scale-95"
+              className="px-3.5 py-2 rounded-full bg-[#3d3931] hover:bg-[#4a453b] text-[#faf6ef] border border-[#faf6ef]/10 text-xs font-medium transition flex items-center gap-1.5 shadow-sm active:scale-95"
               title="Bericht kopieren"
             >
               {copied ? (
                 <>
-                  <Check className="w-3.5 h-3.5 text-[#30d158]" />
-                  <span className="text-[#30d158] font-semibold">Kopiert</span>
+                  <Check className="w-3.5 h-3.5 text-[#7c8a45]" />
+                  <span className="text-[#7c8a45] font-semibold">Kopiert</span>
                 </>
               ) : (
                 <>
-                  <Copy className="w-3.5 h-3.5 text-[#86868b]" />
+                  <Copy className="w-3.5 h-3.5 text-[#a69c8a]" />
                   <span>Kopieren</span>
                 </>
               )}
@@ -292,7 +292,7 @@ export const CoachFeedbackView: React.FC<CoachFeedbackViewProps> = ({
                   `Mein Urteil war '${data.urteil}'. Der Hauptfehler war: '${data.derWichtigsteFehler}'. Wie kann ich meine Hebel und Gelenkachsen gezielt verbessern?`
                 )
               }
-              className="px-4 py-2 rounded-full bg-[#0071e3] hover:bg-[#0077ed] text-white text-xs font-semibold transition flex items-center gap-1.5 shadow-sm active:scale-95"
+              className="px-4 py-2 rounded-full bg-[#d54242] hover:bg-[#be3838] text-[#faf6ef] text-xs font-semibold transition flex items-center gap-1.5 shadow-sm active:scale-95"
             >
               <MessageSquare className="w-3.5 h-3.5" />
               <span>Coach fragen</span>
@@ -301,21 +301,21 @@ export const CoachFeedbackView: React.FC<CoachFeedbackViewProps> = ({
         </div>
 
         {/* Observations at lowest point & weight rationale */}
-        <div className="mt-6 pt-6 border-t border-white/[0.08] grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="p-4 rounded-2xl bg-[#1d1d1f]/60 border border-white/[0.04]">
-            <span className="text-[11px] font-semibold text-[#86868b] tracking-wider uppercase block mb-1">
+        <div className="mt-6 pt-6 border-t border-[#faf6ef]/[0.08] grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="p-4 rounded-2xl bg-[#3d3931]/60 border border-[#faf6ef]/[0.04]">
+            <span className="text-[11px] font-semibold text-[#a69c8a] tracking-wider uppercase block mb-1">
               Beobachtung am Umkehrpunkt
             </span>
-            <p className="text-xs sm:text-sm text-[#f5f5f7] font-normal leading-relaxed">
+            <p className="text-xs sm:text-sm text-[#faf6ef] font-normal leading-relaxed">
               {data.begruendung}
             </p>
           </div>
 
-          <div className="p-4 rounded-2xl bg-[#1d1d1f]/60 border border-white/[0.04]">
-            <span className="text-[11px] font-semibold text-[#86868b] tracking-wider uppercase block mb-1">
+          <div className="p-4 rounded-2xl bg-[#3d3931]/60 border border-[#faf6ef]/[0.04]">
+            <span className="text-[11px] font-semibold text-[#a69c8a] tracking-wider uppercase block mb-1">
               Lastbegründung ({weight.label})
             </span>
-            <p className="text-xs sm:text-sm text-[#f5f5f7] font-normal leading-relaxed">
+            <p className="text-xs sm:text-sm text-[#faf6ef] font-normal leading-relaxed">
               {data.gewicht.begruendung}
             </p>
           </div>
@@ -323,31 +323,31 @@ export const CoachFeedbackView: React.FC<CoachFeedbackViewProps> = ({
       </div>
 
       {/* 2. AKTIV DIE TECHNIK VERBESSERN (Apple Workout Style) */}
-      <div className="rounded-3xl bg-[#161617] border border-white/[0.08] p-6 sm:p-7 shadow-xl space-y-6">
+      <div className="rounded-3xl bg-[#35322c] border border-[#faf6ef]/[0.08] p-6 sm:p-7 shadow-xl space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <span className="p-1 rounded-lg bg-[#2997ff]/10 text-[#2997ff] border border-[#2997ff]/20">
+              <span className="p-1 rounded-lg bg-[#c98a6b]/10 text-[#c98a6b] border border-[#c98a6b]/20">
                 <Zap className="w-4 h-4" />
               </span>
-              <h3 className="text-sm sm:text-base font-semibold tracking-tight text-[#f5f5f7]">
+              <h3 className="text-sm sm:text-base font-semibold tracking-tight text-[#faf6ef]">
                 Technik aktiv verbessern: Vorbereitung für Satz 2
               </h3>
             </div>
-            <p className="text-xs text-[#86868b]">
+            <p className="text-xs text-[#a69c8a]">
               Setze diesen 3-Schritte-Ablauf direkt vor deinem nächsten Satz um.
             </p>
           </div>
 
           {/* Apple Activity Progress Pill */}
-          <div className="flex items-center gap-2 bg-[#1d1d1f] px-3.5 py-1.5 rounded-full border border-white/10 self-start sm:self-auto">
-            <span className="text-xs text-[#86868b] font-medium">Bereit:</span>
-            <span className={`text-xs font-bold ${improvementProgress === 100 ? "text-[#30d158]" : "text-[#ffd60a]"}`}>
+          <div className="flex items-center gap-2 bg-[#3d3931] px-3.5 py-1.5 rounded-full border border-[#faf6ef]/10 self-start sm:self-auto">
+            <span className="text-xs text-[#a69c8a] font-medium">Bereit:</span>
+            <span className={`text-xs font-bold ${improvementProgress === 100 ? "text-[#7c8a45]" : "text-[#d9a441]"}`}>
               {improvementProgress}%
             </span>
-            <div className="w-16 h-1.5 bg-[#2c2c2e] rounded-full overflow-hidden">
+            <div className="w-16 h-1.5 bg-[#4a453b] rounded-full overflow-hidden">
               <div
-                className={`h-full transition-all duration-500 ${improvementProgress === 100 ? "bg-[#30d158]" : "bg-[#ffd60a]"}`}
+                className={`h-full transition-all duration-500 ${improvementProgress === 100 ? "bg-[#7c8a45]" : "bg-[#d9a441]"}`}
                 style={{ width: `${improvementProgress}%` }}
               />
             </div>
@@ -360,34 +360,34 @@ export const CoachFeedbackView: React.FC<CoachFeedbackViewProps> = ({
           <div
             className={`p-5 rounded-2xl border transition-all duration-200 flex flex-col justify-between gap-4 ${
               cueMemorized
-                ? "bg-[#30d158]/5 border-[#30d158]/30"
-                : "bg-[#1d1d1f]/60 border-white/[0.06]"
+                ? "bg-[#7c8a45]/5 border-[#7c8a45]/30"
+                : "bg-[#3d3931]/60 border-[#faf6ef]/[0.06]"
             }`}
           >
             <div>
               <div className="flex items-center justify-between mb-2">
-                <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#86868b]">
+                <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#a69c8a]">
                   Schritt 1 • Mentaler Cue
                 </span>
                 {cueMemorized && (
-                  <span className="text-[11px] text-[#30d158] flex items-center gap-1 font-semibold">
+                  <span className="text-[11px] text-[#7c8a45] flex items-center gap-1 font-semibold">
                     <Check className="w-3.5 h-3.5" />
                     Eingeprägt
                   </span>
                 )}
               </div>
 
-              <span className="text-xs text-[#ff9f9a] font-medium block mb-1">
+              <span className="text-xs text-[#e8a79b] font-medium block mb-1">
                 Hauptfehler: {data.derWichtigsteFehler}
               </span>
 
-              <div className="p-3.5 rounded-xl bg-black/40 border border-white/5 my-2">
-                <p className="text-xs sm:text-sm font-semibold text-[#f5f5f7] leading-snug">
+              <div className="p-3.5 rounded-xl bg-[#1a1815]/40 border border-[#faf6ef]/5 my-2">
+                <p className="text-xs sm:text-sm font-semibold text-[#faf6ef] leading-snug">
                   "{data.korrektur}"
                 </p>
               </div>
 
-              <p className="text-[11px] text-[#86868b]">
+              <p className="text-[11px] text-[#a69c8a]">
                 Wende diesen einen Cue genau am tiefsten Umkehrpunkt an.
               </p>
             </div>
@@ -397,13 +397,13 @@ export const CoachFeedbackView: React.FC<CoachFeedbackViewProps> = ({
               onClick={() => setCueMemorized(!cueMemorized)}
               className={`w-full py-2.5 rounded-full text-xs font-semibold transition flex items-center justify-center gap-1.5 ${
                 cueMemorized
-                  ? "bg-[#30d158]/20 text-[#30d158] border border-[#30d158]/30 hover:bg-[#30d158]/30"
-                  : "bg-[#2c2c2e] hover:bg-[#3a3a3c] text-white border border-white/10"
+                  ? "bg-[#7c8a45]/20 text-[#7c8a45] border border-[#7c8a45]/30 hover:bg-[#7c8a45]/30"
+                  : "bg-[#4a453b] hover:bg-[#5a5449] text-[#faf6ef] border border-[#faf6ef]/10"
               }`}
             >
               {cueMemorized ? (
                 <>
-                  <Check className="w-3.5 h-3.5 text-[#30d158]" />
+                  <Check className="w-3.5 h-3.5 text-[#7c8a45]" />
                   <span>Cue verinnerlicht</span>
                 </>
               ) : (
@@ -416,20 +416,20 @@ export const CoachFeedbackView: React.FC<CoachFeedbackViewProps> = ({
           <div
             className={`p-5 rounded-2xl border transition-all duration-200 flex flex-col justify-between gap-4 ${
               drillCompleted
-                ? "bg-[#30d158]/5 border-[#30d158]/30"
-                : "bg-[#1d1d1f]/60 border-white/[0.06]"
+                ? "bg-[#7c8a45]/5 border-[#7c8a45]/30"
+                : "bg-[#3d3931]/60 border-[#faf6ef]/[0.06]"
             }`}
           >
             <div>
               <div className="flex items-center justify-between mb-2">
-                <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#86868b]">
+                <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#a69c8a]">
                   Schritt 2 • Zubringer-Drill
                 </span>
                 <button
                   type="button"
                   onClick={() => handleTriggerAgentAction("generate_drill")}
                   disabled={isAgentExecuting}
-                  className="text-[11px] text-[#86868b] hover:text-white flex items-center gap-1"
+                  className="text-[11px] text-[#a69c8a] hover:text-[#faf6ef] flex items-center gap-1"
                   title="Drill neu generieren"
                 >
                   <RefreshCw className="w-3 h-3" />
@@ -440,32 +440,32 @@ export const CoachFeedbackView: React.FC<CoachFeedbackViewProps> = ({
               {activeDrill ? (
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <h4 className="text-xs sm:text-sm font-semibold text-[#f5f5f7]">
+                    <h4 className="text-xs sm:text-sm font-semibold text-[#faf6ef]">
                       {activeDrill.title}
                     </h4>
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-[#2c2c2e] text-[#a1a1a6] border border-white/10">
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-[#4a453b] text-[#c3b9a6] border border-[#faf6ef]/10">
                       {activeDrill.setsAndReps}
                     </span>
                   </div>
 
-                  <p className="text-xs text-[#a1a1a6] leading-relaxed">
+                  <p className="text-xs text-[#c3b9a6] leading-relaxed">
                     {activeDrill.executionCue}
                   </p>
                 </div>
               ) : (
-                <p className="text-xs text-[#86868b] italic">
+                <p className="text-xs text-[#a69c8a] italic">
                   Gezielter Drill zur biomechanischen Stabilisierung am Umkehrpunkt.
                 </p>
               )}
 
               {/* Apple Watch style Mini Drill Timer */}
-              <div className="mt-3 p-3 rounded-xl bg-black/40 border border-white/5 flex items-center justify-between">
+              <div className="mt-3 p-3 rounded-xl bg-[#1a1815]/40 border border-[#faf6ef]/5 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-[#ffd60a]" />
-                  <span className="text-xs text-[#86868b] font-medium">
+                  <Clock className="w-4 h-4 text-[#d9a441]" />
+                  <span className="text-xs text-[#a69c8a] font-medium">
                     Drill-Pause:
                   </span>
-                  <span className="text-xs font-mono font-bold text-white">
+                  <span className="text-xs font-mono font-bold text-[#faf6ef]">
                     00:{drillTimerSeconds < 10 ? `0${drillTimerSeconds}` : drillTimerSeconds}
                   </span>
                 </div>
@@ -474,10 +474,10 @@ export const CoachFeedbackView: React.FC<CoachFeedbackViewProps> = ({
                   <button
                     type="button"
                     onClick={() => setIsTimerRunning(!isTimerRunning)}
-                    className="p-1.5 rounded-full bg-[#2c2c2e] hover:bg-[#3a3a3c] text-white transition"
+                    className="p-1.5 rounded-full bg-[#4a453b] hover:bg-[#5a5449] text-[#faf6ef] transition"
                     title={isTimerRunning ? "Pausieren" : "Starten"}
                   >
-                    {isTimerRunning ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5 fill-white" />}
+                    {isTimerRunning ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5 fill-[#faf6ef]" />}
                   </button>
                   <button
                     type="button"
@@ -485,7 +485,7 @@ export const CoachFeedbackView: React.FC<CoachFeedbackViewProps> = ({
                       setIsTimerRunning(false);
                       setDrillTimerSeconds(45);
                     }}
-                    className="p-1.5 rounded-full bg-[#2c2c2e] hover:bg-[#3a3a3c] text-[#86868b] hover:text-white transition"
+                    className="p-1.5 rounded-full bg-[#4a453b] hover:bg-[#5a5449] text-[#a69c8a] hover:text-[#faf6ef] transition"
                     title="Reset"
                   >
                     <RotateCcw className="w-3.5 h-3.5" />
@@ -499,13 +499,13 @@ export const CoachFeedbackView: React.FC<CoachFeedbackViewProps> = ({
               onClick={() => setDrillCompleted(!drillCompleted)}
               className={`w-full py-2.5 rounded-full text-xs font-semibold transition flex items-center justify-center gap-1.5 ${
                 drillCompleted
-                  ? "bg-[#30d158]/20 text-[#30d158] border border-[#30d158]/30 hover:bg-[#30d158]/30"
-                  : "bg-[#2c2c2e] hover:bg-[#3a3a3c] text-white border border-white/10"
+                  ? "bg-[#7c8a45]/20 text-[#7c8a45] border border-[#7c8a45]/30 hover:bg-[#7c8a45]/30"
+                  : "bg-[#4a453b] hover:bg-[#5a5449] text-[#faf6ef] border border-[#faf6ef]/10"
               }`}
             >
               {drillCompleted ? (
                 <>
-                  <Check className="w-3.5 h-3.5 text-[#30d158]" />
+                  <Check className="w-3.5 h-3.5 text-[#7c8a45]" />
                   <span>Drill absolviert</span>
                 </>
               ) : (
@@ -515,22 +515,22 @@ export const CoachFeedbackView: React.FC<CoachFeedbackViewProps> = ({
           </div>
 
           {/* STEP 3: Satz 2 Aufnehmen (Clean Apple Action) */}
-          <div className="p-5 rounded-2xl bg-[#1d1d1f]/60 border border-white/[0.06] flex flex-col justify-between gap-4">
+          <div className="p-5 rounded-2xl bg-[#3d3931]/60 border border-[#faf6ef]/[0.06] flex flex-col justify-between gap-4">
             <div>
-              <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#86868b] block mb-2">
+              <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#a69c8a] block mb-2">
                 Schritt 3 • Satz 2 Ausführen
               </span>
 
-              <h4 className="text-xs sm:text-sm font-semibold text-[#f5f5f7] mb-1">
+              <h4 className="text-xs sm:text-sm font-semibold text-[#faf6ef] mb-1">
                 Bereit für den nächsten Satz
               </h4>
-              <p className="text-xs text-[#a1a1a6] leading-relaxed mb-3">
+              <p className="text-xs text-[#c3b9a6] leading-relaxed mb-3">
                 Lade die nächste Aufnahme hoch. Der Coach vergleicht, ob der Umkehrpunkt stabilisiert wurde.
               </p>
 
-              <div className="p-3 rounded-xl bg-black/40 border border-white/5 text-[11px] text-[#86868b] space-y-1">
-                <div className="flex items-center gap-1.5 text-[#f5f5f7] font-medium">
-                  <Target className="w-3.5 h-3.5 text-[#2997ff]" />
+              <div className="p-3 rounded-xl bg-[#1a1815]/40 border border-[#faf6ef]/5 text-[11px] text-[#a69c8a] space-y-1">
+                <div className="flex items-center gap-1.5 text-[#faf6ef] font-medium">
+                  <Target className="w-3.5 h-3.5 text-[#c98a6b]" />
                   <span>Fokus-Checkliste:</span>
                 </div>
                 <p>• 45°-Kamerawinkel beibehalten</p>
@@ -545,7 +545,7 @@ export const CoachFeedbackView: React.FC<CoachFeedbackViewProps> = ({
                   onStartNextSet(data.exerciseName, data.korrektur);
                 }
               }}
-              className="w-full py-3 rounded-full bg-[#0071e3] hover:bg-[#0077ed] text-white text-xs font-semibold transition flex items-center justify-center gap-2 shadow-lg shadow-[#0071e3]/20 active:scale-95"
+              className="w-full py-3 rounded-full bg-[#d54242] hover:bg-[#be3838] text-[#faf6ef] text-xs font-semibold transition flex items-center justify-center gap-2 shadow-lg shadow-[#d54242]/20 active:scale-95"
             >
               <span>Satz 2 jetzt analysieren</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -555,17 +555,17 @@ export const CoachFeedbackView: React.FC<CoachFeedbackViewProps> = ({
       </div>
 
       {/* 3. MENTALE CUE-MATRIX in Apple Bento Karten */}
-      <div className="rounded-3xl bg-[#161617] border border-white/[0.08] p-6 sm:p-7 shadow-xl space-y-4">
+      <div className="rounded-3xl bg-[#35322c] border border-[#faf6ef]/[0.08] p-6 sm:p-7 shadow-xl space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="p-1 rounded-lg bg-[#ffd60a]/10 text-[#ffd60a] border border-[#ffd60a]/20">
+            <span className="p-1 rounded-lg bg-[#d9a441]/10 text-[#d9a441] border border-[#d9a441]/20">
               <Lightbulb className="w-4 h-4" />
             </span>
             <div>
-              <h3 className="text-sm sm:text-base font-semibold tracking-tight text-[#f5f5f7]">
+              <h3 className="text-sm sm:text-base font-semibold tracking-tight text-[#faf6ef]">
                 Mentale Cue-Matrix
               </h3>
-              <p className="text-xs text-[#86868b]">
+              <p className="text-xs text-[#a69c8a]">
                 Wähle die mentale Anweisung, die sich für dich am intuitivsten anfühlt.
               </p>
             </div>
@@ -575,7 +575,7 @@ export const CoachFeedbackView: React.FC<CoachFeedbackViewProps> = ({
             type="button"
             onClick={() => handleTriggerAgentAction("refine_cues")}
             disabled={isAgentExecuting}
-            className="text-xs text-[#86868b] hover:text-white flex items-center gap-1 px-3 py-1.5 rounded-full bg-[#1d1d1f] border border-white/10 transition"
+            className="text-xs text-[#a69c8a] hover:text-[#faf6ef] flex items-center gap-1 px-3 py-1.5 rounded-full bg-[#3d3931] border border-[#faf6ef]/10 transition"
           >
             <RefreshCw className="w-3 h-3" />
             <span>Neu variieren</span>
@@ -585,55 +585,55 @@ export const CoachFeedbackView: React.FC<CoachFeedbackViewProps> = ({
         {activeCues ? (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-1">
             {/* Externer Cue */}
-            <div className="p-4 rounded-2xl bg-[#1d1d1f]/60 border border-white/[0.04] hover:border-[#30d158]/30 transition">
+            <div className="p-4 rounded-2xl bg-[#3d3931]/60 border border-[#faf6ef]/[0.04] hover:border-[#7c8a45]/30 transition">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-[#30d158]">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[#7c8a45]">
                   Externer Fokus (Objekt / Umwelt)
                 </span>
-                <span className="text-[10px] text-[#86868b]">Kraftübertragung</span>
+                <span className="text-[10px] text-[#a69c8a]">Kraftübertragung</span>
               </div>
-              <p className="text-xs sm:text-sm font-medium text-[#f5f5f7] leading-relaxed">
+              <p className="text-xs sm:text-sm font-medium text-[#faf6ef] leading-relaxed">
                 "{activeCues.externalCue}"
               </p>
-              <p className="text-[11px] text-[#86868b] mt-2">
+              <p className="text-[11px] text-[#a69c8a] mt-2">
                 Konzentriere dich auf den Boden oder den Lastpfad.
               </p>
             </div>
 
             {/* Interner Cue */}
-            <div className="p-4 rounded-2xl bg-[#1d1d1f]/60 border border-white/[0.04] hover:border-[#2997ff]/30 transition">
+            <div className="p-4 rounded-2xl bg-[#3d3931]/60 border border-[#faf6ef]/[0.04] hover:border-[#c98a6b]/30 transition">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-[#2997ff]">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[#c98a6b]">
                   Interner Fokus (Muskelkontraktion)
                 </span>
-                <span className="text-[10px] text-[#86868b]">Aktivierung</span>
+                <span className="text-[10px] text-[#a69c8a]">Aktivierung</span>
               </div>
-              <p className="text-xs sm:text-sm font-medium text-[#f5f5f7] leading-relaxed">
+              <p className="text-xs sm:text-sm font-medium text-[#faf6ef] leading-relaxed">
                 "{activeCues.internalCue}"
               </p>
-              <p className="text-[11px] text-[#86868b] mt-2">
+              <p className="text-[11px] text-[#a69c8a] mt-2">
                 Spüre die gezielte Kontraktion der stabilisierenden Muskeln.
               </p>
             </div>
 
             {/* Visuelle Metapher */}
-            <div className="p-4 rounded-2xl bg-[#1d1d1f]/60 border border-white/[0.04] hover:border-[#ffd60a]/30 transition">
+            <div className="p-4 rounded-2xl bg-[#3d3931]/60 border border-[#faf6ef]/[0.04] hover:border-[#d9a441]/30 transition">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-[#ffd60a]">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[#d9a441]">
                   Visuelles Bild (Metapher)
                 </span>
-                <span className="text-[10px] text-[#86868b]">Körpergefühl</span>
+                <span className="text-[10px] text-[#a69c8a]">Körpergefühl</span>
               </div>
-              <p className="text-xs sm:text-sm font-medium text-[#f5f5f7] leading-relaxed">
+              <p className="text-xs sm:text-sm font-medium text-[#faf6ef] leading-relaxed">
                 "{activeCues.visualCue}"
               </p>
-              <p className="text-[11px] text-[#86868b] mt-2">
+              <p className="text-[11px] text-[#a69c8a] mt-2">
                 Rufe dieses Bild kurz vor der Einleitung der Bewegung ab.
               </p>
             </div>
           </div>
         ) : (
-          <div className="p-4 rounded-2xl bg-[#1d1d1f]/30 border border-dashed border-[#2c2c2e] text-center text-xs text-[#86868b]">
+          <div className="p-4 rounded-2xl bg-[#3d3931]/30 border border-dashed border-[#4a453b] text-center text-xs text-[#a69c8a]">
             Klicke auf "Neu variieren", um Cues für deinen nächsten Satz anzufordern.
           </div>
         )}
@@ -641,19 +641,19 @@ export const CoachFeedbackView: React.FC<CoachFeedbackViewProps> = ({
 
       {/* Satz-Simulation Callout if triggered */}
       {isAgentExecuting && (
-        <div className="p-4 bg-[#161617] border border-white/10 rounded-2xl flex items-center gap-3 text-[#f5f5f7] text-xs">
-          <Loader2 className="w-4 h-4 text-[#2997ff] animate-spin shrink-0" />
+        <div className="p-4 bg-[#35322c] border border-[#faf6ef]/10 rounded-2xl flex items-center gap-3 text-[#faf6ef] text-xs">
+          <Loader2 className="w-4 h-4 text-[#c98a6b] animate-spin shrink-0" />
           <span>{agentActionMessage}</span>
         </div>
       )}
 
       {simulationText && (
-        <div className="p-5 bg-[#161617] border border-white/10 rounded-2xl space-y-2">
-          <div className="flex items-center gap-2 text-xs font-semibold text-[#2997ff]">
+        <div className="p-5 bg-[#35322c] border border-[#faf6ef]/10 rounded-2xl space-y-2">
+          <div className="flex items-center gap-2 text-xs font-semibold text-[#c98a6b]">
             <Bot className="w-4 h-4" />
             <span>Satz-2 Simulation des Kraftsport-Agenten:</span>
           </div>
-          <p className="text-xs text-[#a1a1a6] leading-relaxed font-mono whitespace-pre-wrap">
+          <p className="text-xs text-[#c3b9a6] leading-relaxed font-mono whitespace-pre-wrap">
             {simulationText}
           </p>
         </div>
@@ -661,68 +661,68 @@ export const CoachFeedbackView: React.FC<CoachFeedbackViewProps> = ({
 
       {/* 4. DETAILS DER BEOBACHTUNG (Apple Bento Grid) */}
       {data.beobachteteKriterien && (
-        <div className="rounded-3xl bg-[#161617] border border-white/[0.08] p-6 shadow-xl space-y-4">
-          <h4 className="text-xs font-semibold uppercase tracking-wider text-[#86868b]">
+        <div className="rounded-3xl bg-[#35322c] border border-[#faf6ef]/[0.08] p-6 shadow-xl space-y-4">
+          <h4 className="text-xs font-semibold uppercase tracking-wider text-[#a69c8a]">
             Geprüfte Bewegungsparameter im Video
           </h4>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {data.beobachteteKriterien.bewegungsumfang && (
-              <div className="p-3.5 rounded-2xl bg-[#1d1d1f]/60 border border-white/[0.04]">
-                <span className="text-[11px] font-semibold text-[#86868b] block mb-1">
+              <div className="p-3.5 rounded-2xl bg-[#3d3931]/60 border border-[#faf6ef]/[0.04]">
+                <span className="text-[11px] font-semibold text-[#a69c8a] block mb-1">
                   Bewegungsumfang (Tiefe / ROM)
                 </span>
-                <p className="text-xs text-[#f5f5f7]">
+                <p className="text-xs text-[#faf6ef]">
                   {data.beobachteteKriterien.bewegungsumfang}
                 </p>
               </div>
             )}
             {data.beobachteteKriterien.gelenkstellung && (
-              <div className="p-3.5 rounded-2xl bg-[#1d1d1f]/60 border border-white/[0.04]">
-                <span className="text-[11px] font-semibold text-[#86868b] block mb-1">
+              <div className="p-3.5 rounded-2xl bg-[#3d3931]/60 border border-[#faf6ef]/[0.04]">
+                <span className="text-[11px] font-semibold text-[#a69c8a] block mb-1">
                   Gelenkstellung & Wirbelsäule
                 </span>
-                <p className="text-xs text-[#f5f5f7]">
+                <p className="text-xs text-[#faf6ef]">
                   {data.beobachteteKriterien.gelenkstellung}
                 </p>
               </div>
             )}
             {data.beobachteteKriterien.tempo && (
-              <div className="p-3.5 rounded-2xl bg-[#1d1d1f]/60 border border-white/[0.04]">
-                <span className="text-[11px] font-semibold text-[#86868b] block mb-1">
+              <div className="p-3.5 rounded-2xl bg-[#3d3931]/60 border border-[#faf6ef]/[0.04]">
+                <span className="text-[11px] font-semibold text-[#a69c8a] block mb-1">
                   Tempo (Ablassen / Umkehrung)
                 </span>
-                <p className="text-xs text-[#f5f5f7]">
+                <p className="text-xs text-[#faf6ef]">
                   {data.beobachteteKriterien.tempo}
                 </p>
               </div>
             )}
             {data.beobachteteKriterien.schwung && (
-              <div className="p-3.5 rounded-2xl bg-[#1d1d1f]/60 border border-white/[0.04]">
-                <span className="text-[11px] font-semibold text-[#86868b] block mb-1">
+              <div className="p-3.5 rounded-2xl bg-[#3d3931]/60 border border-[#faf6ef]/[0.04]">
+                <span className="text-[11px] font-semibold text-[#a69c8a] block mb-1">
                   Körperspannung vs. Schwung
                 </span>
-                <p className="text-xs text-[#f5f5f7]">
+                <p className="text-xs text-[#faf6ef]">
                   {data.beobachteteKriterien.schwung}
                 </p>
               </div>
             )}
             {data.beobachteteKriterien.symmetrie && (
-              <div className="p-3.5 rounded-2xl bg-[#1d1d1f]/60 border border-white/[0.04]">
-                <span className="text-[11px] font-semibold text-[#86868b] block mb-1">
+              <div className="p-3.5 rounded-2xl bg-[#3d3931]/60 border border-[#faf6ef]/[0.04]">
+                <span className="text-[11px] font-semibold text-[#a69c8a] block mb-1">
                   Symmetrie
                 </span>
-                <p className="text-xs text-[#f5f5f7]">
+                <p className="text-xs text-[#faf6ef]">
                   {data.beobachteteKriterien.symmetrie}
                 </p>
               </div>
             )}
             {data.beobachteteKriterien.konsistenz && (
-              <div className="p-3.5 rounded-2xl bg-[#1d1d1f]/60 border border-white/[0.04]">
-                <span className="text-[11px] font-semibold text-[#86868b] block mb-1">
+              <div className="p-3.5 rounded-2xl bg-[#3d3931]/60 border border-[#faf6ef]/[0.04]">
+                <span className="text-[11px] font-semibold text-[#a69c8a] block mb-1">
                   Konsistenz gegen Satzende
                 </span>
-                <p className="text-xs text-[#f5f5f7]">
+                <p className="text-xs text-[#faf6ef]">
                   {data.beobachteteKriterien.konsistenz}
                 </p>
               </div>
@@ -733,13 +733,13 @@ export const CoachFeedbackView: React.FC<CoachFeedbackViewProps> = ({
 
       {/* Was nicht beurteilt werden konnte */}
       {data.wasNichtBeurteilbar && (
-        <div className="p-4 rounded-2xl bg-[#161617] border border-white/[0.08] flex items-start gap-3 text-[#a1a1a6]">
-          <EyeOff className="w-5 h-5 text-[#86868b] shrink-0 mt-0.5" />
+        <div className="p-4 rounded-2xl bg-[#35322c] border border-[#faf6ef]/[0.08] flex items-start gap-3 text-[#c3b9a6]">
+          <EyeOff className="w-5 h-5 text-[#a69c8a] shrink-0 mt-0.5" />
           <div className="text-xs">
-            <span className="font-semibold text-[#f5f5f7] block mb-0.5">
+            <span className="font-semibold text-[#faf6ef] block mb-0.5">
               Was optisch nicht beurteilt werden konnte:
             </span>
-            <p className="text-[#86868b] leading-relaxed">
+            <p className="text-[#a69c8a] leading-relaxed">
               {data.wasNichtBeurteilbar}
             </p>
           </div>
@@ -747,11 +747,11 @@ export const CoachFeedbackView: React.FC<CoachFeedbackViewProps> = ({
       )}
 
       {/* 5. KI-AGENT PIPELINE TRACE */}
-      <div className="rounded-3xl bg-[#161617] border border-white/[0.08] p-5 shadow-sm space-y-3">
+      <div className="rounded-3xl bg-[#35322c] border border-[#faf6ef]/[0.08] p-5 shadow-sm space-y-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Cpu className="w-4 h-4 text-[#86868b]" />
-            <span className="text-xs font-semibold text-[#f5f5f7] tracking-wide">
+            <Cpu className="w-4 h-4 text-[#a69c8a]" />
+            <span className="text-xs font-semibold text-[#faf6ef] tracking-wide">
               5-Stufen Agent-Pipeline
             </span>
           </div>
@@ -759,7 +759,7 @@ export const CoachFeedbackView: React.FC<CoachFeedbackViewProps> = ({
           <button
             type="button"
             onClick={() => setShowAgentTraceDetails(!showAgentTraceDetails)}
-            className="text-xs text-[#86868b] hover:text-white flex items-center gap-1 transition"
+            className="text-xs text-[#a69c8a] hover:text-[#faf6ef] flex items-center gap-1 transition"
           >
             <span>{showAgentTraceDetails ? "Weniger Details" : "Details einblenden"}</span>
             {showAgentTraceDetails ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
@@ -771,21 +771,21 @@ export const CoachFeedbackView: React.FC<CoachFeedbackViewProps> = ({
           {agentTraceList.map((step, idx) => (
             <div
               key={step.phaseId || idx}
-              className="p-2.5 rounded-xl bg-[#1d1d1f]/60 border border-white/[0.04] text-[11px]"
+              className="p-2.5 rounded-xl bg-[#3d3931]/60 border border-[#faf6ef]/[0.04] text-[11px]"
             >
               <div className="flex items-center justify-between mb-1">
-                <span className="text-[9px] font-mono text-[#86868b] uppercase">
+                <span className="text-[9px] font-mono text-[#a69c8a] uppercase">
                   Phase 0{idx + 1}
                 </span>
-                <span className={`w-1.5 h-1.5 rounded-full ${step.status === "warning" ? "bg-[#ff453a]" : "bg-[#30d158]"}`} />
+                <span className={`w-1.5 h-1.5 rounded-full ${step.status === "warning" ? "bg-[#b23a2f]" : "bg-[#7c8a45]"}`} />
               </div>
-              <p className="font-medium text-[#f5f5f7] truncate">{step.name.split(":")[0]}</p>
+              <p className="font-medium text-[#faf6ef] truncate">{step.name.split(":")[0]}</p>
             </div>
           ))}
         </div>
 
         {showAgentTraceDetails && (
-          <div className="pt-2 text-xs text-[#86868b] border-t border-white/[0.06] space-y-2">
+          <div className="pt-2 text-xs text-[#a69c8a] border-t border-[#faf6ef]/[0.06] space-y-2">
             <p>
               Der Agent hat die Video-Wiederholungen nach Beginn des Ablassens, Umkehrpunkt und Lockout segmentiert.
               Der Hauptfokus lag auf dem tiefsten Punkt bei <strong>{data.exerciseName || "der Übung"}</strong>.
@@ -795,11 +795,11 @@ export const CoachFeedbackView: React.FC<CoachFeedbackViewProps> = ({
       </div>
 
       {/* 6. EXPANDABLE VERBATIM TEXT ACCORDION */}
-      <div className="rounded-2xl bg-[#161617]/50 border border-white/[0.06] overflow-hidden">
+      <div className="rounded-2xl bg-[#35322c]/50 border border-[#faf6ef]/[0.06] overflow-hidden">
         <button
           type="button"
           onClick={() => setShowRawOutput(!showRawOutput)}
-          className="w-full px-4 py-3 flex items-center justify-between text-xs text-[#86868b] hover:text-[#f5f5f7] transition"
+          className="w-full px-4 py-3 flex items-center justify-between text-xs text-[#a69c8a] hover:text-[#faf6ef] transition"
         >
           <span className="font-mono">Unformatierter Coach-Bericht (Rohausgabe)</span>
           <div className="flex items-center gap-2">
@@ -808,8 +808,8 @@ export const CoachFeedbackView: React.FC<CoachFeedbackViewProps> = ({
         </button>
 
         {showRawOutput && (
-          <div className="p-4 border-t border-white/[0.06] bg-black/50">
-            <pre className="text-xs text-[#a1a1a6] font-mono whitespace-pre-wrap leading-relaxed">
+          <div className="p-4 border-t border-[#faf6ef]/[0.06] bg-[#1a1815]/50">
+            <pre className="text-xs text-[#c3b9a6] font-mono whitespace-pre-wrap leading-relaxed">
               {data.rawOutputText}
             </pre>
           </div>
@@ -818,31 +818,31 @@ export const CoachFeedbackView: React.FC<CoachFeedbackViewProps> = ({
 
       {/* Bottom Floating-style Action Dock (Without 4K Studio!) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-        <div className="p-4 rounded-2xl bg-[#161617] border border-white/[0.08] flex items-center justify-between gap-3">
+        <div className="p-4 rounded-2xl bg-[#35322c] border border-[#faf6ef]/[0.08] flex items-center justify-between gap-3">
           <div>
-            <h5 className="text-xs font-semibold text-[#f5f5f7]">
+            <h5 className="text-xs font-semibold text-[#faf6ef]">
               Frage an den Biomechanik-Coach?
             </h5>
-            <p className="text-[11px] text-[#86868b]">
+            <p className="text-[11px] text-[#a69c8a]">
               Vertiefe Hebelverhältnisse und individuelle Mobilität im Chat.
             </p>
           </div>
           <button
             type="button"
             onClick={() => onOpenChatWithDiagnosis()}
-            className="px-4 py-2 rounded-full bg-[#1d1d1f] hover:bg-[#2c2c2e] text-white text-xs font-medium shrink-0 transition flex items-center gap-1 border border-white/10 active:scale-95"
+            className="px-4 py-2 rounded-full bg-[#3d3931] hover:bg-[#4a453b] text-[#faf6ef] text-xs font-medium shrink-0 transition flex items-center gap-1 border border-[#faf6ef]/10 active:scale-95"
           >
             <span>Öffnen</span>
             <ArrowRight className="w-3 h-3" />
           </button>
         </div>
 
-        <div className="p-4 rounded-2xl bg-[#161617] border border-white/[0.08] flex items-center justify-between gap-3">
+        <div className="p-4 rounded-2xl bg-[#35322c] border border-[#faf6ef]/[0.08] flex items-center justify-between gap-3">
           <div>
-            <h5 className="text-xs font-semibold text-[#f5f5f7]">
+            <h5 className="text-xs font-semibold text-[#faf6ef]">
               Nächsten Satz aufnehmen
             </h5>
-            <p className="text-[11px] text-[#86868b]">
+            <p className="text-[11px] text-[#a69c8a]">
               Übertrage die Korrektur direkt in Satz 2 mit Videoanalyse.
             </p>
           </div>
@@ -853,7 +853,7 @@ export const CoachFeedbackView: React.FC<CoachFeedbackViewProps> = ({
                 onStartNextSet(data.exerciseName, data.korrektur);
               }
             }}
-            className="px-4 py-2 rounded-full bg-[#0071e3] hover:bg-[#0077ed] text-white text-xs font-medium shrink-0 transition flex items-center gap-1 shadow-md shadow-[#0071e3]/20 active:scale-95"
+            className="px-4 py-2 rounded-full bg-[#d54242] hover:bg-[#be3838] text-[#faf6ef] text-xs font-medium shrink-0 transition flex items-center gap-1 shadow-md shadow-[#d54242]/20 active:scale-95"
           >
             <span>Satz 2 starten</span>
             <ArrowRight className="w-3 h-3" />

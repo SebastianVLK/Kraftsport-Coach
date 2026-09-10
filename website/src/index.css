@@ -2,27 +2,27 @@
 
 @layer base {
   :root {
-    --font-apple: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "SF Pro", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
 
-    /* Backdrop dials — every layer is white at a low alpha, so the verdict
-       colours (green / amber / red) stay the only real colour on the page. */
-    --bd-grid: rgba(255, 255, 255, 0.026); /* blueprint grid */
+    /* Backdrop dials — cream and clay at a low alpha, so the verdict colours
+       (olive / ochre / brick) stay the only saturated colour on the page. */
+    --bd-grid: rgba(250, 246, 239, 0.03); /* blueprint grid */
     --bd-grid-size: 68px;
-    --bd-ring: rgba(255, 255, 255, 0.05); /* weight-plate rings */
-    --bd-glow: rgba(255, 255, 255, 0.045); /* soft depth from above */
+    --bd-ring: rgba(250, 246, 239, 0.055); /* weight-plate rings */
+    --bd-glow: rgba(250, 246, 239, 0.05); /* soft depth from above */
   }
 
   html {
-    background-color: #000000;
+    background-color: #2e2c27;
   }
 
   body {
-    font-family: var(--font-apple);
+    font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     /* transparent so the fixed backdrop layers below body can show through */
     background-color: transparent;
-    color: #f5f5f7;
+    color: #faf6ef;
     letter-spacing: -0.011em;
   }
 
@@ -36,7 +36,7 @@
     pointer-events: none;
     background-image:
       radial-gradient(80rem 40rem at 15% -10%, var(--bd-glow), transparent 60%),
-      radial-gradient(60rem 34rem at 92% 4%, rgba(255, 255, 255, 0.028), transparent 62%),
+      radial-gradient(60rem 34rem at 92% 4%, rgba(201, 138, 107, 0.05), transparent 62%),
       linear-gradient(to right, var(--bd-grid) 1px, transparent 1px),
       linear-gradient(to bottom, var(--bd-grid) 1px, transparent 1px);
     background-size:
@@ -90,11 +90,11 @@
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #2c2c2e;
+  background: #4a453b;
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #3a3a3c;
+  background: #5a5449;
 }
 
 .markdown-body p {
@@ -118,9 +118,9 @@
   font-weight: 600;
   margin-top: 0.75rem;
   margin-bottom: 0.35rem;
-  color: #f5f5f7;
+  color: #faf6ef;
   letter-spacing: -0.02em;
 }
 .markdown-body strong {
-  color: #2997ff;
+  color: #c98a6b;
 }
