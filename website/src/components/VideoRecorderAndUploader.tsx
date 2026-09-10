@@ -21,7 +21,9 @@ interface VideoRecorderAndUploaderProps {
     videoBase64: string | null,
     mimeType: string,
     frames: string[],
-    exerciseHint?: string
+    exerciseHint?: string,
+    /** the clip itself, so the verdict view can play back what was judged */
+    file?: File | null
   ) => Promise<void>;
   isAnalyzing: boolean;
   selectedExerciseHint: string;
@@ -64,6 +66,7 @@ export const VideoRecorderAndUploader: React.FC<VideoRecorderAndUploaderProps> =
   const recorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const tickRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const uploadedFileRef = useRef<File | null>(null);
 
   // Keep clips short: long recordings blow past the server's payload limit
   const MAX_RECORDING_SECONDS = 30;
@@ -161,6 +164,7 @@ export const VideoRecorderAndUploader: React.FC<VideoRecorderAndUploaderProps> =
   };
 
   const processVideoFile = (file: File) => {
+    uploadedFileRef.current = file;
     setFileName(file.name);
     setFileSizeBytes(file.size);
     setUploadedMimeType(file.type || "video/mp4");
@@ -343,7 +347,8 @@ export const VideoRecorderAndUploader: React.FC<VideoRecorderAndUploaderProps> =
       uploadedBase64,
       uploadedMimeType,
       extractedFrames,
-      selectedExerciseHint
+      selectedExerciseHint,
+      uploadedFileRef.current
     );
   };
 

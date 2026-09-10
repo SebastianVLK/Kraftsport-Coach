@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { VideoRecorderAndUploader } from "./components/VideoRecorderAndUploader";
 import { CoachFeedbackView } from "./components/CoachFeedbackView";
+import { AnalysedVideoStage } from "./components/AnalysedVideoStage";
 import { ExerciseAnalysisData } from "./types";
 
 type ActiveTab = "video" | "feedback";
@@ -30,6 +31,20 @@ export default function App() {
   const [exerciseAnalysis, setExerciseAnalysis] = useState<ExerciseAnalysisData | null>(null);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
 
+  // The clip that was judged, kept so the verdict view can replay it
+  const [analysedFile, setAnalysedFile] = useState<File | null>(null);
+  const [analysedVideoUrl, setAnalysedVideoUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!analysedFile) {
+      setAnalysedVideoUrl(null);
+      return;
+    }
+    const url = URL.createObjectURL(analysedFile);
+    setAnalysedVideoUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [analysedFile]);
+
 
   // Notification Toast
   const [toastMessage, setToastMessage] = useState<{ text: string; type: "success" | "error" } | null>(null);
@@ -42,6 +57,11 @@ export default function App() {
     );
   };
 
+  // Once the athlete's own clip has been judged it replaces the stock opener
+  const showAnalysedClip = Boolean(
+    activeTab === "feedback" && analysedVideoUrl && exerciseAnalysis
+  );
+
   const showToast = (text: string, type: "success" | "error" = "success") => {
     setToastMessage({ text, type });
     setTimeout(() => setToastMessage(null), 4000);
@@ -53,9 +73,11 @@ export default function App() {
     videoBase64: string | null,
     mimeType: string,
     frames: string[],
-    exerciseHint?: string
+    exerciseHint?: string,
+    file?: File | null
   ) => {
     setIsAnalyzing(true);
+    setAnalysedFile(file ?? null);
     setAnalysisError(null);
     showToast("Übungsvideo wird analysiert – Coach prüft Umkehrpunkt...", "success");
 
@@ -178,9 +200,11 @@ export default function App() {
         </div>
       </header>
 
-      {/* Opening shot. The photo carries its own analysis overlay — live badge,
-          rep counter, form-quality card — so nothing of ours is laid over it
-          beyond the scroll cue; the headline sits in the band underneath. */}
+      {/* Opening slot. On the landing side it is the stock shot; once a verdict
+          exists it becomes the athlete's own clip, annotated and looping. */}
+      {showAnalysedClip ? (
+        <AnalysedVideoStage videoUrl={analysedVideoUrl!} data={exerciseAnalysis!} />
+      ) : (
       <section className="relative w-full">
         {/* Height is the viewport minus the header minus exactly the headline,
             so the picture fills everything else and only "Präzision am
@@ -231,6 +255,7 @@ export default function App() {
           </button>
         </div>
       </section>
+      )}
 
       {/* Main Content Showcase */}
       <main

@@ -31,10 +31,22 @@ export interface AlternativeCues {
   visualCue: string;
 }
 
+/** A moment in the clip the coach wants to point at, in seconds from start. */
+export interface FaultMoment {
+  sekunde: number;
+  label: string;
+  hinweis?: string;
+  schwere?: "hinweis" | "fehler";
+}
+
 export interface ExerciseAnalysisData {
   exerciseName: string;
   urteil: ExerciseVerdict;
   begruendung: string;
+  /** What the athlete already does well — listed before the faults. */
+  wasGutWar?: string[];
+  /** Time-stamped findings, used to annotate the athlete's own clip. */
+  fehlerZeitpunkte?: FaultMoment[];
   derWichtigsteFehler: string;
   korrektur: string;
   gewicht: {

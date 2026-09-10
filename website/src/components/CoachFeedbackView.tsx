@@ -12,7 +12,6 @@ import {
   Target,
   ChevronDown,
   ChevronUp,
-  Lightbulb,
   Play,
   Pause,
   RotateCcw,
@@ -26,13 +25,13 @@ import {
   ExternalLink,
   Repeat,
   Ruler,
+  ThumbsUp,
 } from "lucide-react";
 import {
   ExerciseAnalysisData,
   ExerciseVerdict,
   WeightRecommendation,
   DrillRecommendation,
-  AlternativeCues,
 } from "../types";
 import { findTechniqueVideo, youtubeSearchUrl } from "../data/techniqueVideos";
 
@@ -57,15 +56,10 @@ export const CoachFeedbackView: React.FC<CoachFeedbackViewProps> = ({
   const [activeDrill, setActiveDrill] = useState<DrillRecommendation | undefined>(
     data.drillRecommendation
   );
-  const [activeCues, setActiveCues] = useState<AlternativeCues | undefined>(
-    data.alternativeCues
-  );
   const [isAgentExecuting, setIsAgentExecuting] = useState<boolean>(false);
-  const [agentActionMessage, setAgentActionMessage] = useState<string>("");
 
   useEffect(() => {
     setActiveDrill(data.drillRecommendation);
-    setActiveCues(data.alternativeCues);
     setCueMemorized(false);
     setDrillCompleted(false);
     setIsTimerRunning(false);
@@ -90,21 +84,14 @@ export const CoachFeedbackView: React.FC<CoachFeedbackViewProps> = ({
     return () => clearInterval(interval);
   }, [isTimerRunning, drillTimerSeconds]);
 
-  const handleTriggerAgentAction = async (
-    actionType: "generate_drill" | "refine_cues"
-  ) => {
+  const handleGenerateDrill = async () => {
     try {
       setIsAgentExecuting(true);
-      setAgentActionMessage(
-        actionType === "generate_drill"
-          ? "Drill wird generiert..."
-          : "Cues werden optimiert..."
-      );
 
       const res = await fetch("/api/agent-action", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ actionType, exerciseContext: data }),
+        body: JSON.stringify({ actionType: "generate_drill", exerciseContext: data }),
       });
 
       const resText = await res.text();
@@ -115,18 +102,13 @@ export const CoachFeedbackView: React.FC<CoachFeedbackViewProps> = ({
         result = null;
       }
       if (result && result.success && result.data) {
-        if (actionType === "generate_drill") {
-          setActiveDrill(result.data);
-          setDrillCompleted(false);
-        } else {
-          setActiveCues(result.data);
-        }
+        setActiveDrill(result.data);
+        setDrillCompleted(false);
       }
     } catch (err) {
       console.error("Agent action error:", err);
     } finally {
       setIsAgentExecuting(false);
-      setAgentActionMessage("");
     }
   };
 
@@ -188,6 +170,7 @@ export const CoachFeedbackView: React.FC<CoachFeedbackViewProps> = ({
   const video = findTechniqueVideo(data.exerciseName);
   const searchUrl = youtubeSearchUrl(data.exerciseName);
 
+  const positives = data.wasGutWar ?? [];
   const criteria = data.beobachteteKriterien ?? {};
   const criteriaRows: { label: string; value?: string }[] = [
     { label: "Bewegungsumfang", value: criteria.bewegungsumfang },
@@ -246,10 +229,25 @@ export const CoachFeedbackView: React.FC<CoachFeedbackViewProps> = ({
         </h3>
 
         <div>
-          <span className="block text-[11px] uppercase tracking-[0.14em] font-semibold text-[#6f6759] mb-2">
-            Begründung des Urteils
+          <span className="flex items-center gap-2 text-[11px] uppercase tracking-[0.14em] font-semibold text-[#5f6b25] mb-3">
+            <ThumbsUp className="w-3.5 h-3.5" />
+            Das sitzt bereits
           </span>
-          <p className="text-[15px] leading-relaxed text-[#2e2c27]">{data.begruendung}</p>
+          {positives.length > 0 ? (
+            <ul className="space-y-2.5">
+              {positives.map((item, i) => (
+                <li key={i} className="flex gap-3">
+                  <Check className="w-4 h-4 text-[#5f6b25] shrink-0 mt-1" />
+                  <span className="text-[15px] leading-relaxed text-[#2e2c27]">{item}</span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-[15px] leading-relaxed text-[#6f6759]">
+              Der Coach hat an dieser Ausführung nichts gefunden, das er ohne Einschränkung
+              loben würde.
+            </p>
+          )}
         </div>
 
         <div className="border-t border-[#2e2c27]/10 pt-6">
@@ -262,27 +260,6 @@ export const CoachFeedbackView: React.FC<CoachFeedbackViewProps> = ({
           </p>
         </div>
 
-        {data.repetitionDetails && data.repetitionDetails.length > 0 && (
-          <div className="border-t border-[#2e2c27]/10 pt-6">
-            <span className="block text-[11px] uppercase tracking-[0.14em] font-semibold text-[#6f6759] mb-3">
-              Wiederholung für Wiederholung
-            </span>
-            <ul className="space-y-3">
-              {data.repetitionDetails.map((rep, i) => (
-                <li key={i} className="flex gap-3">
-                  <span className="shrink-0 w-7 h-7 rounded-full bg-[#eee8dd] text-[#2e2c27] text-xs font-bold flex items-center justify-center">
-                    {rep.repNumber}
-                  </span>
-                  <p className="text-sm leading-relaxed text-[#2e2c27] pt-1">
-                    {[rep.phase, rep.umkehrpunkt, rep.tempo, rep.gelenke, rep.notes]
-                      .filter(Boolean)
-                      .join(" · ")}
-                  </p>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
       </section>
 
       {/* ---------------------------------------------------------------- */}
@@ -318,9 +295,6 @@ export const CoachFeedbackView: React.FC<CoachFeedbackViewProps> = ({
                 1
               </span>
               <div className="min-w-0 flex-1">
-                <span className="block text-[11px] uppercase tracking-[0.14em] font-semibold text-[#6f6759]">
-                  Der eine Cue
-                </span>
                 <p className="mt-2 text-xl sm:text-2xl font-bold leading-snug text-[#2e2c27]">
                   „{data.korrektur}"
                 </p>
@@ -359,12 +333,9 @@ export const CoachFeedbackView: React.FC<CoachFeedbackViewProps> = ({
               </span>
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <span className="text-[11px] uppercase tracking-[0.14em] font-semibold text-[#6f6759]">
-                    Korrektur-Drill
-                  </span>
                   <button
                     type="button"
-                    onClick={() => handleTriggerAgentAction("generate_drill")}
+                    onClick={handleGenerateDrill}
                     disabled={isAgentExecuting}
                     className="text-xs text-[#6f6759] hover:text-[#2e2c27] disabled:opacity-50 inline-flex items-center gap-1.5"
                   >
@@ -477,9 +448,6 @@ export const CoachFeedbackView: React.FC<CoachFeedbackViewProps> = ({
                 3
               </span>
               <div className="min-w-0 flex-1">
-                <span className="block text-[11px] uppercase tracking-[0.14em] font-semibold text-[#6f6759]">
-                  Bewegung ansehen
-                </span>
 
                 {video ? (
                   <>
@@ -566,74 +534,6 @@ export const CoachFeedbackView: React.FC<CoachFeedbackViewProps> = ({
         </div>
       </section>
 
-      {/* ---------------------------------------------------------------- */}
-      {/* 4. Cue matrix — one row per cue, not a three-column puzzle        */}
-      {/* ---------------------------------------------------------------- */}
-      {activeCues && (
-        <section className="rounded-3xl bg-[#ffffff] border border-[#2e2c27]/[0.08] p-6 sm:p-9 shadow-sm">
-          <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
-            <div>
-              <h3 className="text-lg sm:text-xl font-bold tracking-tight text-[#2e2c27] flex items-center gap-2">
-                <Lightbulb className="w-5 h-5 text-[#c23a20]" />
-                Drei Wege, denselben Cue zu denken
-              </h3>
-              <p className="mt-1 text-sm text-[#6f6759]">
-                Nimm den, der bei dir zündet — nicht alle drei.
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={() => handleTriggerAgentAction("refine_cues")}
-              disabled={isAgentExecuting}
-              className="text-xs text-[#6f6759] hover:text-[#2e2c27] disabled:opacity-50 inline-flex items-center gap-1.5"
-            >
-              {isAgentExecuting ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              ) : (
-                <RefreshCw className="w-3.5 h-3.5" />
-              )}
-              <span>Neu formulieren</span>
-            </button>
-          </div>
-
-          <dl className="divide-y divide-[#2e2c27]/10">
-            {[
-              {
-                label: "Extern",
-                hint: "Fokus auf die Wirkung nach außen",
-                value: activeCues.externalCue,
-              },
-              {
-                label: "Intern",
-                hint: "Fokus auf die Muskulatur",
-                value: activeCues.internalCue,
-              },
-              {
-                label: "Bildhaft",
-                hint: "Vergleich, den der Körper sofort versteht",
-                value: activeCues.visualCue,
-              },
-            ].map((cue) => (
-              <div key={cue.label} className="py-5 first:pt-0 last:pb-0 sm:flex sm:gap-8">
-                <div className="sm:w-48 shrink-0">
-                  <span className="text-sm font-bold text-[#2e2c27]">{cue.label}</span>
-                  <p className="text-xs text-[#6f6759] mt-0.5">{cue.hint}</p>
-                </div>
-                <p className="mt-2 sm:mt-0 text-base sm:text-lg font-medium leading-snug text-[#2e2c27]">
-                  „{cue.value}"
-                </p>
-              </div>
-            ))}
-          </dl>
-
-          {agentActionMessage && (
-            <p className="mt-4 text-xs text-[#6f6759] flex items-center gap-2">
-              <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              {agentActionMessage}
-            </p>
-          )}
-        </section>
-      )}
 
       {/* ---------------------------------------------------------------- */}
       {/* 5. The technical record, kept apart from the coaching             */}
