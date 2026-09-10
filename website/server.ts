@@ -1,7 +1,7 @@
 import express from "express";
 import path from "path";
 import dotenv from "dotenv";
-import { GoogleGenAI, Type } from "@google/genai";
+import { GoogleGenAI } from "@google/genai";
 import { createServer as createViteServer } from "vite";
 
 dotenv.config({ path: [".env.local", ".env"] });
@@ -392,283 +392,15 @@ Gib ein JSON-Objekt zurück mit:
   }
 });
 
-// 1. Room Analysis API (Vision)
-app.post("/api/analyze-room", async (req, res) => {
-  try {
-    const { imageBase64, mimeType = "image/jpeg", focusMode = "all", language = "nl" } = req.body;
-
-    if (!imageBase64) {
-      res.status(400).json({ error: "Geen afbeeldingsgegevens ontvangen (imageBase64 missing)." });
-      return;
-    }
-
-    // Clean base64 string if data URL prefix is attached
-    const cleanBase64 = extractPureBase64(imageBase64);
-
-    const ai = getGeminiClient();
-
-    const promptText = `Je bent een vooraanstaand interieurarchitect en professionele ruimtelijke analist.
-Voer een gedetailleerde kameranalyse ("live kamer analyse") uit op basis van deze foto / live camera frame.
-Focusgebied: ${focusMode}.
-Taal van de analyse: ${language === "nl" ? "Nederlands (helder, vakkundig en praktisch)" : "English"}.
-
-Geef een strikt gestructureerde JSON-respons terug volgens het schema met:
-- roomType (bijv. Woonkamer, Slaapkamer, Keuken, Werkkamer/Thuiswerkplek, Hal, Badkamer, etc.)
-- style (huidige stijl, bijv. Japandi, Modern Minimalistisch, Industrieel, Klassiek, Eclectisch, etc.)
-- dimensionsEstimate: geschat oppervlak (bijv. "22 - 26 m²"), geschatte plafondhoogte (bijv. "2.60 m"), en ruimtevorm (bijv. "Rechthoekig met erker")
-- lighting:
-  * naturalLightScore (1-10)
-  * artificialLightScore (1-10)
-  * windowDirectionNotes (lichtinval beoordeling)
-  * tips (lijst met 2-4 concrete verlichtingstips)
-- colorPalette: lijst met 4-5 dominante kleuren, elk met { hex, name, role (bijv. 'Basis wandkleur', 'Accent', 'Vloer', 'Meubilair') }
-- detectedItems: lijst van 4 tot 8 gedetecteerde meubelstukken of objecten met { name, location, conditionOrNote }
-- ergonomicsAndFlow:
-  * rating (bijv. "Uitstekend", "Goed", "Voor verbetering vatbaar", "Krap/Verstopt")
-  * pros (2-3 sterke punten in de looproute en ruimtelijkheid)
-  * bottlenecks (1-3 knelpunten of obstakels)
-- keyRecommendations: lijst van 3-5 concrete aanbevelingen met { category, title, description, priority: "Hoog" | "Gemiddeld" | "Laag" }
-- safetyAndClutter:
-  * clutterScore (1-10, waarbij 1 heel opgeruimd is en 10 vol/rommelig)
-  * safetyNotes (veiligheidsaandachtspunten, bijv. losliggende kabels, looproute, scherpe hoeken)
-  * quickWins (2-3 directe acties binnen 10 minuten)
-- overallSummary (een professionele samenvatting van 2-3 zinnen over de potentie en status van deze kamer)`;
-
-    const response = await ai.models.generateContent({
-      model: "gemini-3.5-flash",
-      contents: {
-        parts: [
-          {
-            inlineData: {
-              data: cleanBase64,
-              mimeType: mimeType,
-            },
-          },
-          { text: promptText },
-        ],
-      },
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            roomType: { type: Type.STRING },
-            style: { type: Type.STRING },
-            dimensionsEstimate: {
-              type: Type.OBJECT,
-              properties: {
-                estimatedArea: { type: Type.STRING },
-                ceilingHeight: { type: Type.STRING },
-                shape: { type: Type.STRING },
-              },
-              required: ["estimatedArea", "ceilingHeight", "shape"],
-            },
-            lighting: {
-              type: Type.OBJECT,
-              properties: {
-                naturalLightScore: { type: Type.INTEGER },
-                artificialLightScore: { type: Type.INTEGER },
-                windowDirectionNotes: { type: Type.STRING },
-                tips: {
-                  type: Type.ARRAY,
-                  items: { type: Type.STRING },
-                },
-              },
-              required: ["naturalLightScore", "artificialLightScore", "windowDirectionNotes", "tips"],
-            },
-            colorPalette: {
-              type: Type.ARRAY,
-              items: {
-                type: Type.OBJECT,
-                properties: {
-                  hex: { type: Type.STRING },
-                  name: { type: Type.STRING },
-                  role: { type: Type.STRING },
-                },
-                required: ["hex", "name", "role"],
-              },
-            },
-            detectedItems: {
-              type: Type.ARRAY,
-              items: {
-                type: Type.OBJECT,
-                properties: {
-                  name: { type: Type.STRING },
-                  location: { type: Type.STRING },
-                  conditionOrNote: { type: Type.STRING },
-                },
-                required: ["name", "location", "conditionOrNote"],
-              },
-            },
-            ergonomicsAndFlow: {
-              type: Type.OBJECT,
-              properties: {
-                rating: { type: Type.STRING },
-                pros: { type: Type.ARRAY, items: { type: Type.STRING } },
-                bottlenecks: { type: Type.ARRAY, items: { type: Type.STRING } },
-              },
-              required: ["rating", "pros", "bottlenecks"],
-            },
-            keyRecommendations: {
-              type: Type.ARRAY,
-              items: {
-                type: Type.OBJECT,
-                properties: {
-                  category: { type: Type.STRING },
-                  title: { type: Type.STRING },
-                  description: { type: Type.STRING },
-                  priority: { type: Type.STRING },
-                },
-                required: ["category", "title", "description", "priority"],
-              },
-            },
-            safetyAndClutter: {
-              type: Type.OBJECT,
-              properties: {
-                clutterScore: { type: Type.INTEGER },
-                safetyNotes: { type: Type.ARRAY, items: { type: Type.STRING } },
-                quickWins: { type: Type.ARRAY, items: { type: Type.STRING } },
-              },
-              required: ["clutterScore", "safetyNotes", "quickWins"],
-            },
-            overallSummary: { type: Type.STRING },
-          },
-          required: [
-            "roomType",
-            "style",
-            "dimensionsEstimate",
-            "lighting",
-            "colorPalette",
-            "detectedItems",
-            "ergonomicsAndFlow",
-            "keyRecommendations",
-            "safetyAndClutter",
-            "overallSummary",
-          ],
-        },
-      },
-    });
-
-    const parsed = JSON.parse(response.text || "{}");
-    res.json({ success: true, data: parsed });
-  } catch (error: any) {
-    console.error("Fout bij kameranalyse:", error);
-    res.status(500).json({
-      error: error?.message || "Kameranalyse mislukt. Controleer uw API-sleutel of verbinding.",
-    });
-  }
-});
-
-// 2. High-Quality Image Generation API
-// Text block mandate: "You MUST add image generation to the app using model gemini-3-pro-image-preview and provide an affordance for the user to specify the image size (1K, 2K, and 4K)."
-app.post("/api/generate-image", async (req, res) => {
-  try {
-    const {
-      prompt,
-      imageSize = "1K", // '1K' | '2K' | '4K'
-      aspectRatio = "16:9", // '1:1' | '16:9' | '4:3' | '3:4'
-      referenceImageBase64,
-    } = req.body;
-
-    if (!prompt) {
-      res.status(400).json({ error: "Voer een beschrijving of prompt in voor de gewenste visualisatie." });
-      return;
-    }
-
-    const ai = getGeminiClient();
-
-    // Prepare contents
-    const parts: any[] = [];
-    if (referenceImageBase64) {
-      const cleanBase64 = extractPureBase64(referenceImageBase64);
-      parts.push({
-        inlineData: {
-          data: cleanBase64,
-          mimeType: "image/jpeg",
-        },
-      });
-      parts.push({
-        text: `Based on this room's architectural layout and structure, generate a high-end interior redesign render: ${prompt}`,
-      });
-    } else {
-      parts.push({
-        text: `Ultra-high quality photorealistic architectural interior photograph, professional interior design magazine shoot: ${prompt}`,
-      });
-    }
-
-    // Try gemini-3-pro-image-preview as mandated, with fallback to gemini-3-pro-image if preview alias is not mapped
-    const modelsToTry = ["gemini-3-pro-image-preview", "gemini-3-pro-image", "gemini-3.1-flash-image"];
-    let response: any = null;
-    let usedModel = "";
-    let lastError: any = null;
-
-    for (const modelCandidate of modelsToTry) {
-      try {
-        response = await ai.models.generateContent({
-          model: modelCandidate,
-          contents: { parts },
-          config: {
-            imageConfig: {
-              aspectRatio: aspectRatio as any,
-              imageSize: imageSize as any, // 1K, 2K, 4K
-            },
-          },
-        });
-        usedModel = modelCandidate;
-        break;
-      } catch (err: any) {
-        lastError = err;
-        console.warn(`Model ${modelCandidate} failed, attempting next... Reason:`, err?.message);
-      }
-    }
-
-    if (!response) {
-      throw lastError || new Error("Afbeeldingsgeneratie is niet geslaagd.");
-    }
-
-    // Extract image part
-    let imageUrl = "";
-    let textFeedback = "";
-    const candidateParts = response.candidates?.[0]?.content?.parts || [];
-    for (const part of candidateParts) {
-      if (part.inlineData?.data) {
-        const mime = part.inlineData.mimeType || "image/png";
-        imageUrl = `data:${mime};base64,${part.inlineData.data}`;
-      } else if (part.text) {
-        textFeedback += part.text;
-      }
-    }
-
-    if (!imageUrl) {
-      throw new Error(textFeedback || "Geen afbeeldingsdata geretourneerd door het model.");
-    }
-
-    res.json({
-      success: true,
-      imageUrl,
-      modelUsed: usedModel,
-      imageSize,
-      aspectRatio,
-      textFeedback,
-    });
-  } catch (error: any) {
-    console.error("Fout bij afbeeldingsgeneratie:", error);
-    res.status(500).json({
-      error: error?.message || "Kon geen afbeelding genereren. Controleer de API-sleutel en instellingen.",
-    });
-  }
-});
-
 // 3. Multi-turn Chat API
 // Text block mandate: "You MUST add a multi-turn chat interface to the app using Gemini. The chat must maintain conversation history, display messages in a scrollable thread, and include a system instruction to give the chatbots specific roles. Use gemini-3.1-pro-preview for particularly complex tasks, gemini-3.5-flash for general tasks, and gemini-3.1-flash-lite for tasks that should happen fast."
 app.post("/api/chat", async (req, res) => {
   try {
     const {
       messages = [],
-      roleType = "technique_coach", // 'head_coach' | 'technique_coach' | 'quick_cue' | 'architect' | 'stylist' | 'fast_organizer'
+      roleType = "technique_coach", // 'head_coach' | 'technique_coach' | 'quick_cue'
       modelOverride,
       exerciseAnalysisContext,
-      currentRoomContext,
     } = req.body;
 
     if (!Array.isArray(messages) || messages.length === 0) {
@@ -683,12 +415,12 @@ app.post("/api/chat", async (req, res) => {
     let selectedModel = "gemini-3.5-flash";
     let systemInstruction = "";
 
-    if (roleType === "head_coach" || roleType === "architect") {
+    if (roleType === "head_coach") {
       selectedModel = "gemini-3.1-pro-preview";
       systemInstruction = `Du bist ein erfahrener Headcoach für Kraftsport und Biomechanik.
 Du bist spezialisiert auf komplexe Hebelverhältnisse, Drehmomente an Knie-, Hüft- und Schultergelenk, Lastpfade, physiologische Schwachstellen und Periodisierung.
 Wichtigste Regel: Du bist kein Motivationscoach. Sag klar und analytisch, was fehlerhaft ist, und begründe es biomechanisch. Formuliere Beobachtungen präzise auf Deutsch.`;
-    } else if (roleType === "quick_cue" || roleType === "fast_organizer") {
+    } else if (roleType === "quick_cue") {
       selectedModel = "gemini-3.1-flash-lite";
       systemInstruction = `Du bist der Schnelle Cue-Coach für Kraftsportler direkt am Rack.
 Dein Ziel: Maximale Geschwindigkeit und sofort einprägsame Cues für den nächsten Satz.
@@ -715,8 +447,6 @@ Ehrlichkeit ist deine oberste Maxime: Du bist kein Motivationscoach. Sag klar, w
 - Gewichtsempfehlung: ${exerciseAnalysisContext.gewicht?.empfehlung} (${exerciseAnalysisContext.gewicht?.begruendung})
 - Was nicht beurteilbar war: ${exerciseAnalysisContext.wasNichtBeurteilbar || "Keine Einschränkungen"}
 Beziehe dich bei Fragen des Athleten direkt auf diesen Befund!`;
-    } else if (currentRoomContext) {
-      systemInstruction += `\n\nRaumkontext: ${currentRoomContext.roomType || ""}, ${currentRoomContext.style || ""}`;
     }
 
     const ai = getGeminiClient();
@@ -750,7 +480,7 @@ Beziehe dich bei Fragen des Athleten direkt auf diesen Befund!`;
       selectedModel = "gemini-3.5-flash (fallback)";
     }
 
-    const replyText = response.text || "Ik kon geen antwoord genereren.";
+    const replyText = response.text || "Es konnte keine Antwort erzeugt werden.";
 
     res.json({
       success: true,
@@ -759,9 +489,9 @@ Beziehe dich bei Fragen des Athleten direkt auf diesen Befund!`;
       roleType,
     });
   } catch (error: any) {
-    console.error("Fout bij chat interactie:", error);
+    console.error("Fehler im Chat:", error);
     res.status(500).json({
-      error: error?.message || "Chat interactie mislukt. Probeer het opnieuw.",
+      error: error?.message || "Chat-Anfrage fehlgeschlagen. Bitte erneut versuchen.",
     });
   }
 });
@@ -783,7 +513,7 @@ async function setupServer() {
   }
 
   app.listen(PORT, "0.0.0.0", () => {
-    console.log(`Live Kamer Analyse server running on http://0.0.0.0:${PORT}`);
+    console.log(`Kraftsport-Coach server running on http://0.0.0.0:${PORT}`);
   });
 }
 

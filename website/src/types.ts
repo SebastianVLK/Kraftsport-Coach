@@ -1,60 +1,3 @@
-export interface DimensionsEstimate {
-  estimatedArea: string;
-  ceilingHeight: string;
-  shape: string;
-}
-
-export interface LightingAnalysis {
-  naturalLightScore: number;
-  artificialLightScore: number;
-  windowDirectionNotes: string;
-  tips: string[];
-}
-
-export interface ColorPaletteItem {
-  hex: string;
-  name: string;
-  role: string;
-}
-
-export interface DetectedItem {
-  name: string;
-  location: string;
-  conditionOrNote: string;
-}
-
-export interface ErgonomicsAndFlow {
-  rating: string;
-  pros: string[];
-  bottlenecks: string[];
-}
-
-export interface Recommendation {
-  category: string;
-  title: string;
-  description: string;
-  priority: "Hoog" | "Gemiddeld" | "Laag";
-}
-
-export interface SafetyAndClutter {
-  clutterScore: number;
-  safetyNotes: string[];
-  quickWins: string[];
-}
-
-export interface RoomAnalysisData {
-  roomType: string;
-  style: string;
-  dimensionsEstimate: DimensionsEstimate;
-  lighting: LightingAnalysis;
-  colorPalette: ColorPaletteItem[];
-  detectedItems: DetectedItem[];
-  ergonomicsAndFlow: ErgonomicsAndFlow;
-  keyRecommendations: Recommendation[];
-  safetyAndClutter: SafetyAndClutter;
-  overallSummary: string;
-}
-
 export type ExerciseVerdict = "gut" | "brauchbar" | "mangelhaft" | "nicht_beurteilbar";
 export type WeightRecommendation = "hochgehen" | "gleich bleiben" | "runtergehen";
 
@@ -114,13 +57,7 @@ export interface ExerciseAnalysisData {
   rawOutputText: string;
 }
 
-export type ChatRole =
-  | "head_coach"
-  | "technique_coach"
-  | "quick_cue"
-  | "architect"
-  | "stylist"
-  | "fast_organizer";
+export type ChatRole = "head_coach" | "technique_coach" | "quick_cue";
 
 export type GeminiModelChoice =
   | "gemini-3.1-pro-preview"
@@ -133,16 +70,4 @@ export interface ChatMessage {
   content: string;
   timestamp: string;
   modelUsed?: string;
-}
-
-export type ImageResolution = "1K" | "2K" | "4K";
-
-export interface GeneratedImageItem {
-  id: string;
-  url: string;
-  prompt: string;
-  size: ImageResolution;
-  aspectRatio: string;
-  createdAt: string;
-  modelUsed: string;
 }
