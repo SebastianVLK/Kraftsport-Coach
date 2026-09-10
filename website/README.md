@@ -75,9 +75,20 @@ liegt nur ein SHA-256-Hash in der Datenbank.
 Gespeicherte Analysen heissen „Coachings" und lassen sich als Kalender oder
 als Liste ansehen, jeweils nach Tag gruppiert.
 
-Die Datenbank ist eine SQLite-Datei unter `data/coach.db` — `node:sqlite` ist
-in Node enthalten, es braucht also weder ein natives Modul noch einen
-laufenden Datenbankdienst. Der Ordner `data/` ist von Commits ausgeschlossen.
+Die Datenbank ist eine SQLite-Datei — `node:sqlite` ist in Node enthalten, es
+braucht also weder ein natives Modul noch einen laufenden Datenbankdienst.
+
+Sie liegt bewusst **ausserhalb** des Projektordners, damit Konten ein erneutes
+Klonen oder Löschen des Repositories überstehen:
+
+| System | Pfad |
+| --- | --- |
+| macOS | `~/Library/Application Support/Kraftsport-Coach/coach.db` |
+| Linux | `~/.local/share/kraftsport-coach/coach.db` |
+| Windows | `%APPDATA%\Kraftsport-Coach\coach.db` |
+
+Ein anderer Ort lässt sich über `COACH_DATA_DIR` setzen. Beim Start schreibt
+der Server den tatsächlich benutzten Pfad ins Log.
 
 **Das Video selbst wird nicht gespeichert**, nur die Analyse. Ein wieder
 geöffnetes Coaching zeigt daher das Urteil und alle Anmerkungen, aber keine

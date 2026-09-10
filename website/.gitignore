@@ -11,5 +11,5 @@ coverage/
 public/mediapipe/
 public/models/
 
-# local sqlite database
+# lokale Daten (Datenbank liegt inzwischen ausserhalb des Projekts)
 data/

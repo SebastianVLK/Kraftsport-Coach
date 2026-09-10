@@ -1,17 +1,50 @@
 import { DatabaseSync } from "node:sqlite";
-import { mkdirSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync } from "node:fs";
+import { homedir } from "node:os";
 import path from "node:path";
 
 /**
  * Storage for accounts and saved coachings.
  *
  * node:sqlite ships with Node, so this needs no native module and no service
- * to run alongside the app — the database is a single file under data/.
+ * to run alongside the app.
+ *
+ * The file lives outside the checkout, in the usual per-user data folder. That
+ * keeps accounts alive when the repository is re-cloned or deleted, and it
+ * makes the location independent of the directory the server happens to be
+ * started from — a path built from process.cwd() would silently create a
+ * second, empty database.
  */
-const dataDir = path.join(process.cwd(), "data");
+function resolveDataDir(): string {
+  const override = process.env.COACH_DATA_DIR;
+  if (override) return path.resolve(override);
+
+  if (process.platform === "darwin") {
+    return path.join(homedir(), "Library", "Application Support", "Kraftsport-Coach");
+  }
+  if (process.platform === "win32") {
+    return path.join(process.env.APPDATA ?? homedir(), "Kraftsport-Coach");
+  }
+  return path.join(
+    process.env.XDG_DATA_HOME ?? path.join(homedir(), ".local", "share"),
+    "kraftsport-coach"
+  );
+}
+
+export const dataDir = resolveDataDir();
 mkdirSync(dataDir, { recursive: true });
 
-export const db = new DatabaseSync(path.join(dataDir, "coach.db"));
+export const dbPath = path.join(dataDir, "coach.db");
+
+// Carry over a database from the old in-project location, once.
+const legacyPath = path.join(process.cwd(), "data", "coach.db");
+if (!existsSync(dbPath) && existsSync(legacyPath)) {
+  copyFileSync(legacyPath, dbPath);
+  console.log(`[db] Bestehende Datenbank übernommen aus ${legacyPath}`);
+}
+
+export const db = new DatabaseSync(dbPath);
+console.log(`[db] Konten und Coachings: ${dbPath}`);
 
 db.exec("PRAGMA journal_mode = WAL");
 db.exec("PRAGMA foreign_keys = ON");
