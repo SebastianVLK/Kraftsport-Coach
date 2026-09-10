@@ -66,6 +66,16 @@ Drill-Generierung laufen beide über Gemini.
 | `src/components/PoseOverlay.tsx` | Live-Skelett per MediaPipe |
 | `src/data/techniqueVideos.ts` | geprüfte YouTube-Technikvideos je Übung |
 
+### Messung statt Augenmass
+
+Vor dem Absenden vermisst die App die Bewegung selbst: Ein Pose-Modell läuft
+über den Clip und berechnet Gelenkwinkel, Beckenlage und Standbreiten. Der
+Server leitet daraus Befunde gegen feste Grenzwerte ab, und ein gemessener
+kritischer Befund überstimmt das Urteil des Sprachmodells.
+
+Woher jeder Grenzwert stammt, steht in [docs/KALIBRIERUNG.md](docs/KALIBRIERUNG.md)
+— inklusive dem, was noch nicht an Daten validiert ist.
+
 ### Konto und Coachings
 
 E-Mail und Passwort genügen. Passwörter werden mit scrypt und eigenem Salt

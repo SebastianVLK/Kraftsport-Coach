@@ -49,7 +49,8 @@ const ELBOW_TOLERANCE = 40;
 const KNEE_TOLERANCE = 20;
 
 const PLANK_LIKE = /liegest(ü|ue)tz|push[\s-]?up|planke|plank|dip/i;
-const SQUAT_LIKE = /kniebeuge|squat|ausfallschritt|lunge/i;
+const SQUAT_LIKE = /kniebeuge|squat/i;
+const LUNGE_LIKE = /ausfallschritt|lunge|split[\s-]?squat/i;
 const HINGE_LIKE = /kreuzheben|deadlift|rdl|rudern|row|hip thrust/i;
 const PRESS_LIKE = /bankdr(ü|ue)cken|bench|schulterdr(ü|ue)cken|overhead|press/i;
 const PULL_LIKE = /klimmzug|klimmz(ü|ue)ge|pull[\s-]?up|chin[\s-]?up|latzug/i;
@@ -65,6 +66,7 @@ export function findingsFromMetrics(
   const out: MeasuredFinding[] = [];
   const plank = PLANK_LIKE.test(exercise);
   const squat = SQUAT_LIKE.test(exercise);
+  const lunge = LUNGE_LIKE.test(exercise);
   const hinge = HINGE_LIKE.test(exercise);
   const press = PRESS_LIKE.test(exercise);
   const pull = PULL_LIKE.test(exercise);
@@ -167,6 +169,18 @@ export function findingsFromMetrics(
       severity: "relevant",
       label: "Hüfte wird kaum gebeugt",
       detail: `Hüftwinkel bleibt bei ${m.hipMin}°; beim Hüftbeugemuster wäre deutlich mehr Beugung zu erwarten.`,
+      atSecond: m.deepestAt,
+    });
+  }
+
+  // The same reference implementation gates a lunge's front knee at 60° to
+  // 125°. Past that upper bound plus the knee's own tolerance the athlete never
+  // really descended.
+  if (lunge && m.kneeMin !== null && m.kneeMin > 125 + KNEE_TOLERANCE) {
+    out.push({
+      severity: "relevant",
+      label: "Ausfallschritt zu flach",
+      detail: `Das vordere Knie beugt sich nur bis ${m.kneeMin}°; im tiefsten Punkt wären etwa 90° zu erwarten.`,
       atSecond: m.deepestAt,
     });
   }
