@@ -3,6 +3,15 @@ import path from "path";
 import dotenv from "dotenv";
 import { GoogleGenAI } from "@google/genai";
 import { createServer as createViteServer } from "vite";
+import { randomUUID } from "node:crypto";
+import { coachings } from "./server/store";
+import {
+  registerUser,
+  loginUser,
+  logoutUser,
+  meHandler,
+  requireUser,
+} from "./server/auth";
 
 dotenv.config({ path: [".env.local", ".env"] });
 
@@ -47,6 +56,85 @@ function sanitizeMimeType(mime?: string, fallback = "video/mp4"): string {
   const base = mime.split(";")[0].trim().toLowerCase();
   return base || fallback;
 }
+
+// --- Accounts -------------------------------------------------------------
+app.post("/api/auth/register", registerUser);
+app.post("/api/auth/login", loginUser);
+app.post("/api/auth/logout", logoutUser);
+app.get("/api/auth/me", meHandler);
+
+// --- Saved coachings ------------------------------------------------------
+app.post("/api/coachings", requireUser, (req, res) => {
+  const user = (req as any).user;
+  const analysis = req.body?.analysis;
+
+  if (!analysis || typeof analysis !== "object" || !analysis.urteil) {
+    res.status(400).json({ success: false, error: "Keine Analyse übermittelt." });
+    return;
+  }
+
+  const row = {
+    id: randomUUID(),
+    user_id: user.id,
+    created_at: new Date().toISOString(),
+    exercise: String(analysis.exerciseName ?? "Kraftübung"),
+    urteil: String(analysis.urteil),
+    note: req.body?.note ? String(req.body.note).slice(0, 500) : null,
+    payload: JSON.stringify(analysis),
+  };
+
+  try {
+    coachings.insert(row);
+    res.json({
+      success: true,
+      coaching: {
+        id: row.id,
+        created_at: row.created_at,
+        exercise: row.exercise,
+        urteil: row.urteil,
+        note: row.note,
+      },
+    });
+  } catch (err: any) {
+    console.error("Coaching konnte nicht gespeichert werden:", err);
+    res.status(500).json({ success: false, error: "Speichern fehlgeschlagen." });
+  }
+});
+
+app.get("/api/coachings", requireUser, (req, res) => {
+  const user = (req as any).user;
+  res.json({ success: true, coachings: coachings.listForUser(user.id) });
+});
+
+app.get("/api/coachings/:id", requireUser, (req, res) => {
+  const user = (req as any).user;
+  const row = coachings.get(req.params.id, user.id);
+  if (!row) {
+    res.status(404).json({ success: false, error: "Coaching nicht gefunden." });
+    return;
+  }
+  res.json({
+    success: true,
+    coaching: {
+      id: row.id,
+      created_at: row.created_at,
+      exercise: row.exercise,
+      urteil: row.urteil,
+      note: row.note,
+      analysis: JSON.parse(row.payload),
+    },
+  });
+});
+
+app.delete("/api/coachings/:id", requireUser, (req, res) => {
+  const user = (req as any).user;
+  const removed = coachings.remove(req.params.id, user.id);
+  if (!removed) {
+    res.status(404).json({ success: false, error: "Coaching nicht gefunden." });
+    return;
+  }
+  res.json({ success: true });
+});
 
 // Health check endpoint
 app.get("/api/health", (_req, res) => {

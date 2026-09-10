@@ -26,6 +26,7 @@ import {
   Repeat,
   Ruler,
   ThumbsUp,
+  Bookmark,
 } from "lucide-react";
 import {
   ExerciseAnalysisData,
@@ -38,11 +39,20 @@ import { findTechniqueVideo, youtubeSearchUrl } from "../data/techniqueVideos";
 interface CoachFeedbackViewProps {
   data: ExerciseAnalysisData;
   onStartNextSet?: (exerciseName?: string, cue?: string) => void;
+  /** Missing while nobody is signed in — the card then invites them to. */
+  onSaveCoaching?: () => void;
+  onRequestAccount?: () => void;
+  saveState?: "idle" | "saving" | "saved";
+  isSignedIn?: boolean;
 }
 
 export const CoachFeedbackView: React.FC<CoachFeedbackViewProps> = ({
   data,
   onStartNextSet,
+  onSaveCoaching,
+  onRequestAccount,
+  saveState = "idle",
+  isSignedIn = false,
 }) => {
   const [showDetails, setShowDetails] = useState<boolean>(false);
   const [videoStarted, setVideoStarted] = useState<boolean>(false);
@@ -623,6 +633,55 @@ export const CoachFeedbackView: React.FC<CoachFeedbackViewProps> = ({
               </div>
             )}
           </div>
+        )}
+      </section>
+
+      {/* ---------------------------------------------------------------- */}
+      {/* 5b. Keep it                                                       */}
+      {/* ---------------------------------------------------------------- */}
+      <section className="rounded-3xl bg-[#ffffff] border border-[#2e2c27]/[0.08] p-6 sm:p-7 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h3 className="text-lg font-bold tracking-tight text-[#2e2c27] flex items-center gap-2">
+            <Bookmark className="w-5 h-5 text-[#6f6759]" />
+            Als Coaching speichern
+          </h3>
+          <p className="mt-1 text-sm text-[#6f6759] leading-relaxed max-w-lg">
+            {isSignedIn
+              ? "Landet in deinem Kalender und lässt sich jederzeit wieder öffnen."
+              : "Mit einem Konto bleibt diese Analyse erhalten — E-Mail und Passwort genügen."}
+          </p>
+        </div>
+
+        {isSignedIn ? (
+          <button
+            type="button"
+            onClick={onSaveCoaching}
+            disabled={saveState !== "idle"}
+            className={`shrink-0 px-6 py-3 rounded-full text-sm font-semibold transition inline-flex items-center gap-2 ${
+              saveState === "saved"
+                ? "bg-[#5f6b25] text-[#faf6ef]"
+                : "bg-[#2e2c27] hover:bg-[#1f1d19] text-[#faf6ef] disabled:opacity-60"
+            }`}
+          >
+            {saveState === "saving" && <Loader2 className="w-4 h-4 animate-spin" />}
+            {saveState === "saved" && <Check className="w-4 h-4" />}
+            <span>
+              {saveState === "saved"
+                ? "Gespeichert"
+                : saveState === "saving"
+                ? "Wird gespeichert…"
+                : "Coaching speichern"}
+            </span>
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={onRequestAccount}
+            className="shrink-0 px-6 py-3 rounded-full bg-[#2e2c27] hover:bg-[#1f1d19] text-[#faf6ef] text-sm font-semibold transition inline-flex items-center gap-2"
+          >
+            <span>Konto erstellen</span>
+            <ArrowRight className="w-4 h-4" />
+          </button>
         )}
       </section>
 

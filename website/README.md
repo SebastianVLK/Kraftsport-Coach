@@ -66,8 +66,27 @@ Drill-Generierung laufen beide über Gemini.
 | `src/components/PoseOverlay.tsx` | Live-Skelett per MediaPipe |
 | `src/data/techniqueVideos.ts` | geprüfte YouTube-Technikvideos je Übung |
 
+### Konto und Coachings
+
+E-Mail und Passwort genügen. Passwörter werden mit scrypt und eigenem Salt
+gehasht, die Sitzung läuft über ein httpOnly-Cookie, und vom Sitzungstoken
+liegt nur ein SHA-256-Hash in der Datenbank.
+
+Gespeicherte Analysen heissen „Coachings" und lassen sich als Kalender oder
+als Liste ansehen, jeweils nach Tag gruppiert.
+
+Die Datenbank ist eine SQLite-Datei unter `data/coach.db` — `node:sqlite` ist
+in Node enthalten, es braucht also weder ein natives Modul noch einen
+laufenden Datenbankdienst. Der Ordner `data/` ist von Commits ausgeschlossen.
+
+**Das Video selbst wird nicht gespeichert**, nur die Analyse. Ein wieder
+geöffnetes Coaching zeigt daher das Urteil und alle Anmerkungen, aber keine
+Aufnahme.
+
 ### Endpunkte
 
+- `POST /api/auth/register` · `login` · `logout`, `GET /api/auth/me`
+- `GET|POST /api/coachings`, `GET|DELETE /api/coachings/:id`
 - `POST /api/analyze-exercise-video` — die Videoanalyse
 - `POST /api/agent-action` — Drill generieren, Cues variieren, Satz simulieren
 - `POST /api/chat` — Multi-Turn-Dialog (Endpunkt vorhanden, im UI derzeit ungenutzt)

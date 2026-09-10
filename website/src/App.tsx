@@ -8,17 +8,21 @@ import {
   Activity,
   ArrowRight,
   ChevronDown,
+  LogOut,
 } from "lucide-react";
 import { VideoRecorderAndUploader } from "./components/VideoRecorderAndUploader";
 import { CoachFeedbackView } from "./components/CoachFeedbackView";
 import { AnalysedVideoStage } from "./components/AnalysedVideoStage";
+import { AuthPanel, type AccountUser } from "./components/AuthPanel";
+import { CoachingsView, type CoachingSummary } from "./components/CoachingsView";
 import { ExerciseAnalysisData } from "./types";
 
-type ActiveTab = "video" | "feedback";
+type ActiveTab = "video" | "feedback" | "coachings";
 
 const NAV_ITEMS: { id: ActiveTab; label: string }[] = [
   { id: "video", label: "Video" },
   { id: "feedback", label: "Coach-Urteil" },
+  { id: "coachings", label: "Coachings" },
 ];
 
 export default function App() {
@@ -46,8 +50,101 @@ export default function App() {
   }, [analysedFile]);
 
 
+  // Account and saved coachings
+  const [user, setUser] = useState<AccountUser | null>(null);
+  const [authChecked, setAuthChecked] = useState<boolean>(false);
+  const [coachingList, setCoachingList] = useState<CoachingSummary[]>([]);
+  const [coachingsLoading, setCoachingsLoading] = useState<boolean>(false);
+  const [openingId, setOpeningId] = useState<string | null>(null);
+  const [saveState, setSaveState] = useState<"idle" | "saving" | "saved">("idle");
+
   // Notification Toast
   const [toastMessage, setToastMessage] = useState<{ text: string; type: "success" | "error" } | null>(null);
+
+  useEffect(() => {
+    fetch("/api/auth/me")
+      .then((r) => r.json())
+      .then((d) => setUser(d.user ?? null))
+      .catch(() => setUser(null))
+      .finally(() => setAuthChecked(true));
+  }, []);
+
+  const loadCoachings = async () => {
+    setCoachingsLoading(true);
+    try {
+      const res = await fetch("/api/coachings");
+      const data = await res.json();
+      if (data.success) setCoachingList(data.coachings);
+    } catch {
+      /* the list simply stays as it was */
+    } finally {
+      setCoachingsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (user) loadCoachings();
+    else setCoachingList([]);
+  }, [user]);
+
+  // A fresh analysis has not been saved yet
+  useEffect(() => setSaveState("idle"), [exerciseAnalysis]);
+
+  const handleSaveCoaching = async () => {
+    if (!exerciseAnalysis || saveState === "saving") return;
+    setSaveState("saving");
+    try {
+      const res = await fetch("/api/coachings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ analysis: exerciseAnalysis }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) throw new Error(data.error || "Speichern fehlgeschlagen.");
+      setSaveState("saved");
+      showToast("Coaching gespeichert", "success");
+      loadCoachings();
+    } catch (err: any) {
+      setSaveState("idle");
+      showToast(err.message || "Speichern fehlgeschlagen", "error");
+    }
+  };
+
+  const handleOpenCoaching = async (id: string) => {
+    setOpeningId(id);
+    try {
+      const res = await fetch(`/api/coachings/${id}`);
+      const data = await res.json();
+      if (!res.ok || !data.success) throw new Error(data.error || "Konnte nicht geladen werden.");
+      setExerciseAnalysis(data.coaching.analysis);
+      // The clip itself is not stored, only the analysis
+      setAnalysedFile(null);
+      setSaveState("saved");
+      goToTab("feedback");
+    } catch (err: any) {
+      showToast(err.message || "Konnte nicht geladen werden", "error");
+    } finally {
+      setOpeningId(null);
+    }
+  };
+
+  const handleDeleteCoaching = async (id: string) => {
+    try {
+      const res = await fetch(`/api/coachings/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error();
+      setCoachingList((prev) => prev.filter((c) => c.id !== id));
+      showToast("Coaching gelöscht", "success");
+    } catch {
+      showToast("Löschen fehlgeschlagen", "error");
+    }
+  };
+
+  const handleLogout = async () => {
+    await fetch("/api/auth/logout", { method: "POST" }).catch(() => {});
+    setUser(null);
+    setActiveTab("video");
+    showToast("Abgemeldet", "success");
+  };
 
   // Nav and hero buttons both switch tab and carry you past the opening shot
   const goToTab = (tab: ActiveTab) => {
@@ -191,11 +288,33 @@ export default function App() {
             </span>
           </button>
 
-          <div className="justify-self-end hidden lg:flex items-center gap-2 text-xs text-[#6f6759]">
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#ffffff] border border-[#2e2c27]/[0.06] text-[11px]">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#5f6b25]" />
-              <span>Gemini 3.5 Flash</span>
-            </span>
+          <div className="justify-self-end flex items-center gap-2 text-xs text-[#6f6759]">
+            {user ? (
+              <>
+                <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#ffffff] border border-[#2e2c27]/[0.06] text-[11px] max-w-[180px] truncate">
+                  {user.email}
+                </span>
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  aria-label="Abmelden"
+                  title="Abmelden"
+                  className="p-2 rounded-full text-[#6f6759] hover:text-[#2e2c27] hover:bg-[#eee8dd] transition"
+                >
+                  <LogOut className="w-4 h-4" />
+                </button>
+              </>
+            ) : (
+              authChecked && (
+                <button
+                  type="button"
+                  onClick={() => goToTab("coachings")}
+                  className="px-3.5 py-1.5 rounded-full bg-[#2e2c27] hover:bg-[#1f1d19] text-[#faf6ef] text-[11px] uppercase tracking-[0.08em] font-semibold transition"
+                >
+                  Anmelden
+                </button>
+              )
+            )}
           </div>
         </div>
       </header>
@@ -310,6 +429,22 @@ export default function App() {
           />
         )}
 
+        {activeTab === "coachings" &&
+          (user ? (
+            <CoachingsView
+              coachings={coachingList}
+              loading={coachingsLoading}
+              onOpen={handleOpenCoaching}
+              onDelete={handleDeleteCoaching}
+              openingId={openingId}
+            />
+          ) : (
+            <AuthPanel
+              onAuthenticated={setUser}
+              reason="Melde dich an, um Analysen als Coaching zu speichern und später wieder aufzurufen."
+            />
+          ))}
+
         {/* Tab 2: Detailed Coach Feedback & Technique Work */}
         {activeTab === "feedback" && (
           <div>
@@ -317,6 +452,10 @@ export default function App() {
               <CoachFeedbackView
                 data={exerciseAnalysis}
                 onStartNextSet={handleStartNextSet}
+                onSaveCoaching={handleSaveCoaching}
+                onRequestAccount={() => goToTab("coachings")}
+                saveState={saveState}
+                isSignedIn={Boolean(user)}
               />
             ) : (
               <div className="p-12 text-center bg-[#ffffff] border border-[#2e2c27]/[0.08] rounded-3xl flex flex-col items-center">

@@ -10,3 +10,6 @@ coverage/
 # pose-tracking runtime, restored by `npm run setup:pose`
 public/mediapipe/
 public/models/
+
+# local sqlite database
+data/
