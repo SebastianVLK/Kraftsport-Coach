@@ -13,7 +13,6 @@ import {
 import { VideoRecorderAndUploader } from "./components/VideoRecorderAndUploader";
 import { CoachFeedbackView } from "./components/CoachFeedbackView";
 import { GeminiChatBot } from "./components/GeminiChatBot";
-import { EXERCISE_PRESETS, ExercisePreset } from "./data/exercisePresets";
 import {
   ChatMessage,
   ChatRole,
@@ -29,10 +28,7 @@ export default function App() {
 
   // Video and Exercise Analysis State
   const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
-  const [exerciseAnalysis, setExerciseAnalysis] = useState<ExerciseAnalysisData | null>(() => {
-    // Default to Liegestütze (Preset 0)
-    return EXERCISE_PRESETS[0].sampleAnalysis;
-  });
+  const [exerciseAnalysis, setExerciseAnalysis] = useState<ExerciseAnalysisData | null>(null);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
 
   // Multi-turn Chat state (gemini-3.1-pro-preview / 3.5-flash / 3.1-flash-lite)
@@ -61,7 +57,7 @@ export default function App() {
     try {
       localStorage.setItem("coach_chat_messages", JSON.stringify(chatMessages));
     } catch (e) {
-      console.warn("Kon chat niet opslaan:", e);
+      console.warn("Chatverlauf konnte nicht gespeichert werden:", e);
     }
   }, [chatMessages]);
 
@@ -121,14 +117,6 @@ export default function App() {
     } finally {
       setIsAnalyzing(false);
     }
-  };
-
-  // Select a preset demonstration
-  const handleSelectPreset = (preset: ExercisePreset) => {
-    setExerciseAnalysis(preset.sampleAnalysis);
-    setSelectedExerciseHint(preset.exercise);
-    setActiveTab("feedback");
-    showToast(`Beispiel geladen: ${preset.name}`, "success");
   };
 
   // Handle Multi-Turn Chat
@@ -210,7 +198,7 @@ export default function App() {
     <div className="min-h-screen bg-black text-[#f5f5f7] flex flex-col font-sans selection:bg-[#0071e3]/30 selection:text-white">
       {/* Apple-style Global Nav Bar */}
       <header className="sticky top-0 z-50 bg-black/80 backdrop-blur-xl border-b border-white/[0.08] transition-all">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-12 sm:h-14 flex items-center justify-between gap-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 sm:h-18 flex items-center justify-between gap-4">
           {/* Brand Logo & Apple Style Monogram */}
           <div className="flex items-center gap-2.5">
             <button
@@ -219,17 +207,12 @@ export default function App() {
               className="flex items-center gap-2 text-left group"
             >
               {/* Apple minimalist glyph */}
-              <div className="w-7 h-7 rounded-lg bg-[#1d1d1f] border border-white/10 flex items-center justify-center text-white group-hover:border-white/30 transition">
-                <Dumbbell className="w-3.5 h-3.5" />
+              <div className="w-10 h-10 rounded-xl bg-[#1d1d1f] border border-white/10 flex items-center justify-center text-white group-hover:border-white/30 transition">
+                <Dumbbell className="w-5 h-5" />
               </div>
-              <div>
-                <span className="text-xs sm:text-sm font-semibold tracking-tight text-[#f5f5f7] flex items-center gap-1.5">
-                  <span>Kraftsport-Coach</span>
-                  <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-[#1d1d1f] text-[#86868b] border border-white/[0.08] font-normal">
-                    Pro
-                  </span>
-                </span>
-              </div>
+              <span className="text-lg sm:text-xl font-semibold tracking-tight text-[#f5f5f7]">
+                Kraftsport-Coach
+              </span>
             </button>
           </div>
 
@@ -305,17 +288,19 @@ export default function App() {
       </header>
 
       {/* Main Content Showcase */}
-      <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-8 flex flex-col gap-6">
-        {/* Apple Hero Header Banner */}
-        <section className="text-center py-4 sm:py-6 space-y-2">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#161617] border border-white/[0.08] text-[11px] text-[#86868b] mb-1">
-            <Activity className="w-3 h-3 text-[#2997ff]" />
-            <span>Biomechanische Video-Technikanalyse</span>
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-4 sm:py-5 flex flex-col gap-5">
+        {/* Compact hero: title left, claim right — keeps the vertical space for the video area */}
+        <section className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2 sm:gap-6">
+          <div className="space-y-1.5">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#161617] border border-white/[0.08] text-[11px] text-[#86868b]">
+              <Activity className="w-3 h-3 text-[#2997ff]" />
+              <span>Biomechanische Video-Technikanalyse</span>
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-[#f5f5f7]">
+              Präzision am Umkehrpunkt.
+            </h1>
           </div>
-          <h1 className="text-2xl sm:text-4xl md:text-5xl font-semibold tracking-tight text-[#f5f5f7]">
-            Präzision am Umkehrpunkt.
-          </h1>
-          <p className="text-xs sm:text-sm text-[#86868b] max-w-xl mx-auto font-normal leading-relaxed">
+          <p className="text-xs sm:text-sm text-[#86868b] max-w-md sm:text-right font-normal leading-relaxed">
             Objektive Beurteilung von Bewegungsumfang, Tempo, Gelenkachsen und Rumpfspannung ohne Verharmlosung.
           </p>
         </section>
@@ -362,7 +347,6 @@ export default function App() {
           <VideoRecorderAndUploader
             onAnalyzeVideo={handleAnalyzeVideo}
             isAnalyzing={isAnalyzing}
-            onSelectPreset={handleSelectPreset}
             selectedExerciseHint={selectedExerciseHint}
             onChangeExerciseHint={setSelectedExerciseHint}
           />
@@ -386,14 +370,14 @@ export default function App() {
                   Noch keine Videoanalyse vorhanden
                 </h3>
                 <p className="text-xs text-[#86868b] max-w-sm mb-5 leading-relaxed">
-                  Lade ein Video deiner Liegestütze, Kniebeuge oder deines Kreuzhebens hoch oder wähle ein Test-Set aus.
+                  Nimm einen Satz direkt mit der Kamera auf oder lade ein Video deiner Liegestütze, Kniebeuge oder deines Kreuzhebens hoch.
                 </p>
                 <button
                   type="button"
                   onClick={() => setActiveTab("video")}
                   className="px-5 py-2.5 bg-[#0071e3] hover:bg-[#0077ed] text-white rounded-full text-xs font-semibold shadow-sm transition flex items-center gap-1.5"
                 >
-                  <span>Video auswählen oder testen</span>
+                  <span>Video aufnehmen oder hochladen</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </button>
               </div>
@@ -437,8 +421,8 @@ export default function App() {
       )}
 
       {/* Apple.com/chde Style Clean Footer */}
-      <footer className="border-t border-white/[0.08] py-8 bg-black text-[#86868b] text-xs mt-12">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 space-y-4">
+      <footer className="border-t border-white/[0.08] py-8 bg-black text-[#86868b] text-xs mt-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-4">
           <div className="border-b border-white/[0.06] pb-4 text-[11px] leading-relaxed text-[#86868b]">
             <p>
               1. Die Videoanalyse liefert technische Beobachtungen und biomechanische Orientierungshilfen am Umkehrpunkt. Sie dient sportwissenschaftlichen Zwecken und ersetzt keine medizinische, orthopädische oder physiotherapeutische Befundung.

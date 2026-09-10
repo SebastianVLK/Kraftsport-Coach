@@ -2,7 +2,6 @@ import React, { useState, useRef, useEffect, useCallback } from "react";
 import {
   Upload,
   FileVideo,
-  Sparkles,
   Dumbbell,
   Loader2,
   Layers,
@@ -16,7 +15,6 @@ import {
   SwitchCamera,
   AlertCircle,
 } from "lucide-react";
-import { EXERCISE_PRESETS, ExercisePreset } from "../data/exercisePresets";
 
 interface VideoRecorderAndUploaderProps {
   onAnalyzeVideo: (
@@ -26,7 +24,6 @@ interface VideoRecorderAndUploaderProps {
     exerciseHint?: string
   ) => Promise<void>;
   isAnalyzing: boolean;
-  onSelectPreset: (preset: ExercisePreset) => void;
   selectedExerciseHint: string;
   onChangeExerciseHint: (hint: string) => void;
 }
@@ -34,11 +31,10 @@ interface VideoRecorderAndUploaderProps {
 export const VideoRecorderAndUploader: React.FC<VideoRecorderAndUploaderProps> = ({
   onAnalyzeVideo,
   isAnalyzing,
-  onSelectPreset,
   selectedExerciseHint,
   onChangeExerciseHint,
 }) => {
-  const [mode, setMode] = useState<"upload" | "record" | "presets">("upload");
+  const [mode, setMode] = useState<"upload" | "record">("upload");
 
   // Video upload states
   const [uploadedBlobUrl, setUploadedBlobUrl] = useState<string | null>(null);
@@ -369,7 +365,7 @@ export const VideoRecorderAndUploader: React.FC<VideoRecorderAndUploaderProps> =
   // Shared result view: identical after an upload and after a live recording
   const videoResultPanel = (
           <div className="space-y-4">
-            <div className="relative rounded-2xl overflow-hidden bg-black aspect-video max-h-[440px] flex items-center justify-center border border-white/[0.08]">
+            <div className="relative rounded-2xl overflow-hidden bg-black aspect-video max-h-[68vh] flex items-center justify-center border border-white/[0.08]">
               <video
                 src={uploadedBlobUrl}
                 controls
@@ -479,7 +475,7 @@ export const VideoRecorderAndUploader: React.FC<VideoRecorderAndUploaderProps> =
           </div>
         </div>
 
-        {/* Apple Segmented Control: Aufnahme, Upload & Beispiel-Sets */}
+        {/* Apple Segmented Control: Upload & Live-Aufnahme */}
         <div className="flex items-center gap-1 bg-[#1d1d1f] p-1 rounded-full border border-white/[0.08] self-start md:self-auto shadow-inner">
           <button
             id="btn-mode-upload"
@@ -507,20 +503,6 @@ export const VideoRecorderAndUploader: React.FC<VideoRecorderAndUploaderProps> =
           >
             <Camera className="w-3.5 h-3.5" />
             <span>Live-Aufnahme</span>
-          </button>
-
-          <button
-            id="btn-mode-presets"
-            type="button"
-            onClick={() => setMode("presets")}
-            className={`flex items-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-medium transition duration-150 ${
-              mode === "presets"
-                ? "bg-white text-black font-semibold shadow-sm"
-                : "text-[#86868b] hover:text-[#f5f5f7]"
-            }`}
-          >
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>Beispiel-Sets</span>
           </button>
         </div>
       </div>
@@ -592,7 +574,7 @@ export const VideoRecorderAndUploader: React.FC<VideoRecorderAndUploaderProps> =
 
       {/* Mode 1: Video File Upload in Apple Style */}
       {mode === "upload" && (
-        <div className="p-5 sm:p-8 space-y-5">
+        <div className="p-5 sm:p-8 space-y-6">
           <input
             ref={fileInputRef}
             type="file"
@@ -610,7 +592,7 @@ export const VideoRecorderAndUploader: React.FC<VideoRecorderAndUploaderProps> =
                 const file = e.dataTransfer.files?.[0];
                 if (file) processVideoFile(file);
               }}
-              className="border-2 border-dashed border-[#424245]/50 hover:border-[#2997ff]/80 rounded-3xl p-10 sm:p-14 text-center cursor-pointer transition-all duration-200 bg-black/40 hover:bg-black/60 flex flex-col items-center justify-center gap-3.5 group"
+              className="border-2 border-dashed border-[#424245]/50 hover:border-[#2997ff]/80 rounded-3xl p-14 sm:p-24 text-center cursor-pointer transition-all duration-200 bg-black/40 hover:bg-black/60 flex flex-col items-center justify-center gap-3.5 group"
             >
               <div className="w-16 h-16 rounded-2xl bg-[#1d1d1f] border border-white/10 flex items-center justify-center text-[#2997ff] group-hover:scale-105 transition">
                 <FileVideo className="w-8 h-8" />
@@ -635,7 +617,7 @@ export const VideoRecorderAndUploader: React.FC<VideoRecorderAndUploaderProps> =
 
       {/* Mode 2: Live camera recording */}
       {mode === "record" && (
-        <div className="p-5 sm:p-8 space-y-5">
+        <div className="p-5 sm:p-8 space-y-6">
           {cameraError && (
             <div className="p-4 bg-[#1c1213] border border-[#ff453a]/40 rounded-2xl flex items-start gap-2.5 text-xs text-[#ff9f9a]">
               <AlertCircle className="w-4 h-4 text-[#ff453a] shrink-0 mt-0.5" />
@@ -646,7 +628,7 @@ export const VideoRecorderAndUploader: React.FC<VideoRecorderAndUploaderProps> =
           {uploadedBlobUrl ? (
             videoResultPanel
           ) : !isCameraOn ? (
-            <div className="border-2 border-dashed border-[#424245]/50 hover:border-[#2997ff]/80 rounded-3xl p-10 sm:p-14 text-center transition-all duration-200 bg-black/40 flex flex-col items-center justify-center gap-3.5">
+            <div className="border-2 border-dashed border-[#424245]/50 hover:border-[#2997ff]/80 rounded-3xl p-14 sm:p-24 text-center transition-all duration-200 bg-black/40 flex flex-col items-center justify-center gap-3.5">
               <div className="w-16 h-16 rounded-2xl bg-[#1d1d1f] border border-white/10 flex items-center justify-center text-[#2997ff]">
                 <Camera className="w-8 h-8" />
               </div>
@@ -676,7 +658,7 @@ export const VideoRecorderAndUploader: React.FC<VideoRecorderAndUploaderProps> =
             </div>
           ) : (
             <div className="space-y-4">
-              <div className="relative rounded-2xl overflow-hidden bg-black aspect-video max-h-[440px] flex items-center justify-center border border-white/[0.08]">
+              <div className="relative rounded-2xl overflow-hidden bg-black aspect-video max-h-[68vh] flex items-center justify-center border border-white/[0.08]">
                 <video
                   ref={liveVideoRef}
                   autoPlay
@@ -746,66 +728,6 @@ export const VideoRecorderAndUploader: React.FC<VideoRecorderAndUploaderProps> =
               </div>
             </div>
           )}
-        </div>
-      )}
-
-      {/* Mode 3: Preset Demonstrations in Apple Spec Cards */}
-      {mode === "presets" && (
-        <div className="p-5 sm:p-8 space-y-4">
-          <div>
-            <h4 className="text-[11px] font-semibold text-[#86868b] uppercase tracking-wider mb-3">
-              Wähle ein Test-Szenario zur sofortigen Überprüfung:
-            </h4>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-              {EXERCISE_PRESETS.map((preset) => {
-                const isGood = preset.sampleAnalysis.urteil === "gut";
-                const isUsable = preset.sampleAnalysis.urteil === "brauchbar";
-                const isFlawed = preset.sampleAnalysis.urteil === "mangelhaft";
-
-                return (
-                  <button
-                    key={preset.id}
-                    id={`preset-${preset.id}`}
-                    type="button"
-                    onClick={() => onSelectPreset(preset)}
-                    className="p-4 rounded-2xl bg-[#1d1d1f]/60 hover:bg-[#1d1d1f] border border-white/[0.06] hover:border-white/20 text-left transition flex flex-col justify-between gap-3 group"
-                  >
-                    <div>
-                      <div className="flex items-center justify-between mb-1.5">
-                        <span className="text-xs font-semibold text-[#f5f5f7] group-hover:text-[#2997ff] transition">
-                          {preset.name}
-                        </span>
-                        <span
-                          className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full border ${
-                            isGood
-                              ? "bg-[#30d158]/10 border-[#30d158]/20 text-[#30d158]"
-                              : isUsable
-                              ? "bg-[#ffd60a]/10 border-[#ffd60a]/20 text-[#ffd60a]"
-                              : isFlawed
-                              ? "bg-[#ff453a]/10 border-[#ff453a]/20 text-[#ff453a]"
-                              : "bg-[#1d1d1f] border-white/10 text-[#86868b]"
-                          }`}
-                        >
-                          {preset.sampleAnalysis.urteil}
-                        </span>
-                      </div>
-                      <p className="text-xs text-[#86868b] line-clamp-2 leading-relaxed">
-                        {preset.description}
-                      </p>
-                    </div>
-
-                    <div className="flex items-center justify-between text-[11px] text-[#86868b] pt-2 border-t border-white/[0.04]">
-                      <span>{preset.exercise}</span>
-                      <span className="text-[#2997ff] font-medium group-hover:translate-x-0.5 transition flex items-center gap-1">
-                        <span>Laden</span>
-                        <ArrowRight className="w-3 h-3" />
-                      </span>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
         </div>
       )}
     </div>
