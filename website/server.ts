@@ -6,6 +6,11 @@ import { createServer as createViteServer } from "vite";
 import { randomUUID } from "node:crypto";
 import { coachings } from "./server/store";
 import {
+  findingsFromMetrics,
+  metricsBlock,
+  enforceVerdict,
+} from "./server/poseFindings";
+import {
   registerUser,
   loginUser,
   logoutUser,
@@ -155,7 +160,10 @@ app.post("/api/analyze-exercise-video", async (req, res) => {
       videoFrames = [],
       mimeType = "video/webm",
       exerciseHint = "",
+      poseMetrics = null,
     } = req.body;
+
+    const measured = findingsFromMetrics(poseMetrics, exerciseHint);
 
     const hasVideo = typeof videoBase64 === "string" && videoBase64.length > 100;
     const hasFrames = Array.isArray(videoFrames) && videoFrames.length > 0;
@@ -186,7 +194,9 @@ app.post("/api/analyze-exercise-video", async (req, res) => {
       ? videoFrames.reduce((n: number, f: string) => n + (f?.length ?? 0), 0)
       : 0;
     console.log(
-      `[analyse] Übung="${exerciseHint || "?"}" | Video: ${
+      `[analyse] Übung="${exerciseHint || "?"}" | Messung: ${
+        poseMetrics ? `${poseMetrics.frames} Bilder, ${measured.length} Befund(e)` : "keine"
+      } | Video: ${
         hasVideo ? `${(videoBase64.length / 1024 / 1024).toFixed(1)} MB base64, ${mimeType}` : "keins"
       } | Schlüsselbilder: ${hasFrames ? videoFrames.length : 0} (${(frameBytes / 1024 / 1024).toFixed(1)} MB)`
     );
@@ -326,7 +336,7 @@ Gib ausschließlich ein JSON-Objekt mit folgenden Feldern zurück:
   "rawOutputText": "URTEIL: ...\\n\\nBEGRÜNDUNG: ...\\n\\nDER WICHTIGSTE FEHLER: ...\\n\\nKORREKTUR: ...\\n\\nGEWICHT: ...\\n\\nWAS ICH NICHT BEURTEILEN KONNTE: ..."
 }`;
 
-    const promptText = `${systemPrompt}\n\n${
+    const promptText = `${systemPrompt}\n\n${metricsBlock(poseMetrics, measured)}\n\n${
       exerciseHint ? `Athleten-Angabe zur Übung: "${exerciseHint}"` : "Analysiere die gezeigte Kraftsport-Übung im Bild- und Videomaterial."
     }`;
 
@@ -478,6 +488,13 @@ Gib ausschließlich ein JSON-Objekt mit folgenden Feldern zurück:
 
     if (!parsed.rawOutputText) {
       parsed.rawOutputText = `URTEIL: ${parsed.urteil || "brauchbar"}\n\nBEGRÜNDUNG: ${parsed.begruendung || ""}\n\nDER WICHTIGSTE FEHLER: ${parsed.derWichtigsteFehler || "Keiner identifiziert."}\n\nKORREKTUR: ${parsed.korrektur || ""}\n\nGEWICHT: ${parsed.gewicht?.empfehlung || "gleich bleiben"} – ${parsed.gewicht?.begruendung || ""}\n\nWAS ICH NICHT BEURTEILEN KONNTE: ${parsed.wasNichtBeurteilbar || ""}`;
+    }
+
+    const forced = enforceVerdict(parsed, measured);
+    if (forced.changed) {
+      console.log(
+        `[analyse] Urteil per Messung von "${forced.from}" auf "${parsed.urteil}" korrigiert`
+      );
     }
 
     console.log(

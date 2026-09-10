@@ -15,6 +15,7 @@ import {
   SwitchCamera,
   AlertCircle,
 } from "lucide-react";
+import { measureClip, type PoseMetrics } from "../lib/poseMetrics";
 
 interface VideoRecorderAndUploaderProps {
   onAnalyzeVideo: (
@@ -23,7 +24,9 @@ interface VideoRecorderAndUploaderProps {
     frames: string[],
     exerciseHint?: string,
     /** the clip itself, so the verdict view can play back what was judged */
-    file?: File | null
+    file?: File | null,
+    /** geometry measured from the clip, so the coach judges numbers not vibes */
+    metrics?: PoseMetrics | null
   ) => Promise<void>;
   isAnalyzing: boolean;
   selectedExerciseHint: string;
@@ -46,6 +49,7 @@ export const VideoRecorderAndUploader: React.FC<VideoRecorderAndUploaderProps> =
   const [fileSizeBytes, setFileSizeBytes] = useState<number>(0);
   const [extractedFrames, setExtractedFrames] = useState<string[]>([]);
   const [isVideoProcessing, setIsVideoProcessing] = useState<boolean>(false);
+  const [isMeasuring, setIsMeasuring] = useState<boolean>(false);
   const [processingStatus, setProcessingStatus] = useState<string>("");
 
   // Custom exercise input toggle
@@ -347,12 +351,27 @@ export const VideoRecorderAndUploader: React.FC<VideoRecorderAndUploaderProps> =
 
   // Trigger analysis for uploaded video
   const handleSubmitForAnalysis = async () => {
+    // Measure first: the numbers travel with the request, so the coach is
+    // handed a hip angle instead of being asked to estimate one.
+    let metrics: PoseMetrics | null = null;
+    if (uploadedBlobUrl) {
+      setIsMeasuring(true);
+      setProcessingStatus("Bewegung wird vermessen (Gelenkwinkel, Körperlinie)...");
+      try {
+        metrics = await measureClip(uploadedBlobUrl);
+      } finally {
+        setIsMeasuring(false);
+        setProcessingStatus("");
+      }
+    }
+
     await onAnalyzeVideo(
       uploadedBase64,
       uploadedMimeType,
       extractedFrames,
       selectedExerciseHint,
-      uploadedFileRef.current
+      uploadedFileRef.current,
+      metrics
     );
   };
 

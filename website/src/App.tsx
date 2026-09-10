@@ -173,7 +173,8 @@ export default function App() {
     mimeType: string,
     frames: string[],
     exerciseHint?: string,
-    file?: File | null
+    file?: File | null,
+    metrics?: unknown
   ) => {
     setIsAnalyzing(true);
     setAnalysedFile(file ?? null);
@@ -194,6 +195,7 @@ export default function App() {
           mimeType: mimeType || "video/mp4",
           videoFrames: frames,
           exerciseHint: exerciseHint || selectedExerciseHint,
+          poseMetrics: metrics ?? null,
           language: "de",
         }),
       });
