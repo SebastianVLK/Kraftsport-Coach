@@ -19,10 +19,12 @@ import { ExerciseAnalysisData } from "./types";
 
 type ActiveTab = "video" | "feedback" | "coachings";
 
-const NAV_ITEMS: { id: ActiveTab; label: string }[] = [
+const NAV_ITEMS: { id: ActiveTab; label: string; signedInOnly?: boolean }[] = [
   { id: "video", label: "Video" },
   { id: "feedback", label: "Coach-Urteil" },
-  { id: "coachings", label: "Coachings" },
+  // Signed out, the "Anmelden" button on the right already leads here — a nav
+  // link to an empty account view would just say the same thing twice.
+  { id: "coachings", label: "Coachings", signedInOnly: true },
 ];
 
 export default function App() {
@@ -241,7 +243,7 @@ export default function App() {
       <header className="sticky top-0 z-50 bg-[#faf6ef]/90 backdrop-blur-xl border-b border-[#2e2c27]/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 sm:h-18 grid grid-cols-[1fr_auto_1fr] items-center gap-3">
           <nav className="justify-self-start flex items-center gap-4 sm:gap-7">
-            {NAV_ITEMS.map((item) => {
+            {NAV_ITEMS.filter((item) => user || !item.signedInOnly).map((item) => {
               const active = activeTab === item.id;
               return (
                 <button
