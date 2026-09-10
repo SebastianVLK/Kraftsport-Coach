@@ -66,6 +66,7 @@ db.exec(`
   CREATE TABLE IF NOT EXISTS users (
     id            TEXT PRIMARY KEY,
     email         TEXT NOT NULL UNIQUE,
+    display_name  TEXT,
     password_hash TEXT NOT NULL,
     salt          TEXT NOT NULL,
     created_at    TEXT NOT NULL
@@ -92,9 +93,19 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_coachings_user_date ON coachings(user_id, created_at DESC);
 `);
 
+// Accounts created before display_name existed must keep working.
+const userColumns = (db.prepare("PRAGMA table_info(users)").all() as unknown as {
+  name: string;
+}[]).map((c) => c.name);
+if (!userColumns.includes("display_name")) {
+  db.exec("ALTER TABLE users ADD COLUMN display_name TEXT");
+  console.log("[db] Spalte display_name ergänzt.");
+}
+
 export interface UserRow {
   id: string;
   email: string;
+  display_name: string | null;
   password_hash: string;
   salt: string;
   created_at: string;
@@ -121,9 +132,19 @@ export const users = {
   },
   insert(row: UserRow) {
     db.prepare(
-      `INSERT INTO users (id, email, password_hash, salt, created_at)
-       VALUES (?, ?, ?, ?, ?)`
-    ).run(row.id, row.email.toLowerCase(), row.password_hash, row.salt, row.created_at);
+      `INSERT INTO users (id, email, display_name, password_hash, salt, created_at)
+       VALUES (?, ?, ?, ?, ?, ?)`
+    ).run(
+      row.id,
+      row.email.toLowerCase(),
+      row.display_name,
+      row.password_hash,
+      row.salt,
+      row.created_at
+    );
+  },
+  rename(id: string, name: string) {
+    db.prepare("UPDATE users SET display_name = ? WHERE id = ?").run(name, id);
   },
 };
 

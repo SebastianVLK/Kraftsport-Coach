@@ -1,9 +1,10 @@
 import React, { useState } from "react";
-import { Loader2, LogIn, UserPlus, AlertCircle } from "lucide-react";
+import { Loader2, LogIn, UserPlus, AlertCircle, Eye, EyeOff } from "lucide-react";
 
 export interface AccountUser {
   id: string;
   email: string;
+  name: string;
   createdAt: string;
 }
 
@@ -15,8 +16,10 @@ interface AuthPanelProps {
 
 export const AuthPanel: React.FC<AuthPanelProps> = ({ onAuthenticated, reason }) => {
   const [mode, setMode] = useState<"login" | "register">("login");
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -29,7 +32,9 @@ export const AuthPanel: React.FC<AuthPanelProps> = ({ onAuthenticated, reason })
       const res = await fetch(`/api/auth/${mode}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify(
+          mode === "register" ? { name, email, password } : { email, password }
+        ),
       });
       const data = await res.json();
       if (!res.ok || !data.success) {
@@ -49,10 +54,36 @@ export const AuthPanel: React.FC<AuthPanelProps> = ({ onAuthenticated, reason })
         {mode === "login" ? "Anmelden" : "Konto erstellen"}
       </h3>
       <p className="mt-2 text-sm text-[#6f6759] leading-relaxed">
-        {reason ?? "E-Mail und Passwort genügen — mehr wird nicht gespeichert."}
+        {reason ??
+          (mode === "register"
+            ? "Benutzername, E-Mail und Passwort — mehr wird nicht gespeichert."
+            : "Mit E-Mail und Passwort anmelden.")}
       </p>
 
       <form onSubmit={submit} className="mt-6 space-y-4">
+        {mode === "register" && (
+          <div>
+            <label
+              htmlFor="auth-name"
+              className="block text-[11px] uppercase tracking-[0.14em] font-semibold text-[#6f6759] mb-1.5"
+            >
+              Benutzername
+            </label>
+            <input
+              id="auth-name"
+              type="text"
+              required
+              minLength={2}
+              maxLength={40}
+              autoComplete="nickname"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full bg-[#faf6ef] border border-[#2e2c27]/15 rounded-xl px-4 py-3 text-[15px] text-[#2e2c27] placeholder-[#6f6759] focus:outline-none focus:border-[#c23a20]"
+              placeholder="Wie sollen wir dich nennen?"
+            />
+          </div>
+        )}
+
         <div>
           <label
             htmlFor="auth-email"
@@ -79,17 +110,29 @@ export const AuthPanel: React.FC<AuthPanelProps> = ({ onAuthenticated, reason })
           >
             Passwort
           </label>
-          <input
-            id="auth-password"
-            type="password"
-            required
-            minLength={8}
-            autoComplete={mode === "login" ? "current-password" : "new-password"}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full bg-[#faf6ef] border border-[#2e2c27]/15 rounded-xl px-4 py-3 text-[15px] text-[#2e2c27] placeholder-[#6f6759] focus:outline-none focus:border-[#c23a20]"
-            placeholder={mode === "register" ? "mindestens 8 Zeichen" : "••••••••"}
-          />
+          <div className="relative">
+            <input
+              id="auth-password"
+              type={showPassword ? "text" : "password"}
+              required
+              minLength={8}
+              autoComplete={mode === "login" ? "current-password" : "new-password"}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full bg-[#faf6ef] border border-[#2e2c27]/15 rounded-xl pl-4 pr-12 py-3 text-[15px] text-[#2e2c27] placeholder-[#6f6759] focus:outline-none focus:border-[#c23a20]"
+              placeholder={mode === "register" ? "mindestens 8 Zeichen" : "••••••••"}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              aria-label={showPassword ? "Passwort verbergen" : "Passwort anzeigen"}
+              aria-pressed={showPassword}
+              title={showPassword ? "Passwort verbergen" : "Passwort anzeigen"}
+              className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-lg text-[#6f6759] hover:text-[#2e2c27] hover:bg-[#eee8dd] transition"
+            >
+              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            </button>
+          </div>
         </div>
 
         {error && (

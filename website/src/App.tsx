@@ -8,23 +8,23 @@ import {
   Activity,
   ArrowRight,
   ChevronDown,
-  LogOut,
 } from "lucide-react";
 import { VideoRecorderAndUploader } from "./components/VideoRecorderAndUploader";
 import { CoachFeedbackView } from "./components/CoachFeedbackView";
 import { AnalysedVideoStage } from "./components/AnalysedVideoStage";
 import { AuthPanel, type AccountUser } from "./components/AuthPanel";
-import { CoachingsView, type CoachingSummary } from "./components/CoachingsView";
+import { type CoachingSummary } from "./components/CoachingsView";
+import { AccountView } from "./components/AccountView";
 import { ExerciseAnalysisData } from "./types";
 
-type ActiveTab = "video" | "feedback" | "coachings";
+type ActiveTab = "video" | "feedback" | "account";
 
 const NAV_ITEMS: { id: ActiveTab; label: string; signedInOnly?: boolean }[] = [
   { id: "video", label: "Video" },
   { id: "feedback", label: "Coach-Urteil" },
   // Signed out, the "Anmelden" button on the right already leads here — a nav
   // link to an empty account view would just say the same thing twice.
-  { id: "coachings", label: "Coachings", signedInOnly: true },
+  { id: "account", label: "Konto", signedInOnly: true },
 ];
 
 export default function App() {
@@ -293,24 +293,25 @@ export default function App() {
           <div className="justify-self-end flex items-center gap-2 text-xs text-[#6f6759]">
             {user ? (
               <>
-                <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#ffffff] border border-[#2e2c27]/[0.06] text-[11px] max-w-[180px] truncate">
-                  {user.email}
-                </span>
                 <button
                   type="button"
-                  onClick={handleLogout}
-                  aria-label="Abmelden"
-                  title="Abmelden"
-                  className="p-2 rounded-full text-[#6f6759] hover:text-[#2e2c27] hover:bg-[#eee8dd] transition"
+                  onClick={() => goToTab("account")}
+                  title="Zum Konto"
+                  className="inline-flex items-center gap-2 pl-1 pr-3 py-1 rounded-full bg-[#ffffff] border border-[#2e2c27]/[0.06] hover:border-[#2e2c27]/25 transition max-w-[200px]"
                 >
-                  <LogOut className="w-4 h-4" />
+                  <span className="shrink-0 w-6 h-6 rounded-full bg-[#2e2c27] text-[#faf6ef] text-[10px] font-black uppercase flex items-center justify-center">
+                    {user.name.slice(0, 2)}
+                  </span>
+                  <span className="text-[11px] font-semibold text-[#2e2c27] truncate">
+                    {user.name}
+                  </span>
                 </button>
               </>
             ) : (
               authChecked && (
                 <button
                   type="button"
-                  onClick={() => goToTab("coachings")}
+                  onClick={() => goToTab("account")}
                   className="px-3.5 py-1.5 rounded-full bg-[#2e2c27] hover:bg-[#1f1d19] text-[#faf6ef] text-[11px] uppercase tracking-[0.08em] font-semibold transition"
                 >
                   Anmelden
@@ -431,19 +432,21 @@ export default function App() {
           />
         )}
 
-        {activeTab === "coachings" &&
+        {activeTab === "account" &&
           (user ? (
-            <CoachingsView
+            <AccountView
+              user={user}
               coachings={coachingList}
               loading={coachingsLoading}
               onOpen={handleOpenCoaching}
               onDelete={handleDeleteCoaching}
+              onLogout={handleLogout}
               openingId={openingId}
             />
           ) : (
             <AuthPanel
               onAuthenticated={setUser}
-              reason="Melde dich an, um Analysen als Coaching zu speichern und später wieder aufzurufen."
+              reason="Mit einem Konto bleiben deine Analysen erhalten und lassen sich später wieder aufrufen."
             />
           ))}
 
@@ -455,7 +458,7 @@ export default function App() {
                 data={exerciseAnalysis}
                 onStartNextSet={handleStartNextSet}
                 onSaveCoaching={handleSaveCoaching}
-                onRequestAccount={() => goToTab("coachings")}
+                onRequestAccount={() => goToTab("account")}
                 saveState={saveState}
                 isSignedIn={Boolean(user)}
               />

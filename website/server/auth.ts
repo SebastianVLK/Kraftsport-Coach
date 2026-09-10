@@ -57,12 +57,17 @@ function clearSessionCookie(res: Response) {
 export interface PublicUser {
   id: string;
   email: string;
+  name: string;
   createdAt: string;
 }
+
+/** Accounts from before display names existed fall back to the local part. */
+const nameOf = (u: UserRow) => u.display_name?.trim() || u.email.split("@")[0];
 
 const toPublic = (u: UserRow): PublicUser => ({
   id: u.id,
   email: u.email,
+  name: nameOf(u),
   createdAt: u.created_at,
 });
 
@@ -94,7 +99,14 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 export function registerUser(req: Request, res: Response) {
   const email = String(req.body?.email ?? "").trim().toLowerCase();
   const password = String(req.body?.password ?? "");
+  const name = String(req.body?.name ?? "").trim().replace(/\s+/g, " ");
 
+  if (name.length < 2 || name.length > 40) {
+    res
+      .status(400)
+      .json({ success: false, error: "Der Benutzername braucht 2 bis 40 Zeichen." });
+    return;
+  }
   if (!EMAIL_RE.test(email)) {
     res.status(400).json({ success: false, error: "Bitte eine gültige E-Mail-Adresse angeben." });
     return;
@@ -114,6 +126,7 @@ export function registerUser(req: Request, res: Response) {
   const row: UserRow = {
     id: randomUUID(),
     email,
+    display_name: name,
     password_hash: hashPassword(password, salt),
     salt,
     created_at: new Date().toISOString(),
