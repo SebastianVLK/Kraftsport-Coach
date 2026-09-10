@@ -337,26 +337,26 @@ export default function App() {
       )}
 
       {/* Apple.com/chde Style Clean Footer */}
-      <footer className="border-t border-[#2e2c27]/[0.08] py-8 bg-[#2e2c27]/50 backdrop-blur-sm text-[#6f6759] text-xs mt-10">
+      <footer className="border-t border-[#2e2c27]/[0.08] py-8 bg-[#2e2c27]/50 backdrop-blur-sm text-[#000000] text-sm mt-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-4">
-          <div className="border-b border-[#2e2c27]/[0.06] pb-4 text-[11px] leading-relaxed text-[#6f6759]">
+          <div className="border-b border-[#000000]/15 pb-4 text-[13px] leading-relaxed text-[#000000]">
             <p>
               1. Die Videoanalyse liefert technische Beobachtungen und biomechanische Orientierungshilfen am Umkehrpunkt. Sie dient sportwissenschaftlichen Zwecken und ersetzt keine medizinische, orthopädische oder physiotherapeutische Befundung.
             </p>
           </div>
 
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px]">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 text-[13px]">
             <span>
               Copyright © 2026 Kraftsport-Coach. Alle Rechte vorbehalten.
             </span>
-            <div className="flex flex-wrap items-center gap-4 text-[#6f6759]">
+            <div className="flex flex-wrap items-center gap-4 text-[#000000]">
               <span>Schweiz (Deutsch)</span>
-              <span className="text-[#2e2c27]/20">•</span>
+              <span className="text-[#000000]/40">•</span>
               <span>Datenschutz</span>
-              <span className="text-[#2e2c27]/20">•</span>
+              <span className="text-[#000000]/40">•</span>
               <span>Nutzungsbedingungen</span>
-              <span className="text-[#2e2c27]/20">•</span>
-              <span className="font-mono text-[#5f5849]">Gemini 3.5 & 3.1 Pro</span>
+              <span className="text-[#000000]/40">•</span>
+              <span className="font-mono">Gemini 3.5 &amp; 3.1 Pro</span>
             </div>
           </div>
         </div>
