@@ -199,6 +199,7 @@ app.post("/api/analyze-exercise-video", async (req, res) => {
         `[messung] Bilder=${p.frames} Abdeckung=${(p.coverage * 100).toFixed(0)}% | ` +
           `Ellenbogen ${p.elbowMin}–${p.elbowMax}° | Knie ${p.kneeMin}–${p.kneeMax}° | ` +
           `Hüfte min ${p.hipMin}° | Körperlinie ${p.bodyLineMin}–${p.bodyLineMax}° | ` +
+          `Becken ${p.hipOffsetMax} bis ${p.hipOffsetMin} (>0.05 = durchhängend) | ` +
           `Oberarm/Rumpf max ${p.armToTorsoMax}°`
       );
       if (measured.length) {

@@ -18,6 +18,8 @@ export interface PoseMetrics {
   bodyLineMin: number | null;
   bodyLineMax: number | null;
   armToTorsoMax: number | null;
+  hipOffsetMax: number | null;
+  hipOffsetMin: number | null;
   worstBodyLineAt: number | null;
   deepestAt: number | null;
 }
@@ -51,21 +53,26 @@ export function findingsFromMetrics(
   const press = PRESS_LIKE.test(exercise);
 
   if (plank) {
-    // Shoulder–hip–ankle: 180° is a straight body. Below ~163° the hip has
-    // dropped clearly; above ~197° the athlete is piking upwards.
-    if (m.bodyLineMin !== null && m.bodyLineMin < 163) {
+    // Thresholds read off 28,500 labelled plank frames (correct / hip low /
+    // hip high) from the Exercise-Correction dataset, with a safety margin
+    // chosen so a correct rep is almost never flagged: at +0.05 the sag rule
+    // catches 98.8% of sagging frames while misfiring on 0.23% of correct
+    // ones, and at -0.30 the pike rule catches 98.9% at 0.01%.
+    const pct = (v: number) => `${Math.round(v * 100)}% der Körperlänge`;
+
+    if (m.hipOffsetMax !== null && m.hipOffsetMax > 0.05) {
       out.push({
         severity: "kritisch",
         label: "Hüfte hängt durch",
-        detail: `Körperlinie Schulter–Hüfte–Sprunggelenk sinkt auf ${m.bodyLineMin}° (gerade wären ~180°).`,
+        detail: `Das Becken sinkt ${pct(m.hipOffsetMax)} unter die Linie Schulter–Sprunggelenk.`,
         atSecond: m.worstBodyLineAt,
       });
     }
-    if (m.bodyLineMax !== null && m.bodyLineMax > 197) {
+    if (m.hipOffsetMin !== null && m.hipOffsetMin < -0.3) {
       out.push({
         severity: "kritisch",
-        label: "Hüfte knickt nach oben ab",
-        detail: `Körperlinie erreicht ${m.bodyLineMax}° — der Hintern steht deutlich zu hoch.`,
+        label: "Hüfte steht zu hoch",
+        detail: `Das Becken steht ${pct(Math.abs(m.hipOffsetMin))} über der Linie Schulter–Sprunggelenk.`,
         atSecond: m.worstBodyLineAt,
       });
     }
@@ -143,7 +150,12 @@ Urteile allein nach dem Bildmaterial und sage im Feld "wasNichtBeurteilbar", das
 - Ellenbogenwinkel: min ${n(m.elbowMin)}, max ${n(m.elbowMax)}
 - Kniewinkel: min ${n(m.kneeMin)}, max ${n(m.kneeMax)}
 - Hüftwinkel (Schulter–Hüfte–Knie): min ${n(m.hipMin)}
-- Körperlinie (Schulter–Hüfte–Sprunggelenk): min ${n(m.bodyLineMin)}, max ${n(m.bodyLineMax)} — gerade wären ~180°
+- Körperlinie (Schulter–Hüfte–Sprunggelenk): min ${n(m.bodyLineMin)}, max ${n(m.bodyLineMax)}
+- Beckenlage zur Linie Schulter–Sprunggelenk: ${
+    m.hipOffsetMax === null
+      ? "nicht messbar"
+      : `${(m.hipOffsetMax * 100).toFixed(0)}% tiefster, ${((m.hipOffsetMin ?? 0) * 100).toFixed(0)}% höchster Ausschlag (0% = exakt auf der Linie, positiv = durchhängend)`
+  }
 - Oberarm zum Rumpf: max ${n(m.armToTorsoMax)}
 - Tiefster Punkt bei etwa ${n(m.deepestAt, "s")}
 
