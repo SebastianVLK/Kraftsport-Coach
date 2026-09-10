@@ -365,7 +365,7 @@ export const VideoRecorderAndUploader: React.FC<VideoRecorderAndUploaderProps> =
   // Shared result view: identical after an upload and after a live recording
   const videoResultPanel = (
           <div className="space-y-4">
-            <div className="relative rounded-2xl overflow-hidden bg-[#221f1b] aspect-video max-h-[68vh] flex items-center justify-center border border-[#faf6ef]/[0.08]">
+            <div className="relative rounded-2xl overflow-hidden bg-[#1f1c16] aspect-video max-h-[68vh] flex items-center justify-center border border-[#faf6ef]/[0.08]">
               <video
                 src={uploadedBlobUrl}
                 controls
@@ -378,26 +378,26 @@ export const VideoRecorderAndUploader: React.FC<VideoRecorderAndUploaderProps> =
 
             {/* Status and Extracted Keyframe Preview Strip (Final Cut Pro / Photos Style) */}
             {isVideoProcessing && (
-              <div className="p-3 bg-[#3d3931] border border-[#faf6ef]/[0.08] rounded-xl flex items-center gap-2.5 text-xs text-[#faf6ef]">
-                <Loader2 className="w-4 h-4 text-[#c98a6b] animate-spin shrink-0" />
+              <div className="p-3 bg-[#453e2f] border border-[#faf6ef]/[0.08] rounded-xl flex items-center gap-2.5 text-xs text-[#faf6ef]">
+                <Loader2 className="w-4 h-4 text-[#e2553c] animate-spin shrink-0" />
                 <span>{processingStatus || "Videosegmente werden für die Biomechanik aufbereitet..."}</span>
               </div>
             )}
 
             {extractedFrames.length > 0 && (
-              <div className="bg-[#3d3931]/60 border border-[#faf6ef]/[0.06] rounded-2xl p-3.5 space-y-2">
+              <div className="bg-[#453e2f]/60 border border-[#faf6ef]/[0.06] rounded-2xl p-3.5 space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-semibold text-[#a69c8a] flex items-center gap-1.5">
-                    <Layers className="w-3.5 h-3.5 text-[#c98a6b]" />
+                  <span className="text-[11px] font-semibold text-[#b0a692] flex items-center gap-1.5">
+                    <Layers className="w-3.5 h-3.5 text-[#e2553c]" />
                     <span>{extractedFrames.length} Phasen-Bilder extrahiert (Umkehrpunkt & Exzentrik)</span>
                   </span>
-                  <span className="text-[10px] text-[#7c8a45] font-medium">Bereit</span>
+                  <span className="text-[10px] text-[#a8c94a] font-medium">Bereit</span>
                 </div>
                 <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
                   {extractedFrames.map((frm, idx) => (
-                    <div key={idx} className="relative aspect-video rounded-lg overflow-hidden bg-[#221f1b] border border-[#faf6ef]/10">
+                    <div key={idx} className="relative aspect-video rounded-lg overflow-hidden bg-[#1f1c16] border border-[#faf6ef]/10">
                       <img src={frm} alt={`Frame ${idx + 1}`} className="w-full h-full object-cover" />
-                      <span className="absolute bottom-1 right-1 text-[8px] bg-[#1a1815]/80 px-1 py-0.2 rounded font-mono text-[#faf6ef]">
+                      <span className="absolute bottom-1 right-1 text-[8px] bg-[#1c1913]/80 px-1 py-0.2 rounded font-mono text-[#faf6ef]">
                         #{idx + 1}
                       </span>
                     </div>
@@ -407,11 +407,11 @@ export const VideoRecorderAndUploader: React.FC<VideoRecorderAndUploaderProps> =
             )}
 
             <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
-              <div className="text-xs text-[#a69c8a] flex items-center gap-2">
+              <div className="text-xs text-[#b0a692] flex items-center gap-2">
                 <FileVideo className="w-4 h-4 text-[#faf6ef]" />
                 <span className="font-mono text-[#faf6ef]">{fileName || "video.mp4"}</span>
                 {fileSizeBytes > 0 && (
-                  <span className="text-[10px] bg-[#3d3931] text-[#a69c8a] px-2 py-0.5 rounded-full border border-[#faf6ef]/[0.06]">
+                  <span className="text-[10px] bg-[#453e2f] text-[#b0a692] px-2 py-0.5 rounded-full border border-[#faf6ef]/[0.06]">
                     {(fileSizeBytes / (1024 * 1024)).toFixed(1)} MB
                   </span>
                 )}
@@ -428,7 +428,7 @@ export const VideoRecorderAndUploader: React.FC<VideoRecorderAndUploaderProps> =
                     setFileName(null);
                     setFileSizeBytes(0);
                   }}
-                  className="px-4 py-2 bg-[#3d3931] hover:bg-[#4a453b] text-[#faf6ef] rounded-full text-xs font-semibold transition border border-[#faf6ef]/10"
+                  className="px-4 py-2 bg-[#453e2f] hover:bg-[#524a39] text-[#faf6ef] rounded-full text-xs font-semibold transition border border-[#faf6ef]/10"
                 >
                   {mode === "record" ? "Neu aufnehmen" : "Anderes Video"}
                 </button>
@@ -438,7 +438,7 @@ export const VideoRecorderAndUploader: React.FC<VideoRecorderAndUploaderProps> =
                   type="button"
                   onClick={handleSubmitForAnalysis}
                   disabled={isAnalyzing || isVideoProcessing}
-                  className="px-6 py-2.5 bg-[#faf6ef] hover:bg-[#e8e2d6] disabled:opacity-50 text-[#2e2c27] rounded-full text-xs sm:text-sm font-semibold transition flex items-center gap-2 shadow-lg shadow-[#1a1815]/40 active:scale-95"
+                  className="px-6 py-2.5 bg-[#faf6ef] hover:bg-[#e8e2d6] disabled:opacity-50 text-[#332e24] rounded-full text-xs sm:text-sm font-semibold transition flex items-center gap-2 shadow-lg shadow-[#1c1913]/40 active:scale-95"
                 >
                   {isAnalyzing ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
@@ -453,22 +453,22 @@ export const VideoRecorderAndUploader: React.FC<VideoRecorderAndUploaderProps> =
   );
 
   return (
-    <div id="video-recorder-container" className="bg-[#35322c] border border-[#faf6ef]/[0.08] rounded-3xl overflow-hidden shadow-2xl">
+    <div id="video-recorder-container" className="bg-[#3b3529] border border-[#faf6ef]/[0.08] rounded-3xl overflow-hidden shadow-2xl">
       {/* Top Header & Mode Toggle in Apple Style */}
-      <div className="p-5 sm:p-6 border-b border-[#faf6ef]/[0.08] bg-[#35322c]/50 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="p-5 sm:p-6 border-b border-[#faf6ef]/[0.08] bg-[#3b3529]/50 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-3">
-            <span className="w-9 h-9 rounded-2xl bg-[#3d3931] border border-[#faf6ef]/10 flex items-center justify-center text-[#c98a6b]">
+            <span className="w-9 h-9 rounded-2xl bg-[#453e2f] border border-[#faf6ef]/10 flex items-center justify-center text-[#e2553c]">
               <Activity className="w-4 h-4" />
             </span>
             <div>
               <h2 className="text-sm sm:text-base font-semibold tracking-tight text-[#faf6ef] flex items-center gap-2">
                 <span>Video-Technikanalyse</span>
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#3d3931] border border-[#faf6ef]/[0.08] text-[#a69c8a] font-medium">
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#453e2f] border border-[#faf6ef]/[0.08] text-[#b0a692] font-medium">
                   KI-Coach
                 </span>
               </h2>
-              <p className="text-xs text-[#a69c8a] font-normal">
+              <p className="text-xs text-[#b0a692] font-normal">
                 Objektive Diagnose am tiefsten Punkt (Umkehrpunkt)
               </p>
             </div>
@@ -476,15 +476,15 @@ export const VideoRecorderAndUploader: React.FC<VideoRecorderAndUploaderProps> =
         </div>
 
         {/* Apple Segmented Control: Upload & Live-Aufnahme */}
-        <div className="flex items-center gap-1 bg-[#3d3931] p-1 rounded-full border border-[#faf6ef]/[0.08] self-start md:self-auto shadow-inner">
+        <div className="flex items-center gap-1 bg-[#453e2f] p-1 rounded-full border border-[#faf6ef]/[0.08] self-start md:self-auto shadow-inner">
           <button
             id="btn-mode-upload"
             type="button"
             onClick={() => setMode("upload")}
             className={`flex items-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-medium transition duration-150 ${
               mode === "upload"
-                ? "bg-[#faf6ef] text-[#2e2c27] font-semibold shadow-sm"
-                : "text-[#a69c8a] hover:text-[#faf6ef]"
+                ? "bg-[#faf6ef] text-[#332e24] font-semibold shadow-sm"
+                : "text-[#b0a692] hover:text-[#faf6ef]"
             }`}
           >
             <Upload className="w-3.5 h-3.5" />
@@ -497,8 +497,8 @@ export const VideoRecorderAndUploader: React.FC<VideoRecorderAndUploaderProps> =
             onClick={() => setMode("record")}
             className={`flex items-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-medium transition duration-150 ${
               mode === "record"
-                ? "bg-[#faf6ef] text-[#2e2c27] font-semibold shadow-sm"
-                : "text-[#a69c8a] hover:text-[#faf6ef]"
+                ? "bg-[#faf6ef] text-[#332e24] font-semibold shadow-sm"
+                : "text-[#b0a692] hover:text-[#faf6ef]"
             }`}
           >
             <Camera className="w-3.5 h-3.5" />
@@ -508,9 +508,9 @@ export const VideoRecorderAndUploader: React.FC<VideoRecorderAndUploaderProps> =
       </div>
 
       {/* Planned Exercise Tag Selector with Apple Pills */}
-      <div className="px-5 py-3.5 bg-[#3d3931]/40 border-b border-[#faf6ef]/[0.06] flex flex-col sm:flex-row sm:items-center gap-2.5 text-xs">
-        <span className="text-[#a69c8a] font-medium shrink-0 flex items-center gap-1.5">
-          <Dumbbell className="w-3.5 h-3.5 text-[#c98a6b]" />
+      <div className="px-5 py-3.5 bg-[#453e2f]/40 border-b border-[#faf6ef]/[0.06] flex flex-col sm:flex-row sm:items-center gap-2.5 text-xs">
+        <span className="text-[#b0a692] font-medium shrink-0 flex items-center gap-1.5">
+          <Dumbbell className="w-3.5 h-3.5 text-[#e2553c]" />
           <span>Fokus-Übung:</span>
         </span>
 
@@ -525,8 +525,8 @@ export const VideoRecorderAndUploader: React.FC<VideoRecorderAndUploaderProps> =
               }}
               className={`px-3 py-1 rounded-full transition text-[11px] font-medium ${
                 selectedExerciseHint === ex && !showCustomInput
-                  ? "bg-[#faf6ef] text-[#2e2c27] font-semibold shadow-sm"
-                  : "bg-[#3d3931] text-[#a69c8a] hover:text-[#faf6ef] border border-[#faf6ef]/[0.06]"
+                  ? "bg-[#faf6ef] text-[#332e24] font-semibold shadow-sm"
+                  : "bg-[#453e2f] text-[#b0a692] hover:text-[#faf6ef] border border-[#faf6ef]/[0.06]"
               }`}
             >
               {ex}
@@ -538,8 +538,8 @@ export const VideoRecorderAndUploader: React.FC<VideoRecorderAndUploaderProps> =
             onClick={() => setShowCustomInput(!showCustomInput)}
             className={`px-3 py-1 rounded-full transition text-[11px] font-medium flex items-center gap-1 ${
               showCustomInput
-                ? "bg-[#faf6ef] text-[#2e2c27]"
-                : "bg-[#3d3931] text-[#a69c8a] hover:text-[#faf6ef] border border-[#faf6ef]/[0.06]"
+                ? "bg-[#faf6ef] text-[#332e24]"
+                : "bg-[#453e2f] text-[#b0a692] hover:text-[#faf6ef] border border-[#faf6ef]/[0.06]"
             }`}
           >
             <PlusCircle className="w-3 h-3" />
@@ -554,7 +554,7 @@ export const VideoRecorderAndUploader: React.FC<VideoRecorderAndUploaderProps> =
                 value={customExerciseText}
                 onChange={(e) => setCustomExerciseText(e.target.value)}
                 placeholder="z. B. Frontkniebeuge..."
-                className="bg-[#3d3931] border border-[#faf6ef]/20 rounded-full px-3 py-1 text-xs text-[#faf6ef] placeholder-[#a69c8a] focus:outline-none focus:border-[#c98a6b]"
+                className="bg-[#453e2f] border border-[#faf6ef]/20 rounded-full px-3 py-1 text-xs text-[#faf6ef] placeholder-[#b0a692] focus:outline-none focus:border-[#e2553c]"
               />
               <button
                 type="button"
@@ -563,7 +563,7 @@ export const VideoRecorderAndUploader: React.FC<VideoRecorderAndUploaderProps> =
                     onChangeExerciseHint(customExerciseText.trim());
                   }
                 }}
-                className="px-3 py-1 bg-[#faf6ef] hover:bg-[#e8e2d6] text-[#2e2c27] text-[11px] font-semibold rounded-full shadow-sm"
+                className="px-3 py-1 bg-[#faf6ef] hover:bg-[#e8e2d6] text-[#332e24] text-[11px] font-semibold rounded-full shadow-sm"
               >
                 Setzen
               </button>
@@ -592,20 +592,20 @@ export const VideoRecorderAndUploader: React.FC<VideoRecorderAndUploaderProps> =
                 const file = e.dataTransfer.files?.[0];
                 if (file) processVideoFile(file);
               }}
-              className="border-2 border-dashed border-[#5c5648]/50 hover:border-[#c98a6b]/80 rounded-3xl p-14 sm:p-24 text-center cursor-pointer transition-all duration-200 bg-[#1a1815]/40 hover:bg-[#1a1815]/60 flex flex-col items-center justify-center gap-3.5 group"
+              className="border-2 border-dashed border-[#625a47]/50 hover:border-[#e2553c]/80 rounded-3xl p-14 sm:p-24 text-center cursor-pointer transition-all duration-200 bg-[#1c1913]/40 hover:bg-[#1c1913]/60 flex flex-col items-center justify-center gap-3.5 group"
             >
-              <div className="w-16 h-16 rounded-2xl bg-[#3d3931] border border-[#faf6ef]/10 flex items-center justify-center text-[#c98a6b] group-hover:scale-105 transition">
+              <div className="w-16 h-16 rounded-2xl bg-[#453e2f] border border-[#faf6ef]/10 flex items-center justify-center text-[#e2553c] group-hover:scale-105 transition">
                 <FileVideo className="w-8 h-8" />
               </div>
               <div className="space-y-1">
                 <h4 className="text-sm sm:text-base font-semibold text-[#faf6ef]">
                   Übungsvideo auswählen oder hierhin ziehen
                 </h4>
-                <p className="text-xs text-[#a69c8a] max-w-sm mx-auto leading-relaxed">
+                <p className="text-xs text-[#b0a692] max-w-sm mx-auto leading-relaxed">
                   Unterstützt MP4, WebM, MOV. Ideal sind 1–5 saubere Wiederholungen (5–20 Sekunden), gefilmt aus 45° bis 90° Blickwinkel.
                 </p>
               </div>
-              <span className="text-xs text-[#2e2c27] bg-[#faf6ef] hover:bg-[#e8e2d6] px-4 py-2 rounded-full transition shadow-sm">
+              <span className="text-xs text-[#332e24] bg-[#faf6ef] hover:bg-[#e8e2d6] px-4 py-2 rounded-full transition shadow-sm">
                 Video-Datei auswählen
               </span>
             </div>
@@ -619,8 +619,8 @@ export const VideoRecorderAndUploader: React.FC<VideoRecorderAndUploaderProps> =
       {mode === "record" && (
         <div className="p-5 sm:p-8 space-y-6">
           {cameraError && (
-            <div className="p-4 bg-[#2e1f1a] border border-[#b23a2f]/40 rounded-2xl flex items-start gap-2.5 text-xs text-[#e8a79b]">
-              <AlertCircle className="w-4 h-4 text-[#b23a2f] shrink-0 mt-0.5" />
+            <div className="p-4 bg-[#3a251c] border border-[#e2553c]/40 rounded-2xl flex items-start gap-2.5 text-xs text-[#f2b3a5]">
+              <AlertCircle className="w-4 h-4 text-[#e2553c] shrink-0 mt-0.5" />
               <span className="leading-relaxed">{cameraError}</span>
             </div>
           )}
@@ -628,15 +628,15 @@ export const VideoRecorderAndUploader: React.FC<VideoRecorderAndUploaderProps> =
           {uploadedBlobUrl ? (
             videoResultPanel
           ) : !isCameraOn ? (
-            <div className="border-2 border-dashed border-[#5c5648]/50 hover:border-[#c98a6b]/80 rounded-3xl p-14 sm:p-24 text-center transition-all duration-200 bg-[#1a1815]/40 flex flex-col items-center justify-center gap-3.5">
-              <div className="w-16 h-16 rounded-2xl bg-[#3d3931] border border-[#faf6ef]/10 flex items-center justify-center text-[#c98a6b]">
+            <div className="border-2 border-dashed border-[#625a47]/50 hover:border-[#e2553c]/80 rounded-3xl p-14 sm:p-24 text-center transition-all duration-200 bg-[#1c1913]/40 flex flex-col items-center justify-center gap-3.5">
+              <div className="w-16 h-16 rounded-2xl bg-[#453e2f] border border-[#faf6ef]/10 flex items-center justify-center text-[#e2553c]">
                 <Camera className="w-8 h-8" />
               </div>
               <div className="space-y-1">
                 <h4 className="text-sm sm:text-base font-semibold text-[#faf6ef]">
                   Satz direkt mit der Kamera aufnehmen
                 </h4>
-                <p className="text-xs text-[#a69c8a] max-w-sm mx-auto leading-relaxed">
+                <p className="text-xs text-[#b0a692] max-w-sm mx-auto leading-relaxed">
                   Stelle das Gerät seitlich bis 45° auf Hüfthöhe auf, sodass alle Gelenke im Bild
                   bleiben. Ideal sind 1–5 Wiederholungen, maximal {MAX_RECORDING_SECONDS} Sekunden.
                 </p>
@@ -646,7 +646,7 @@ export const VideoRecorderAndUploader: React.FC<VideoRecorderAndUploaderProps> =
                 type="button"
                 onClick={() => startCamera()}
                 disabled={isStartingCamera}
-                className="text-xs text-[#2e2c27] bg-[#faf6ef] hover:bg-[#e8e2d6] disabled:opacity-50 px-4 py-2 rounded-full transition shadow-sm flex items-center gap-2"
+                className="text-xs text-[#332e24] bg-[#faf6ef] hover:bg-[#e8e2d6] disabled:opacity-50 px-4 py-2 rounded-full transition shadow-sm flex items-center gap-2"
               >
                 {isStartingCamera ? (
                   <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -658,7 +658,7 @@ export const VideoRecorderAndUploader: React.FC<VideoRecorderAndUploaderProps> =
             </div>
           ) : (
             <div className="space-y-4">
-              <div className="relative rounded-2xl overflow-hidden bg-[#221f1b] aspect-video max-h-[68vh] flex items-center justify-center border border-[#faf6ef]/[0.08]">
+              <div className="relative rounded-2xl overflow-hidden bg-[#1f1c16] aspect-video max-h-[68vh] flex items-center justify-center border border-[#faf6ef]/[0.08]">
                 <video
                   ref={liveVideoRef}
                   autoPlay
@@ -670,8 +670,8 @@ export const VideoRecorderAndUploader: React.FC<VideoRecorderAndUploaderProps> =
                 />
 
                 {isRecording && (
-                  <div className="absolute top-3 left-3 flex items-center gap-2 px-2.5 py-1 rounded-full bg-[#1a1815]/70 backdrop-blur-md border border-[#b23a2f]/40">
-                    <span className="w-2 h-2 rounded-full bg-[#b23a2f] animate-pulse" />
+                  <div className="absolute top-3 left-3 flex items-center gap-2 px-2.5 py-1 rounded-full bg-[#1c1913]/70 backdrop-blur-md border border-[#e2553c]/40">
+                    <span className="w-2 h-2 rounded-full bg-[#e2553c] animate-pulse" />
                     <span className="text-[11px] font-mono text-[#faf6ef]">
                       {String(Math.floor(recordedSeconds / 60)).padStart(2, "0")}:
                       {String(recordedSeconds % 60).padStart(2, "0")} / {MAX_RECORDING_SECONDS}s
@@ -686,7 +686,7 @@ export const VideoRecorderAndUploader: React.FC<VideoRecorderAndUploaderProps> =
                     type="button"
                     onClick={() => startCamera(facingMode === "user" ? "environment" : "user")}
                     disabled={isRecording || isStartingCamera}
-                    className="px-4 py-2 bg-[#3d3931] hover:bg-[#4a453b] disabled:opacity-40 text-[#faf6ef] rounded-full text-xs font-semibold transition border border-[#faf6ef]/10 flex items-center gap-1.5"
+                    className="px-4 py-2 bg-[#453e2f] hover:bg-[#524a39] disabled:opacity-40 text-[#faf6ef] rounded-full text-xs font-semibold transition border border-[#faf6ef]/10 flex items-center gap-1.5"
                     title="Zwischen Front- und Rückkamera wechseln"
                   >
                     <SwitchCamera className="w-3.5 h-3.5" />
@@ -697,7 +697,7 @@ export const VideoRecorderAndUploader: React.FC<VideoRecorderAndUploaderProps> =
                     type="button"
                     onClick={stopCamera}
                     disabled={isRecording}
-                    className="px-4 py-2 bg-[#3d3931] hover:bg-[#4a453b] disabled:opacity-40 text-[#faf6ef] rounded-full text-xs font-semibold transition border border-[#faf6ef]/10 flex items-center gap-1.5"
+                    className="px-4 py-2 bg-[#453e2f] hover:bg-[#524a39] disabled:opacity-40 text-[#faf6ef] rounded-full text-xs font-semibold transition border border-[#faf6ef]/10 flex items-center gap-1.5"
                   >
                     <CameraOff className="w-3.5 h-3.5" />
                     <span className="hidden sm:inline">Kamera aus</span>
@@ -709,7 +709,7 @@ export const VideoRecorderAndUploader: React.FC<VideoRecorderAndUploaderProps> =
                     id="btn-start-recording"
                     type="button"
                     onClick={startRecording}
-                    className="px-6 py-2.5 bg-[#b23a2f] hover:bg-[#c64637] text-[#faf6ef] rounded-full text-xs sm:text-sm font-semibold transition flex items-center gap-2 shadow-lg shadow-[#b23a2f]/25 active:scale-95"
+                    className="px-6 py-2.5 bg-[#e2553c] hover:bg-[#c9432c] text-[#faf6ef] rounded-full text-xs sm:text-sm font-semibold transition flex items-center gap-2 shadow-lg shadow-[#e2553c]/25 active:scale-95"
                   >
                     <Circle className="w-4 h-4 fill-current" />
                     <span>Aufnahme starten</span>
@@ -719,7 +719,7 @@ export const VideoRecorderAndUploader: React.FC<VideoRecorderAndUploaderProps> =
                     id="btn-stop-recording"
                     type="button"
                     onClick={stopRecording}
-                    className="px-6 py-2.5 bg-[#faf6ef] hover:bg-[#faf6ef] text-[#2e2c27] rounded-full text-xs sm:text-sm font-semibold transition flex items-center gap-2 shadow-lg active:scale-95"
+                    className="px-6 py-2.5 bg-[#faf6ef] hover:bg-[#faf6ef] text-[#332e24] rounded-full text-xs sm:text-sm font-semibold transition flex items-center gap-2 shadow-lg active:scale-95"
                   >
                     <Square className="w-4 h-4 fill-current" />
                     <span>Aufnahme beenden</span>

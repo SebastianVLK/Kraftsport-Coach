@@ -4,16 +4,16 @@
   :root {
     --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
 
-    /* Backdrop dials — cream and clay at a low alpha, so the verdict colours
+    /* Backdrop dials — cream and terracotta at a low alpha, so the verdict colours
        (olive / ochre / brick) stay the only saturated colour on the page. */
-    --bd-grid: rgba(250, 246, 239, 0.03); /* blueprint grid */
+    --bd-grid: rgba(250, 246, 239, 0.038); /* blueprint grid */
     --bd-grid-size: 68px;
-    --bd-ring: rgba(250, 246, 239, 0.055); /* weight-plate rings */
-    --bd-glow: rgba(250, 246, 239, 0.05); /* soft depth from above */
+    --bd-ring: rgba(250, 246, 239, 0.07); /* weight-plate rings */
+    --bd-glow: rgba(250, 246, 239, 0.06); /* soft depth from above */
   }
 
   html {
-    background-color: #2e2c27;
+    background-color: #332e24;
   }
 
   body {
@@ -36,7 +36,7 @@
     pointer-events: none;
     background-image:
       radial-gradient(80rem 40rem at 15% -10%, var(--bd-glow), transparent 60%),
-      radial-gradient(60rem 34rem at 92% 4%, rgba(201, 138, 107, 0.05), transparent 62%),
+      radial-gradient(60rem 34rem at 92% 4%, rgba(226, 85, 60, 0.05), transparent 62%),
       linear-gradient(to right, var(--bd-grid) 1px, transparent 1px),
       linear-gradient(to bottom, var(--bd-grid) 1px, transparent 1px);
     background-size:
@@ -90,11 +90,11 @@
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #4a453b;
+  background: #524a39;
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #5a5449;
+  background: #625a47;
 }
 
 .markdown-body p {
@@ -122,5 +122,5 @@
   letter-spacing: -0.02em;
 }
 .markdown-body strong {
-  color: #c98a6b;
+  color: #e2553c;
 }

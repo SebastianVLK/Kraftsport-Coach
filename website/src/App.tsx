@@ -195,9 +195,9 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen text-[#faf6ef] flex flex-col font-sans selection:bg-[#c98a6b]/30 selection:text-[#faf6ef]">
+    <div className="min-h-screen text-[#faf6ef] flex flex-col font-sans selection:bg-[#e2553c]/30 selection:text-[#faf6ef]">
       {/* Apple-style Global Nav Bar */}
-      <header className="sticky top-0 z-50 bg-[#1a1815]/80 backdrop-blur-xl border-b border-[#faf6ef]/[0.08] transition-all">
+      <header className="sticky top-0 z-50 bg-[#1c1913]/80 backdrop-blur-xl border-b border-[#faf6ef]/[0.08] transition-all">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 sm:h-18 flex items-center justify-between gap-4">
           {/* Brand Logo & Apple Style Monogram */}
           <div className="flex items-center gap-2.5">
@@ -207,7 +207,7 @@ export default function App() {
               className="flex items-center gap-2 text-left group"
             >
               {/* Mark: solid cream block, like CARE's stamped wordmark */}
-              <div className="w-10 h-10 rounded-lg bg-[#faf6ef] flex items-center justify-center text-[#2e2c27] group-hover:bg-[#e8e2d6] transition">
+              <div className="w-10 h-10 rounded-lg bg-[#faf6ef] flex items-center justify-center text-[#332e24] group-hover:bg-[#e8e2d6] transition">
                 <Dumbbell className="w-5 h-5" strokeWidth={2.5} />
               </div>
               <span className="text-base sm:text-xl font-black uppercase tracking-[-0.03em] leading-none text-[#faf6ef]">
@@ -217,15 +217,15 @@ export default function App() {
           </div>
 
           {/* Apple Segmented Control Tab Switcher (Without 4K Studio) */}
-          <nav className="flex items-center gap-1 bg-[#3d3931]/90 p-1 rounded-full border border-[#faf6ef]/[0.08] shadow-inner">
+          <nav className="flex items-center gap-1 bg-[#453e2f]/90 p-1 rounded-full border border-[#faf6ef]/[0.08] shadow-inner">
             <button
               id="tab-btn-video"
               type="button"
               onClick={() => setActiveTab("video")}
               className={`flex items-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-medium transition duration-150 ${
                 activeTab === "video"
-                  ? "bg-[#faf6ef] text-[#2e2c27] font-semibold shadow-sm"
-                  : "text-[#a69c8a] hover:text-[#faf6ef]"
+                  ? "bg-[#faf6ef] text-[#332e24] font-semibold shadow-sm"
+                  : "text-[#b0a692] hover:text-[#faf6ef]"
               }`}
             >
               <Video className="w-3.5 h-3.5" />
@@ -238,8 +238,8 @@ export default function App() {
               onClick={() => setActiveTab("feedback")}
               className={`flex items-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-medium transition duration-150 relative ${
                 activeTab === "feedback"
-                  ? "bg-[#faf6ef] text-[#2e2c27] font-semibold shadow-sm"
-                  : "text-[#a69c8a] hover:text-[#faf6ef]"
+                  ? "bg-[#faf6ef] text-[#332e24] font-semibold shadow-sm"
+                  : "text-[#b0a692] hover:text-[#faf6ef]"
               }`}
             >
               <FileText className="w-3.5 h-3.5" />
@@ -248,10 +248,10 @@ export default function App() {
                 <span
                   className={`w-1.5 h-1.5 rounded-full ${
                     exerciseAnalysis.urteil === "gut"
-                      ? "bg-[#7c8a45]"
+                      ? "bg-[#a8c94a]"
                       : exerciseAnalysis.urteil === "brauchbar"
-                      ? "bg-[#d9a441]"
-                      : "bg-[#b23a2f]"
+                      ? "bg-[#e3b355]"
+                      : "bg-[#e2553c]"
                   }`}
                 />
               )}
@@ -263,14 +263,14 @@ export default function App() {
               onClick={() => setActiveTab("chat")}
               className={`flex items-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-medium transition duration-150 ${
                 activeTab === "chat"
-                  ? "bg-[#faf6ef] text-[#2e2c27] font-semibold shadow-sm"
-                  : "text-[#a69c8a] hover:text-[#faf6ef]"
+                  ? "bg-[#faf6ef] text-[#332e24] font-semibold shadow-sm"
+                  : "text-[#b0a692] hover:text-[#faf6ef]"
               }`}
             >
               <MessageSquare className="w-3.5 h-3.5" />
               <span>Dialog</span>
               {chatMessages.length > 0 && (
-                <span className="text-[9px] bg-[#4a453b] text-[#c3b9a6] px-1.5 py-0.2 rounded-full font-mono">
+                <span className="text-[9px] bg-[#524a39] text-[#c3b9a6] px-1.5 py-0.2 rounded-full font-mono">
                   {chatMessages.length}
                 </span>
               )}
@@ -278,9 +278,9 @@ export default function App() {
           </nav>
 
           {/* Right Status Pill (Apple Watch style) */}
-          <div className="hidden lg:flex items-center gap-2 text-xs text-[#a69c8a]">
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#35322c] border border-[#faf6ef]/[0.06] text-[11px]">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#7c8a45]" />
+          <div className="hidden lg:flex items-center gap-2 text-xs text-[#b0a692]">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#3b3529] border border-[#faf6ef]/[0.06] text-[11px]">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#a8c94a]" />
               <span>Gemini 3.5 Flash</span>
             </span>
           </div>
@@ -292,34 +292,34 @@ export default function App() {
         {/* Compact hero: title left, claim right — keeps the vertical space for the video area */}
         <section className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2 sm:gap-6">
           <div className="space-y-1.5">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#35322c] border border-[#faf6ef]/[0.08] text-[11px] text-[#a69c8a]">
-              <Activity className="w-3 h-3 text-[#c98a6b]" />
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#3b3529] border border-[#faf6ef]/[0.08] text-[11px] text-[#b0a692]">
+              <Activity className="w-3 h-3 text-[#e2553c]" />
               <span>Biomechanische Video-Technikanalyse</span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-[#faf6ef]">
               Präzision am Umkehrpunkt.
             </h1>
           </div>
-          <p className="text-xs sm:text-sm text-[#a69c8a] max-w-md sm:text-right font-normal leading-relaxed">
+          <p className="text-xs sm:text-sm text-[#b0a692] max-w-md sm:text-right font-normal leading-relaxed">
             Objektive Beurteilung von Bewegungsumfang, Tempo, Gelenkachsen und Rumpfspannung ohne Verharmlosung.
           </p>
         </section>
 
         {/* Global Loading Banner during Analysis (Apple Style) */}
         {isAnalyzing && (
-          <div className="p-4 bg-[#35322c] border border-[#c98a6b]/40 rounded-2xl flex items-center justify-between gap-4 shadow-lg backdrop-blur-md">
+          <div className="p-4 bg-[#3b3529] border border-[#e2553c]/40 rounded-2xl flex items-center justify-between gap-4 shadow-lg backdrop-blur-md">
             <div className="flex items-center gap-3">
-              <div className="w-5 h-5 rounded-full border-2 border-[#c98a6b] border-t-transparent animate-spin" />
+              <div className="w-5 h-5 rounded-full border-2 border-[#e2553c] border-t-transparent animate-spin" />
               <div>
                 <p className="text-xs sm:text-sm font-semibold text-[#faf6ef]">
                   Kraftsport-Coach analysiert die Bewegung...
                 </p>
-                <p className="text-[11px] text-[#a69c8a]">
+                <p className="text-[11px] text-[#b0a692]">
                   Phasen-Segmentierung, tiefster Punkt, Ellenbogenwinkel und Lastpfad.
                 </p>
               </div>
             </div>
-            <span className="text-[10px] text-[#c98a6b] font-mono px-2.5 py-1 bg-[#c98a6b]/10 rounded-full border border-[#c98a6b]/20">
+            <span className="text-[10px] text-[#e2553c] font-mono px-2.5 py-1 bg-[#e2553c]/10 rounded-full border border-[#e2553c]/20">
               Analysiere
             </span>
           </div>
@@ -327,15 +327,15 @@ export default function App() {
 
         {/* Error Alert */}
         {analysisError && (
-          <div className="p-4 bg-[#2e1f1a] border border-[#b23a2f]/40 rounded-2xl flex items-center justify-between text-xs text-[#e8a79b]">
+          <div className="p-4 bg-[#3a251c] border border-[#e2553c]/40 rounded-2xl flex items-center justify-between text-xs text-[#f2b3a5]">
             <div className="flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 text-[#b23a2f] shrink-0" />
+              <AlertCircle className="w-4 h-4 text-[#e2553c] shrink-0" />
               <span>{analysisError}</span>
             </div>
             <button
               type="button"
               onClick={() => setAnalysisError(null)}
-              className="text-[#a69c8a] hover:text-[#faf6ef] text-xs underline"
+              className="text-[#b0a692] hover:text-[#faf6ef] text-xs underline"
             >
               Schliessen
             </button>
@@ -362,20 +362,20 @@ export default function App() {
                 onStartNextSet={handleStartNextSet}
               />
             ) : (
-              <div className="p-12 text-center bg-[#35322c] border border-[#faf6ef]/[0.08] rounded-3xl flex flex-col items-center">
-                <div className="w-12 h-12 rounded-2xl bg-[#3d3931] border border-[#faf6ef]/10 flex items-center justify-center text-[#a69c8a] mb-3">
+              <div className="p-12 text-center bg-[#3b3529] border border-[#faf6ef]/[0.08] rounded-3xl flex flex-col items-center">
+                <div className="w-12 h-12 rounded-2xl bg-[#453e2f] border border-[#faf6ef]/10 flex items-center justify-center text-[#b0a692] mb-3">
                   <Dumbbell className="w-6 h-6" />
                 </div>
                 <h3 className="text-sm sm:text-base font-semibold text-[#faf6ef] mb-1">
                   Noch keine Videoanalyse vorhanden
                 </h3>
-                <p className="text-xs text-[#a69c8a] max-w-sm mb-5 leading-relaxed">
+                <p className="text-xs text-[#b0a692] max-w-sm mb-5 leading-relaxed">
                   Nimm einen Satz direkt mit der Kamera auf oder lade ein Video deiner Liegestütze, Kniebeuge oder deines Kreuzhebens hoch.
                 </p>
                 <button
                   type="button"
                   onClick={() => setActiveTab("video")}
-                  className="px-5 py-2.5 bg-[#faf6ef] hover:bg-[#e8e2d6] text-[#2e2c27] rounded-full text-xs font-semibold shadow-sm transition flex items-center gap-1.5"
+                  className="px-5 py-2.5 bg-[#faf6ef] hover:bg-[#e8e2d6] text-[#332e24] rounded-full text-xs font-semibold shadow-sm transition flex items-center gap-1.5"
                 >
                   <span>Video aufnehmen oder hochladen</span>
                   <ArrowRight className="w-3.5 h-3.5" />
@@ -406,14 +406,14 @@ export default function App() {
           <div
             className={`px-4 py-2.5 rounded-full shadow-2xl text-xs font-medium flex items-center gap-2 backdrop-blur-xl border ${
               toastMessage.type === "success"
-                ? "bg-[#35322c]/95 text-[#faf6ef] border-[#faf6ef]/10"
-                : "bg-[#2e1f1a]/95 text-[#e8a79b] border-[#b23a2f]/40"
+                ? "bg-[#3b3529]/95 text-[#faf6ef] border-[#faf6ef]/10"
+                : "bg-[#3a251c]/95 text-[#f2b3a5] border-[#e2553c]/40"
             }`}
           >
             {toastMessage.type === "success" ? (
-              <CheckCircle className="w-3.5 h-3.5 text-[#7c8a45] shrink-0" />
+              <CheckCircle className="w-3.5 h-3.5 text-[#a8c94a] shrink-0" />
             ) : (
-              <AlertCircle className="w-3.5 h-3.5 text-[#b23a2f] shrink-0" />
+              <AlertCircle className="w-3.5 h-3.5 text-[#e2553c] shrink-0" />
             )}
             <span>{toastMessage.text}</span>
           </div>
@@ -421,9 +421,9 @@ export default function App() {
       )}
 
       {/* Apple.com/chde Style Clean Footer */}
-      <footer className="border-t border-[#faf6ef]/[0.08] py-8 bg-[#1a1815]/50 backdrop-blur-sm text-[#a69c8a] text-xs mt-10">
+      <footer className="border-t border-[#faf6ef]/[0.08] py-8 bg-[#1c1913]/50 backdrop-blur-sm text-[#b0a692] text-xs mt-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-4">
-          <div className="border-b border-[#faf6ef]/[0.06] pb-4 text-[11px] leading-relaxed text-[#a69c8a]">
+          <div className="border-b border-[#faf6ef]/[0.06] pb-4 text-[11px] leading-relaxed text-[#b0a692]">
             <p>
               1. Die Videoanalyse liefert technische Beobachtungen und biomechanische Orientierungshilfen am Umkehrpunkt. Sie dient sportwissenschaftlichen Zwecken und ersetzt keine medizinische, orthopädische oder physiotherapeutische Befundung.
             </p>
@@ -433,7 +433,7 @@ export default function App() {
             <span>
               Copyright © 2026 Kraftsport-Coach. Alle Rechte vorbehalten.
             </span>
-            <div className="flex flex-wrap items-center gap-4 text-[#a69c8a]">
+            <div className="flex flex-wrap items-center gap-4 text-[#b0a692]">
               <span>Schweiz (Deutsch)</span>
               <span className="text-[#faf6ef]/20">•</span>
               <span>Datenschutz</span>
