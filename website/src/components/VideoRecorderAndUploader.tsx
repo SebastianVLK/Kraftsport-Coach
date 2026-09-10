@@ -469,17 +469,9 @@ export const VideoRecorderAndUploader: React.FC<VideoRecorderAndUploaderProps> =
             <span className="w-9 h-9 rounded-2xl bg-[#eee8dd] border border-[#2e2c27]/10 flex items-center justify-center text-[#c23a20]">
               <Activity className="w-4 h-4" />
             </span>
-            <div>
-              <h2 className="text-sm sm:text-base font-semibold tracking-tight text-[#2e2c27] flex items-center gap-2">
-                <span>Video-Technikanalyse</span>
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#eee8dd] border border-[#2e2c27]/[0.08] text-[#6f6759] font-medium">
-                  KI-Coach
-                </span>
-              </h2>
-              <p className="text-xs text-[#6f6759] font-normal">
-                Objektive Diagnose am tiefsten Punkt (Umkehrpunkt)
-              </p>
-            </div>
+            <h2 className="text-sm sm:text-base font-semibold tracking-tight text-[#2e2c27]">
+              Video-Technikanalyse
+            </h2>
           </div>
         </div>
 
