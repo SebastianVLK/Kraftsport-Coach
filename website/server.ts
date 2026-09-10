@@ -202,6 +202,7 @@ app.post("/api/analyze-exercise-video", async (req, res) => {
           `Hüfte min ${p.hipMin}° | Körperlinie ${p.bodyLineMin}–${p.bodyLineMax}° | ` +
           `Becken ${p.hipOffsetMax} bis ${p.hipOffsetMin} (>0.05 = durchhängend) | ` +
           `Knie/Fuss ${p.kneeOverFootAtDepth} Stand/Schulter ${p.footOverShoulderMedian} | ` +
+          `Wdh. ${p.reps?.length ?? 0} Drift ${p.depthDrift ?? "-"}° | ` +
           `Oberarm/Rumpf max ${p.armToTorsoMax}°`
       );
       if (measured.length) {

@@ -44,9 +44,18 @@ export interface PoseMetrics {
   worstBodyLineAt: number | null;
   /** Second of the deepest point, by the smaller of elbow/knee flexion. */
   deepestAt: number | null;
+  /** Repetitions counted from the leading joint's angle, with each bottom. */
+  reps: { at: number; bottom: number }[];
+  /** How much shallower the last repetition was than the first, in degrees. */
+  depthDrift: number | null;
 }
 
 const V = 0.6; // landmark visibility below this is not trusted
+
+// The gates sit past the ideal by the joint's own measurement error, so noise
+// alone cannot book or drop a repetition. See docs/KALIBRIERUNG.md.
+const ELBOW_SLACK = 25;
+const KNEE_SLACK = 15;
 
 type LM = { x: number; y: number; z?: number; visibility?: number };
 
@@ -197,9 +206,19 @@ function summarise(rows: FrameMeasurement[], sampled: number): PoseMetrics {
       })
     : null;
 
+  // Whichever joint actually moves is the one that marks out the repetitions
+  const span = (k: "elbow" | "knee") => {
+    const v = rows.map((r) => r[k]).filter((x): x is number => typeof x === "number");
+    return v.length ? Math.max(...v) - Math.min(...v) : 0;
+  };
+  const lead = span("elbow") >= span("knee") ? "elbow" : "knee";
+  const { reps, depthDrift } = countReps(rows, lead);
+
   return {
     frames: rows.length,
     coverage: sampled ? rows.length / sampled : 0,
+    reps,
+    depthDrift,
     elbowMin: min(col("elbow")),
     elbowMax: max(col("elbow")),
     kneeMin: min(col("knee")),
@@ -226,6 +245,54 @@ function summarise(rows: FrameMeasurement[], sampled: number): PoseMetrics {
   };
 }
 
+/**
+ * Counts repetitions from the leading joint's angle with a two-state machine.
+ *
+ * The verdict view has always described findings "repetition by repetition",
+ * but nothing counted them — the model was inventing both the number and what
+ * happened in each. Segmenting the movement first is the standard opening step
+ * in the rehabilitation literature (arXiv:2304.09735), and the gate values are
+ * the ones an independent counter uses: below 90° is the bottom, above 145° is
+ * the top. Requiring both before a repetition is booked rejects the half rep
+ * that never came back up.
+ */
+function countReps(
+  rows: FrameMeasurement[],
+  joint: "elbow" | "knee"
+): { reps: { at: number; bottom: number }[]; depthDrift: number | null } {
+  const DOWN = 90 + (joint === "elbow" ? ELBOW_SLACK : KNEE_SLACK);
+  const UP = 145;
+
+  const reps: { at: number; bottom: number }[] = [];
+  let state: "up" | "down" = "up";
+  let bottom = 999;
+  let bottomAt = 0;
+
+  for (const r of rows) {
+    const a = r[joint];
+    if (a === null) continue;
+    if (state === "up" && a < DOWN) {
+      state = "down";
+      bottom = a;
+      bottomAt = r.t;
+    } else if (state === "down") {
+      if (a < bottom) {
+        bottom = a;
+        bottomAt = r.t;
+      }
+      if (a > UP) {
+        reps.push({ at: Number(bottomAt.toFixed(1)), bottom: Math.round(bottom) });
+        state = "up";
+        bottom = 999;
+      }
+    }
+  }
+
+  const drift =
+    reps.length >= 2 ? Math.round(reps[reps.length - 1].bottom - reps[0].bottom) : null;
+  return { reps, depthDrift: drift };
+}
+
 const seekTo = (video: HTMLVideoElement, t: number) =>
   new Promise<void>((resolve) => {
     const done = () => {
@@ -244,7 +311,7 @@ const seekTo = (video: HTMLVideoElement, t: number) =>
  */
 export async function measureClip(
   videoUrl: string,
-  sampleCount = 14
+  sampleCount = 26
 ): Promise<PoseMetrics | null> {
   let landmarker: PoseLandmarker | null = null;
   const video = document.createElement("video");

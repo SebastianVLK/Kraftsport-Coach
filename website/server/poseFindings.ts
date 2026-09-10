@@ -24,6 +24,8 @@ export interface PoseMetrics {
   footOverShoulderMedian: number | null;
   worstBodyLineAt: number | null;
   deepestAt: number | null;
+  reps: { at: number; bottom: number }[];
+  depthDrift: number | null;
 }
 
 export type Severity = "kritisch" | "relevant";
@@ -206,6 +208,19 @@ export function findingsFromMetrics(
     });
   }
 
+  // Depth falling away across the set is what the grading rules call a relevant
+  // finding that worsens over the repetitions. Fifteen degrees clears the
+  // measurement noise of either joint.
+  if (m.reps.length >= 2 && m.depthDrift !== null && m.depthDrift > 15) {
+    const last = m.reps[m.reps.length - 1];
+    out.push({
+      severity: "relevant",
+      label: "Tiefe nimmt über den Satz ab",
+      detail: `Die letzte Wiederholung bleibt ${m.depthDrift}° flacher als die erste (${m.reps[0].bottom}° gegenüber ${last.bottom}°).`,
+      atSecond: last.at,
+    });
+  }
+
   return out;
 }
 
@@ -281,6 +296,15 @@ Urteile allein nach dem Bildmaterial und sage im Feld "wasNichtBeurteilbar", das
     m.footOverShoulderMedian === null ? "nicht messbar" : m.footOverShoulderMedian
   }
 - Tiefster Punkt bei etwa ${n(m.deepestAt, "s")}
+- Gezählte Wiederholungen: ${
+    m.reps.length === 0
+      ? "keine vollständige erkannt"
+      : m.reps
+          .map((r, i) => `Wdh. ${i + 1} bei ${r.at}s, tiefster Winkel ${r.bottom}°`)
+          .join("; ")
+  }
+Diese Wiederholungen sind gezählt, nicht geschätzt. Beziehe dich in
+"repetitionDetails" ausschliesslich auf sie und erfinde keine weiteren.
 
 ${
   findings.length
