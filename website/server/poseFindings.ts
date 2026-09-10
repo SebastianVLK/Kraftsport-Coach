@@ -35,10 +35,24 @@ export interface MeasuredFinding {
   atSecond: number | null;
 }
 
+/**
+ * Measurement tolerance, from a comparison of 3D pose estimation against
+ * inertial motion capture (arXiv:2306.06117). Knee, ankle and back flexion
+ * deviate by 1–7° on average with maxima around 20°, while elbow flexion is the
+ * least dependable joint of all, with maximum deviations up to 50°.
+ *
+ * Thresholds therefore sit far enough past the ideal that the tolerance cannot
+ * produce a finding on its own. An elbow rule in particular may only fire when
+ * the range is missed by more than the instrument can plausibly be wrong by.
+ */
+const ELBOW_TOLERANCE = 40;
+const KNEE_TOLERANCE = 20;
+
 const PLANK_LIKE = /liegest(ü|ue)tz|push[\s-]?up|planke|plank|dip/i;
 const SQUAT_LIKE = /kniebeuge|squat|ausfallschritt|lunge/i;
 const HINGE_LIKE = /kreuzheben|deadlift|rdl|rudern|row|hip thrust/i;
 const PRESS_LIKE = /bankdr(ü|ue)cken|bench|schulterdr(ü|ue)cken|overhead|press/i;
+const PULL_LIKE = /klimmzug|klimmz(ü|ue)ge|pull[\s-]?up|chin[\s-]?up|latzug/i;
 
 export function findingsFromMetrics(
   m: PoseMetrics | null | undefined,
@@ -53,6 +67,7 @@ export function findingsFromMetrics(
   const squat = SQUAT_LIKE.test(exercise);
   const hinge = HINGE_LIKE.test(exercise);
   const press = PRESS_LIKE.test(exercise);
+  const pull = PULL_LIKE.test(exercise);
 
   if (plank) {
     // Thresholds read off 28,500 labelled plank frames (correct / hip low /
@@ -78,7 +93,9 @@ export function findingsFromMetrics(
         atSecond: m.worstBodyLineAt,
       });
     }
-    if (m.elbowMin !== null && m.elbowMin > 110) {
+    // 90° is the target; only past 90 + tolerance is the shortfall larger than
+    // the measurement can account for
+    if (m.elbowMin !== null && m.elbowMin > 90 + ELBOW_TOLERANCE) {
       out.push({
         severity: "relevant",
         label: "Bewegungsumfang verkürzt",
@@ -86,7 +103,7 @@ export function findingsFromMetrics(
         atSecond: m.deepestAt,
       });
     }
-    if (m.armToTorsoMax !== null && m.armToTorsoMax > 75) {
+    if (m.armToTorsoMax !== null && m.armToTorsoMax > 85) {
       out.push({
         severity: "kritisch",
         label: "Ellenbogen flügeln nach aussen",
@@ -127,7 +144,7 @@ export function findingsFromMetrics(
         atSecond: m.deepestAt,
       });
     }
-    if (m.kneeMin !== null && m.kneeMin > 100) {
+    if (m.kneeMin !== null && m.kneeMin > 90 + KNEE_TOLERANCE) {
       out.push({
         severity: "relevant",
         label: "Nicht tief genug",
@@ -135,7 +152,7 @@ export function findingsFromMetrics(
         atSecond: m.deepestAt,
       });
     }
-    if (m.hipMin !== null && m.hipMin < 35) {
+    if (m.hipMin !== null && m.hipMin < 25) {
       out.push({
         severity: "relevant",
         label: "Sehr starke Hüftbeugung",
@@ -145,7 +162,7 @@ export function findingsFromMetrics(
     }
   }
 
-  if (hinge && m.hipMin !== null && m.hipMin > 120) {
+  if (hinge && m.hipMin !== null && m.hipMin > 140) {
     out.push({
       severity: "relevant",
       label: "Hüfte wird kaum gebeugt",
@@ -154,7 +171,19 @@ export function findingsFromMetrics(
     });
   }
 
-  if (press && m.elbowMin !== null && m.elbowMin > 100) {
+  // A pull-up starts from a straight arm; reference implementations gate the
+  // bottom position at 160°. With the elbow's tolerance subtracted, anything
+  // under 130° is a hang that never straightened.
+  if (pull && m.elbowMax !== null && m.elbowMax < 130) {
+    out.push({
+      severity: "relevant",
+      label: "Arme werden unten nicht gestreckt",
+      detail: `Der Ellenbogen öffnet sich nur bis ${m.elbowMax}°; eine volle Wiederholung beginnt nahezu gestreckt bei etwa 160° oder mehr.`,
+      atSecond: null,
+    });
+  }
+
+  if (press && m.elbowMin !== null && m.elbowMin > 90 + ELBOW_TOLERANCE) {
     out.push({
       severity: "relevant",
       label: "Bewegungsumfang verkürzt",
@@ -179,7 +208,7 @@ Urteile allein nach dem Bildmaterial und sage im Feld "wasNichtBeurteilbar", das
   const n = (v: number | null, unit = "°") => (v === null ? "nicht messbar" : `${v}${unit}`);
 
   return `GEMESSENE GEOMETRIE (aus ${m.frames} Einzelbildern per Pose-Tracking, keine Schätzung):
-- Ellenbogenwinkel: min ${n(m.elbowMin)}, max ${n(m.elbowMax)}
+- Ellenbogenwinkel: min ${n(m.elbowMin)}, max ${n(m.elbowMax)} (unsicherste Messung, bis zu 40° Abweichung möglich — daraus keine knappen Schlüsse ziehen)
 - Kniewinkel: min ${n(m.kneeMin)}, max ${n(m.kneeMax)}
 - Hüftwinkel (Schulter–Hüfte–Knie): min ${n(m.hipMin)}
 - Körperlinie (Schulter–Hüfte–Sprunggelenk): min ${n(m.bodyLineMin)}, max ${n(m.bodyLineMax)}
