@@ -14,15 +14,35 @@ belegten Zahl schnell wieder eine geratene.
 
 ## Was gemessen wird
 
-| Grösse | Herkunft |
-| --- | --- |
-| Gelenkwinkel (Ellenbogen, Knie, Hüfte) | 3D-Weltkoordinaten von MediaPipe |
-| Beckenlage zur Linie Schulter–Sprunggelenk | 2D-Bildkoordinaten, auf Körperlänge normiert |
-| Knieabstand zu Fussabstand, Standbreite | 2D-Bildkoordinaten, nur bei Frontalansicht |
+Alles wird in **2D-Bildkoordinaten** gerechnet, mit `atan2` von Kreuz- gegen
+Skalarprodukt.
 
-Winkel kommen aus den **Weltkoordinaten**, weil ein schräg gefilmter Körper im
-Bild perspektivisch verkürzt erscheint. Die Beckenlage kommt aus den
-**Bildkoordinaten**, weil die Referenzdaten so gelabelt waren.
+| Grösse | Berechnung |
+| --- | --- |
+| Gelenkwinkel (Ellenbogen, Knie, Hüfte) | Winkel in der Bildebene |
+| Beckenlage zur Linie Schulter–Sprunggelenk | vorzeichenbehaftet, auf Körperlänge normiert |
+| Knieabstand zu Fussabstand, Standbreite | nur bei Frontalansicht |
+
+**Warum 2D und nicht 3D:** MediaPipe liefert auch Weltkoordinaten, und ein
+schräg gefilmter Körper erscheint im Bild perspektivisch verkürzt — das spricht
+zunächst für 3D. Aber **jeder** Grenzwert unten stammt aus einer Quelle, die den
+projizierten Winkel misst. Auf denselben Bildern unterscheiden sich 2D- und
+3D-Winkel erheblich:
+
+| Gelenk | Median | 95 % | Maximum |
+| --- | --- | --- | --- |
+| Ellenbogen | 12.9° | 29.3° | 39.7° |
+| Knie | 1.7° | 10.8° | 21.2° |
+| Hüfte | 1.7° | 12.0° | 26.9° |
+
+Beim Ellenbogen liegt die Abweichung damit in der Grössenordnung der
+Grenzwert-Sicherheitsabstände selbst. Eine Grösse zu messen und sie an einer
+Zahl zu beurteilen, die aus einer anderen stammt, ist schlechter als jede der
+beiden Konventionen konsequent durchzuhalten.
+
+Das Perspektiv-Argument betraf ohnehin vor allem die Körperlinie — und die wird
+gar nicht mehr als Winkel gemessen, sondern als vorzeichenbehafteter Abstand,
+kalibriert an gelabelten Daten.
 
 ## Die Grenzwerte
 
@@ -113,5 +133,5 @@ Das ist Absicht: Ein erfundener Befund wäre schlimmer als ein fehlender.
 | [arXiv:2306.06117](https://arxiv.org/abs/2306.06117) | **Brauchbar.** Messgenauigkeit je Gelenk |
 | [Ultralytics Workouts](https://docs.ultralytics.com/guides/workouts-monitoring) | **Bestätigend.** 90° / 145° für Liegestütze |
 | [Labellerr Pull-up Counter](https://www.labellerr.com/blog/ai-pull-up-counter-yolo11-pose/) | **Bestätigend.** 160° volle Streckung |
-| [arXiv:2406.17443](https://arxiv.org/abs/2406.17443) | **Methodisch bestätigend.** Kamerawinkel-unabhängige Gelenkwinkel nach ISB-Standard — dieselbe Begründung für Weltkoordinaten. Keine Grenzwerte |
+| [arXiv:2406.17443](https://arxiv.org/abs/2406.17443) | **Methodisch.** Gelenkwinkel nach ISB-Standard, unabhängig von Kamerawinkel und Person. Keine Grenzwerte; der beschriebene Weg wäre die saubere Ablösung der Bildebene, wenn die Grenzwerte dazu passend neu erhoben würden |
 | [HuggingFace TrainingDataPro](https://huggingface.co/datasets/TrainingDataPro/pose_estimation) | **Unbrauchbar.** Generische Pose-Daten ohne Qualitätslabels, kommerziell gesperrt |
