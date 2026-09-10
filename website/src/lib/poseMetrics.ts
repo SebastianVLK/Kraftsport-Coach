@@ -37,18 +37,27 @@ export interface PoseMetrics {
 
 const V = 0.6; // landmark visibility below this is not trusted
 
-type LM = { x: number; y: number; visibility?: number };
+type LM = { x: number; y: number; z?: number; visibility?: number };
 
+/**
+ * Angles come from the 3D world landmarks, not from the picture.
+ *
+ * In image coordinates a body filmed at an angle is foreshortened, so a
+ * perfectly straight athlete can project to 150° and trip a threshold that was
+ * never actually breached. The world landmarks are metric and root-relative,
+ * which takes the camera's perspective out of the measurement — and the app
+ * asks people to film at 45°, exactly where the 2D error is largest.
+ */
 function angle(a: LM, b: LM, c: LM): number | null {
   if ((a.visibility ?? 1) < V || (b.visibility ?? 1) < V || (c.visibility ?? 1) < V) {
     return null;
   }
-  const v1 = { x: a.x - b.x, y: a.y - b.y };
-  const v2 = { x: c.x - b.x, y: c.y - b.y };
-  const m1 = Math.hypot(v1.x, v1.y);
-  const m2 = Math.hypot(v2.x, v2.y);
+  const v1 = { x: a.x - b.x, y: a.y - b.y, z: (a.z ?? 0) - (b.z ?? 0) };
+  const v2 = { x: c.x - b.x, y: c.y - b.y, z: (c.z ?? 0) - (b.z ?? 0) };
+  const m1 = Math.hypot(v1.x, v1.y, v1.z);
+  const m2 = Math.hypot(v2.x, v2.y, v2.z);
   if (!m1 || !m2) return null;
-  const cos = (v1.x * v2.x + v1.y * v2.y) / (m1 * m2);
+  const cos = (v1.x * v2.x + v1.y * v2.y + v1.z * v2.z) / (m1 * m2);
   return (Math.acos(Math.max(-1, Math.min(1, cos))) * 180) / Math.PI;
 }
 
@@ -178,8 +187,14 @@ export async function measureClip(
       } catch {
         continue;
       }
-      const lm = result.landmarks?.[0] as LM[] | undefined;
-      if (lm?.length) rows.push(measureFrame(lm, t));
+      // world landmarks carry the geometry, image landmarks carry the
+      // dependable visibility flags — take one from each
+      const world = result.worldLandmarks?.[0] as LM[] | undefined;
+      const image = result.landmarks?.[0] as LM[] | undefined;
+      if (world?.length && image?.length) {
+        const merged = world.map((p, i) => ({ ...p, visibility: image[i]?.visibility }));
+        rows.push(measureFrame(merged, t));
+      }
     }
 
     if (rows.length < 3) return null;

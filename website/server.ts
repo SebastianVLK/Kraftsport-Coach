@@ -193,6 +193,23 @@ app.post("/api/analyze-exercise-video", async (req, res) => {
     const frameBytes = hasFrames
       ? videoFrames.reduce((n: number, f: string) => n + (f?.length ?? 0), 0)
       : 0;
+    if (poseMetrics) {
+      const p = poseMetrics;
+      console.log(
+        `[messung] Bilder=${p.frames} Abdeckung=${(p.coverage * 100).toFixed(0)}% | ` +
+          `Ellenbogen ${p.elbowMin}–${p.elbowMax}° | Knie ${p.kneeMin}–${p.kneeMax}° | ` +
+          `Hüfte min ${p.hipMin}° | Körperlinie ${p.bodyLineMin}–${p.bodyLineMax}° | ` +
+          `Oberarm/Rumpf max ${p.armToTorsoMax}°`
+      );
+      if (measured.length) {
+        for (const f of measured) {
+          console.log(`[messung]   -> [${f.severity}] ${f.label}: ${f.detail}`);
+        }
+      } else {
+        console.log("[messung]   -> kein Grenzwert überschritten");
+      }
+    }
+
     console.log(
       `[analyse] Übung="${exerciseHint || "?"}" | Messung: ${
         poseMetrics ? `${poseMetrics.frames} Bilder, ${measured.length} Befund(e)` : "keine"
