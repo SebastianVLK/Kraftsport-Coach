@@ -1,0 +1,6 @@
+{
+  "name": "Live Kamer Analyse",
+  "description": "Erfahrener Kraftsport-Coach zur objektiven Beurteilung der technischen Übungsausführung (Bewegungsumfang, Umkehrpunkt, Tempo, Gelenkstellung) anhand von Videoaufnahmen.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
