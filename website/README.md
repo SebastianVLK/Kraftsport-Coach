@@ -78,17 +78,16 @@ als Liste ansehen, jeweils nach Tag gruppiert.
 Die Datenbank ist eine SQLite-Datei — `node:sqlite` ist in Node enthalten, es
 braucht also weder ein natives Modul noch einen laufenden Datenbankdienst.
 
-Sie liegt bewusst **ausserhalb** des Projektordners, damit Konten ein erneutes
-Klonen oder Löschen des Repositories überstehen:
+Sie liegt bewusst **ausserhalb** des Projektordners — so überstehen Konten ein
+erneutes Klonen oder Löschen des Repositories, und der Ort hängt nicht davon
+ab, aus welchem Verzeichnis der Server gestartet wurde:
 
-| System | Pfad |
-| --- | --- |
-| macOS | `~/Library/Application Support/Kraftsport-Coach/coach.db` |
-| Linux | `~/.local/share/kraftsport-coach/coach.db` |
-| Windows | `%APPDATA%\Kraftsport-Coach\coach.db` |
+    ~/Desktop/Kraftsport-Coach/coach.db
 
-Ein anderer Ort lässt sich über `COACH_DATA_DIR` setzen. Beim Start schreibt
-der Server den tatsächlich benutzten Pfad ins Log.
+Gibt es keinen Schreibtisch (Server, abgespecktes Konto), weicht die App auf
+den üblichen Datenordner des Systems aus. Ein anderer Ort lässt sich über
+`COACH_DATA_DIR` setzen. Beim Start schreibt der Server den tatsächlich
+benutzten Pfad ins Log.
 
 **Das Video selbst wird nicht gespeichert**, nur die Analyse. Ein wieder
 geöffnetes Coaching zeigt daher das Urteil und alle Anmerkungen, aber keine

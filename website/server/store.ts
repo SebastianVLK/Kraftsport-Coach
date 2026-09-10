@@ -19,11 +19,18 @@ function resolveDataDir(): string {
   const override = process.env.COACH_DATA_DIR;
   if (override) return path.resolve(override);
 
-  if (process.platform === "darwin") {
-    return path.join(homedir(), "Library", "Application Support", "Kraftsport-Coach");
-  }
+  // A visible folder on the desktop, so the saved data is somewhere you can
+  // actually open, back up or hand over — not buried in a system directory.
+  const desktop = path.join(homedir(), "Desktop");
+  if (existsSync(desktop)) return path.join(desktop, "Kraftsport-Coach");
+
+  // No desktop (a server, a stripped-down account): fall back to the usual
+  // per-user data folder for the platform.
   if (process.platform === "win32") {
     return path.join(process.env.APPDATA ?? homedir(), "Kraftsport-Coach");
+  }
+  if (process.platform === "darwin") {
+    return path.join(homedir(), "Library", "Application Support", "Kraftsport-Coach");
   }
   return path.join(
     process.env.XDG_DATA_HOME ?? path.join(homedir(), ".local", "share"),
@@ -36,11 +43,17 @@ mkdirSync(dataDir, { recursive: true });
 
 export const dbPath = path.join(dataDir, "coach.db");
 
-// Carry over a database from the old in-project location, once.
-const legacyPath = path.join(process.cwd(), "data", "coach.db");
-if (!existsSync(dbPath) && existsSync(legacyPath)) {
-  copyFileSync(legacyPath, dbPath);
-  console.log(`[db] Bestehende Datenbank übernommen aus ${legacyPath}`);
+// Carry over a database from an earlier location, once.
+const legacyPaths = [
+  path.join(homedir(), "Library", "Application Support", "Kraftsport-Coach", "coach.db"),
+  path.join(process.cwd(), "data", "coach.db"),
+];
+if (!existsSync(dbPath)) {
+  const previous = legacyPaths.find((p) => p !== dbPath && existsSync(p));
+  if (previous) {
+    copyFileSync(previous, dbPath);
+    console.log(`[db] Bestehende Datenbank übernommen aus ${previous}`);
+  }
 }
 
 export const db = new DatabaseSync(dbPath);
