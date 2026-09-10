@@ -218,8 +218,11 @@ export default function App() {
             Objektive Beurteilung von Bewegungsumfang, Tempo, Gelenkachsen und Rumpfspannung
             ohne Verharmlosung.
           </p>
+          {/* Once a verdict exists the call to action has been answered, so it
+              only shows while the analysis tab is where you still need to go. */}
           <button
             type="button"
+            hidden={activeTab === "feedback"}
             onClick={() => goToTab("video")}
             className="mt-8 px-9 py-4 sm:px-10 sm:py-[18px] rounded-full bg-[#2e2c27] hover:bg-[#1f1d19] text-[#faf6ef] text-base sm:text-lg font-semibold transition inline-flex items-center gap-2.5 shadow-sm active:scale-95"
           >
