@@ -70,6 +70,12 @@ interface PoseOverlayProps {
   videoRef: React.RefObject<HTMLVideoElement | null>;
   /** Label of the finding showing right now, if any. */
   activeFaultLabel?: string | null;
+  /**
+   * Everything the coach faulted in this clip. These areas stay red for the
+   * whole playback — a joint the coach called wrong must never read as green
+   * just because its timestamp has passed.
+   */
+  faultTexts?: string[];
   exerciseName: string;
 }
 
@@ -78,6 +84,7 @@ type Status = "idle" | "loading" | "ready" | "unavailable";
 export const PoseOverlay: React.FC<PoseOverlayProps> = ({
   videoRef,
   activeFaultLabel,
+  faultTexts = [],
   exerciseName,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -85,10 +92,21 @@ export const PoseOverlay: React.FC<PoseOverlayProps> = ({
   const rafRef = useRef<number | null>(null);
   const lastTsRef = useRef<number>(-1);
   const faultRef = useRef<string | null | undefined>(activeFaultLabel);
+  const persistentRef = useRef<Set<number>>(new Set());
   const [status, setStatus] = useState<Status>("idle");
   const [angle, setAngle] = useState<number | null>(null);
 
+  // The coach faulted something we could not tie to a joint. Painting the
+  // skeleton green would then claim an all-clear the analysis never gave, so
+  // the joints go neutral instead.
+  const unmappedFault =
+    faultTexts.length > 0 &&
+    faultTexts.every((t) => jointsForFault(t).size === 0);
+  const unmappedRef = useRef<boolean>(unmappedFault);
+  unmappedRef.current = unmappedFault;
+
   faultRef.current = activeFaultLabel;
+  persistentRef.current = new Set(faultTexts.flatMap((t) => [...jointsForFault(t)]));
 
   useEffect(() => {
     let cancelled = false;
@@ -173,7 +191,36 @@ export const PoseOverlay: React.FC<PoseOverlayProps> = ({
       const offY = (box.height - drawH) / 2;
       const pt = (i: number) => ({ x: offX + lm[i].x * drawW, y: offY + lm[i].y * drawH });
 
-      const faulty = jointsForFault(faultRef.current);
+      const active = jointsForFault(faultRef.current);
+      const persistent = persistentRef.current;
+      const faulty = new Set<number>([...persistent, ...active]);
+
+      // --- red zones over the faulted regions ---------------------------
+      // Sized against the athlete's own torso so the blobs scale with the
+      // framing instead of a fixed pixel radius.
+      const torso =
+        lm[J.shoulderR] && lm[J.hipR]
+          ? Math.hypot(
+              (lm[J.shoulderR].x - lm[J.hipR].x) * drawW,
+              (lm[J.shoulderR].y - lm[J.hipR].y) * drawH
+            )
+          : drawW * 0.25;
+
+      faulty.forEach((i) => {
+        const p = lm[i];
+        if (!p || (p.visibility ?? 1) < 0.5) return;
+        const { x, y } = pt(i);
+        const isActive = active.has(i);
+        const radius = torso * (isActive ? 0.62 : 0.46);
+        const grad = ctx.createRadialGradient(x, y, 0, x, y, radius);
+        grad.addColorStop(0, isActive ? "rgba(255, 68, 38, 0.55)" : "rgba(255, 68, 38, 0.34)");
+        grad.addColorStop(0.55, isActive ? "rgba(255, 68, 38, 0.22)" : "rgba(255, 68, 38, 0.13)");
+        grad.addColorStop(1, "rgba(255, 68, 38, 0)");
+        ctx.beginPath();
+        ctx.arc(x, y, radius, 0, Math.PI * 2);
+        ctx.fillStyle = grad;
+        ctx.fill();
+      });
 
       // bones
       ctx.lineWidth = Math.max(2, drawW * 0.004);
@@ -184,7 +231,7 @@ export const PoseOverlay: React.FC<PoseOverlayProps> = ({
         const b = lm[c.end];
         if (!a || !b || (a.visibility ?? 1) < 0.5 || (b.visibility ?? 1) < 0.5) continue;
         const isFaulty = faulty.has(c.start) || faulty.has(c.end);
-        ctx.strokeStyle = isFaulty ? "rgba(255, 122, 92, 0.95)" : "rgba(250, 246, 239, 0.85)";
+        ctx.strokeStyle = isFaulty ? "rgba(255, 68, 38, 0.95)" : "rgba(250, 246, 239, 0.85)";
         const p1 = pt(c.start);
         const p2 = pt(c.end);
         ctx.beginPath();
@@ -202,13 +249,17 @@ export const PoseOverlay: React.FC<PoseOverlayProps> = ({
         const { x, y } = pt(i);
         if (isFaulty) {
           ctx.beginPath();
-          ctx.arc(x, y, r * 2.6 * pulse, 0, Math.PI * 2);
-          ctx.fillStyle = "rgba(255, 122, 92, 0.25)";
+          ctx.arc(x, y, r * (active.has(i) ? 2.8 * pulse : 2.1), 0, Math.PI * 2);
+          ctx.fillStyle = "rgba(255, 68, 38, 0.3)";
           ctx.fill();
         }
         ctx.beginPath();
         ctx.arc(x, y, isFaulty ? r * 1.5 : r, 0, Math.PI * 2);
-        ctx.fillStyle = isFaulty ? "#ff7a5c" : "#7bd44e";
+        ctx.fillStyle = isFaulty
+          ? "#ff4426"
+          : unmappedRef.current
+          ? "#faf6ef"
+          : "#7bd44e";
         ctx.fill();
       });
 
@@ -262,6 +313,12 @@ export const PoseOverlay: React.FC<PoseOverlayProps> = ({
       {status === "unavailable" && (
         <span className="absolute top-3 left-1/2 -translate-x-1/2 px-2.5 py-1 rounded-full bg-[#000000]/60 backdrop-blur-md text-[10px] text-[#faf6ef]">
           Pose-Tracking nicht verfügbar — „npm run setup:pose"
+        </span>
+      )}
+
+      {status === "ready" && unmappedFault && (
+        <span className="absolute top-11 left-1/2 -translate-x-1/2 px-2.5 py-1 rounded-full bg-[#000000]/60 backdrop-blur-md text-[10px] text-[#faf6ef] text-center max-w-[90%]">
+          Befund keinem Gelenk zuzuordnen — keine Freigabe der übrigen Punkte
         </span>
       )}
 

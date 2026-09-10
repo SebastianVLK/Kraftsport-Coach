@@ -39,6 +39,17 @@ export const AnalysedVideoStage: React.FC<AnalysedVideoStageProps> = ({
 
   const isPortrait = ratio !== null && ratio < 1;
 
+  // Everything the coach faulted, so those regions stay red for the whole clip
+  // rather than only while their timestamp is on screen. A clean verdict marks
+  // nothing — there is no problem area to point at.
+  const faultTexts =
+    data.urteil === "gut"
+      ? []
+      : [
+          data.derWichtigsteFehler,
+          ...moments.map((m) => `${m.label} ${m.hinweis ?? ""}`),
+        ].filter(Boolean);
+
   const togglePlay = () => {
     const v = videoRef.current;
     if (!v) return;
@@ -89,6 +100,7 @@ export const AnalysedVideoStage: React.FC<AnalysedVideoStageProps> = ({
           <PoseOverlay
             videoRef={videoRef}
             activeFaultLabel={activeMoment ? `${activeMoment.label} ${activeMoment.hinweis ?? ""}` : null}
+            faultTexts={faultTexts}
             exerciseName={data.exerciseName}
           />
 
