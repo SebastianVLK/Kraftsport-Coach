@@ -10,7 +10,6 @@ import {
   Copy,
   Check,
   EyeOff,
-  MessageSquare,
   ArrowRight,
   Target,
   Bot,
@@ -36,13 +35,11 @@ import {
 
 interface CoachFeedbackViewProps {
   data: ExerciseAnalysisData;
-  onOpenChatWithDiagnosis: (prompt?: string) => void;
   onStartNextSet?: (exerciseName?: string, cue?: string) => void;
 }
 
 export const CoachFeedbackView: React.FC<CoachFeedbackViewProps> = ({
   data,
-  onOpenChatWithDiagnosis,
   onStartNextSet,
 }) => {
   const [copied, setCopied] = useState<boolean>(false);
@@ -285,18 +282,6 @@ export const CoachFeedbackView: React.FC<CoachFeedbackViewProps> = ({
               )}
             </button>
 
-            <button
-              type="button"
-              onClick={() =>
-                onOpenChatWithDiagnosis(
-                  `Mein Urteil war '${data.urteil}'. Der Hauptfehler war: '${data.derWichtigsteFehler}'. Wie kann ich meine Hebel und Gelenkachsen gezielt verbessern?`
-                )
-              }
-              className="px-4 py-2 rounded-full bg-[#2e2c27] hover:bg-[#1f1d19] text-[#faf6ef] text-xs font-semibold transition flex items-center gap-1.5 shadow-sm active:scale-95"
-            >
-              <MessageSquare className="w-3.5 h-3.5" />
-              <span>Coach fragen</span>
-            </button>
           </div>
         </div>
 
@@ -817,25 +802,7 @@ export const CoachFeedbackView: React.FC<CoachFeedbackViewProps> = ({
       </div>
 
       {/* Bottom Floating-style Action Dock (Without 4K Studio!) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-        <div className="p-4 rounded-2xl bg-[#ffffff] border border-[#2e2c27]/[0.08] flex items-center justify-between gap-3">
-          <div>
-            <h5 className="text-xs font-semibold text-[#2e2c27]">
-              Frage an den Biomechanik-Coach?
-            </h5>
-            <p className="text-[11px] text-[#6f6759]">
-              Vertiefe Hebelverhältnisse und individuelle Mobilität im Chat.
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={() => onOpenChatWithDiagnosis()}
-            className="px-4 py-2 rounded-full bg-[#eee8dd] hover:bg-[#e2dacb] text-[#2e2c27] text-xs font-medium shrink-0 transition flex items-center gap-1 border border-[#2e2c27]/10 active:scale-95"
-          >
-            <span>Öffnen</span>
-            <ArrowRight className="w-3 h-3" />
-          </button>
-        </div>
+      <div className="grid grid-cols-1 gap-3 pt-2">
 
         <div className="p-4 rounded-2xl bg-[#ffffff] border border-[#2e2c27]/[0.08] flex items-center justify-between gap-3">
           <div>

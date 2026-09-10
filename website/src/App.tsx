@@ -1,29 +1,28 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Video,
   Dumbbell,
-  MessageSquare,
   AlertCircle,
   CheckCircle,
   FileText,
   Activity,
   ArrowRight,
-  ChevronRight,
+  ChevronDown,
 } from "lucide-react";
 import { VideoRecorderAndUploader } from "./components/VideoRecorderAndUploader";
 import { CoachFeedbackView } from "./components/CoachFeedbackView";
-import { GeminiChatBot } from "./components/GeminiChatBot";
-import {
-  ChatMessage,
-  ChatRole,
-  GeminiModelChoice,
-  ExerciseAnalysisData,
-} from "./types";
+import { ExerciseAnalysisData } from "./types";
 
-type ActiveTab = "video" | "feedback" | "chat";
+type ActiveTab = "video" | "feedback";
+
+const NAV_ITEMS: { id: ActiveTab; label: string }[] = [
+  { id: "video", label: "Video" },
+  { id: "feedback", label: "Coach-Urteil" },
+];
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<ActiveTab>("video");
+  const appRef = useRef<HTMLElement>(null);
   const [selectedExerciseHint, setSelectedExerciseHint] = useState<string>("Liegestütze (Push-ups)");
 
   // Video and Exercise Analysis State
@@ -31,35 +30,23 @@ export default function App() {
   const [exerciseAnalysis, setExerciseAnalysis] = useState<ExerciseAnalysisData | null>(null);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
 
-  // Multi-turn Chat state (gemini-3.1-pro-preview / 3.5-flash / 3.1-flash-lite)
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>(() => {
-    try {
-      const saved = localStorage.getItem("coach_chat_messages");
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
-    }
-  });
-  const [isChatLoading, setIsChatLoading] = useState<boolean>(false);
-  const [activeChatRole, setActiveChatRole] = useState<ChatRole>("technique_coach");
-  const [initialChatPrompt, setInitialChatPrompt] = useState<string | null>(null);
 
   // Notification Toast
   const [toastMessage, setToastMessage] = useState<{ text: string; type: "success" | "error" } | null>(null);
+
+  // Nav and hero buttons both switch tab and carry you past the opening shot
+  const goToTab = (tab: ActiveTab) => {
+    setActiveTab(tab);
+    requestAnimationFrame(() =>
+      appRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+    );
+  };
 
   const showToast = (text: string, type: "success" | "error" = "success") => {
     setToastMessage({ text, type });
     setTimeout(() => setToastMessage(null), 4000);
   };
 
-  // Sync to localStorage
-  useEffect(() => {
-    try {
-      localStorage.setItem("coach_chat_messages", JSON.stringify(chatMessages));
-    } catch (e) {
-      console.warn("Chatverlauf konnte nicht gespeichert werden:", e);
-    }
-  }, [chatMessages]);
 
   // Handle Video Analysis via /api/analyze-exercise-video
   const handleAnalyzeVideo = async (
@@ -108,7 +95,7 @@ export default function App() {
       }
 
       setExerciseAnalysis(data.data);
-      setActiveTab("feedback");
+      goToTab("feedback");
       showToast(`Coach-Urteil: ${data.data.urteil.toUpperCase()}`, "success");
     } catch (err: any) {
       console.error("Fehler bei Videoanalyse:", err);
@@ -119,166 +106,70 @@ export default function App() {
     }
   };
 
-  // Handle Multi-Turn Chat
-  const handleSendMessage = async (
-    text: string,
-    role: ChatRole,
-    modelChoice?: GeminiModelChoice
-  ) => {
-    const userMsg: ChatMessage = {
-      id: `msg-user-${Date.now()}`,
-      role: "user",
-      content: text,
-      timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-    };
 
-    const newHistory = [...chatMessages, userMsg];
-    setChatMessages(newHistory);
-    setIsChatLoading(true);
-
-    try {
-      const res = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          messages: newHistory.map((m) => ({
-            role: m.role,
-            content: m.content,
-          })),
-          roleType: role,
-          modelOverride: modelChoice,
-          exerciseAnalysisContext: exerciseAnalysis,
-        }),
-      });
-
-      const data = await res.json();
-      if (!res.ok || !data.success) {
-        throw new Error(data.error || "Keine Antwort vom Coach erhalten.");
-      }
-
-      const assistantMsg: ChatMessage = {
-        id: `msg-bot-${Date.now()}`,
-        role: "assistant",
-        content: data.reply,
-        timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-        modelUsed: data.modelUsed,
-      };
-
-      setChatMessages((prev) => [...prev, assistantMsg]);
-    } catch (err: any) {
-      console.error("Fehler im Chat:", err);
-      const errorMsg: ChatMessage = {
-        id: `msg-err-${Date.now()}`,
-        role: "assistant",
-        content: `⚠️ Fehler bei der Coach-Antwort: ${err.message || "Bitte erneut versuchen."}`,
-        timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-      };
-      setChatMessages((prev) => [...prev, errorMsg]);
-    } finally {
-      setIsChatLoading(false);
-    }
-  };
-
-  const handleOpenChatWithDiagnosis = (prompt?: string) => {
-    if (prompt) {
-      setInitialChatPrompt(prompt);
-    }
-    setActiveTab("chat");
-  };
 
   const handleStartNextSet = (exerciseName?: string, cue?: string) => {
     if (exerciseName) {
       setSelectedExerciseHint(exerciseName);
     }
-    setActiveTab("video");
+    goToTab("video");
     showToast(`Nächster Satz vorbereitet: "${cue || "Fokus am Umkehrpunkt"}"`, "success");
   };
 
   return (
     <div className="min-h-screen text-[#2e2c27] flex flex-col font-sans selection:bg-[#c23a20]/30 selection:text-[#2e2c27]">
-      {/* Apple-style Global Nav Bar */}
-      <header className="sticky top-0 z-50 bg-[#2e2c27]/80 backdrop-blur-xl border-b border-[#2e2c27]/[0.08] transition-all">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 sm:h-18 flex items-center justify-between gap-4">
-          {/* Brand Logo & Apple Style Monogram */}
-          <div className="flex items-center gap-2.5">
-            <button
-              type="button"
-              onClick={() => setActiveTab("video")}
-              className="flex items-center gap-2 text-left group"
-            >
-              {/* Mark: solid cream block, like CARE's stamped wordmark */}
-              <div className="w-10 h-10 rounded-lg bg-[#2e2c27] flex items-center justify-center text-[#faf6ef] group-hover:bg-[#1f1d19] transition">
-                <Dumbbell className="w-5 h-5" strokeWidth={2.5} />
-              </div>
-              <span className="text-base sm:text-xl font-black uppercase tracking-[-0.03em] leading-none text-[#2e2c27]">
-                Kraftsport Coach
-              </span>
-            </button>
-          </div>
-
-          {/* Apple Segmented Control Tab Switcher (Without 4K Studio) */}
-          <nav className="flex items-center gap-1 bg-[#eee8dd]/90 p-1 rounded-full border border-[#2e2c27]/[0.08] shadow-inner">
-            <button
-              id="tab-btn-video"
-              type="button"
-              onClick={() => setActiveTab("video")}
-              className={`flex items-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-medium transition duration-150 ${
-                activeTab === "video"
-                  ? "bg-[#2e2c27] text-[#faf6ef] font-semibold shadow-sm"
-                  : "text-[#6f6759] hover:text-[#2e2c27]"
-              }`}
-            >
-              <Video className="w-3.5 h-3.5" />
-              <span>Video</span>
-            </button>
-
-            <button
-              id="tab-btn-feedback"
-              type="button"
-              onClick={() => setActiveTab("feedback")}
-              className={`flex items-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-medium transition duration-150 relative ${
-                activeTab === "feedback"
-                  ? "bg-[#2e2c27] text-[#faf6ef] font-semibold shadow-sm"
-                  : "text-[#6f6759] hover:text-[#2e2c27]"
-              }`}
-            >
-              <FileText className="w-3.5 h-3.5" />
-              <span>Coach-Urteil</span>
-              {exerciseAnalysis && (
-                <span
-                  className={`w-1.5 h-1.5 rounded-full ${
-                    exerciseAnalysis.urteil === "gut"
-                      ? "bg-[#5f6b25]"
-                      : exerciseAnalysis.urteil === "brauchbar"
-                      ? "bg-[#a4761a]"
-                      : "bg-[#c23a20]"
+      {/* Nav in the oace cut: links left, wordmark centred, status right */}
+      <header className="sticky top-0 z-50 bg-[#faf6ef]/90 backdrop-blur-xl border-b border-[#2e2c27]/10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 sm:h-18 grid grid-cols-[1fr_auto_1fr] items-center gap-3">
+          <nav className="justify-self-start flex items-center gap-4 sm:gap-7">
+            {NAV_ITEMS.map((item) => {
+              const active = activeTab === item.id;
+              return (
+                <button
+                  key={item.id}
+                  id={`tab-btn-${item.id}`}
+                  type="button"
+                  onClick={() => goToTab(item.id)}
+                  className={`relative flex items-center gap-1.5 text-[11px] sm:text-xs uppercase tracking-[0.08em] font-semibold transition ${
+                    active ? "text-[#2e2c27]" : "text-[#6f6759] hover:text-[#2e2c27]"
                   }`}
-                />
-              )}
-            </button>
-
-            <button
-              id="tab-btn-chat"
-              type="button"
-              onClick={() => setActiveTab("chat")}
-              className={`flex items-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-medium transition duration-150 ${
-                activeTab === "chat"
-                  ? "bg-[#2e2c27] text-[#faf6ef] font-semibold shadow-sm"
-                  : "text-[#6f6759] hover:text-[#2e2c27]"
-              }`}
-            >
-              <MessageSquare className="w-3.5 h-3.5" />
-              <span>Dialog</span>
-              {chatMessages.length > 0 && (
-                <span className="text-[9px] bg-[#e2dacb] text-[#5f5849] px-1.5 py-0.2 rounded-full font-mono">
-                  {chatMessages.length}
-                </span>
-              )}
-            </button>
+                >
+                  <span>{item.label}</span>
+                  {item.id === "feedback" && exerciseAnalysis && (
+                    <span
+                      className={`w-1.5 h-1.5 rounded-full ${
+                        exerciseAnalysis.urteil === "gut"
+                          ? "bg-[#5f6b25]"
+                          : exerciseAnalysis.urteil === "brauchbar"
+                          ? "bg-[#a4761a]"
+                          : "bg-[#c23a20]"
+                      }`}
+                    />
+                  )}
+                  <span
+                    className={`absolute -bottom-1.5 left-0 right-0 h-[2px] bg-[#2e2c27] transition-opacity ${
+                      active ? "opacity-100" : "opacity-0"
+                    }`}
+                  />
+                </button>
+              );
+            })}
           </nav>
 
-          {/* Right Status Pill (Apple Watch style) */}
-          <div className="hidden lg:flex items-center gap-2 text-xs text-[#6f6759]">
+          <button
+            type="button"
+            onClick={() => goToTab("video")}
+            className="justify-self-center flex items-center gap-2 group"
+          >
+            <span className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-[#2e2c27] flex items-center justify-center text-[#faf6ef] group-hover:bg-[#1f1d19] transition">
+              <Dumbbell className="w-4 h-4 sm:w-[18px] sm:h-[18px]" strokeWidth={2.5} />
+            </span>
+            <span className="text-sm sm:text-lg font-black uppercase tracking-[-0.02em] leading-none text-[#2e2c27] whitespace-nowrap">
+              Kraftsport Coach
+            </span>
+          </button>
+
+          <div className="justify-self-end hidden lg:flex items-center gap-2 text-xs text-[#6f6759]">
             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#ffffff] border border-[#2e2c27]/[0.06] text-[11px]">
               <span className="w-1.5 h-1.5 rounded-full bg-[#5f6b25]" />
               <span>Gemini 3.5 Flash</span>
@@ -287,23 +178,50 @@ export default function App() {
         </div>
       </header>
 
-      {/* Main Content Showcase */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-4 sm:py-5 flex flex-col gap-5">
-        {/* Compact hero: title left, claim right — keeps the vertical space for the video area */}
-        <section className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2 sm:gap-6">
-          <div className="space-y-1.5">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#ffffff] border border-[#2e2c27]/[0.08] text-[11px] text-[#6f6759]">
-              <Activity className="w-3 h-3 text-[#c23a20]" />
-              <span>Biomechanische Video-Technikanalyse</span>
-            </div>
-            <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-[#2e2c27]">
-              Präzision am Umkehrpunkt.
-            </h1>
-          </div>
-          <p className="text-xs sm:text-sm text-[#6f6759] max-w-md sm:text-right font-normal leading-relaxed">
-            Objektive Beurteilung von Bewegungsumfang, Tempo, Gelenkachsen und Rumpfspannung ohne Verharmlosung.
+      {/* Full-bleed opening shot — the app itself starts below the fold */}
+      <section className="relative w-full h-[calc(100svh-4rem)] sm:h-[calc(100svh-4.5rem)] min-h-[420px] overflow-hidden">
+        <img
+          src="/hero.png"
+          alt="Athlet an der Klimmzugstange"
+          className="absolute inset-0 w-full h-full object-cover object-center"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#2e2c27]/90 via-[#2e2c27]/30 to-[#2e2c27]/10" />
+
+        <div className="relative h-full max-w-7xl mx-auto px-4 sm:px-6 flex flex-col justify-end pb-16 sm:pb-24">
+          <h1 className="text-[#faf6ef] font-black uppercase tracking-[-0.03em] leading-[0.92] text-4xl sm:text-6xl md:text-7xl max-w-3xl">
+            Präzision am
+            <br />
+            Umkehrpunkt.
+          </h1>
+          <p className="mt-4 sm:mt-5 text-[#faf6ef]/85 text-sm sm:text-base max-w-xl leading-relaxed">
+            Objektive Beurteilung von Bewegungsumfang, Tempo, Gelenkachsen und Rumpfspannung
+            ohne Verharmlosung.
           </p>
-        </section>
+          <button
+            type="button"
+            onClick={() => goToTab("video")}
+            className="mt-7 self-start px-6 py-3 rounded-full bg-[#faf6ef] hover:bg-[#e8e2d6] text-[#2e2c27] text-sm font-semibold transition flex items-center gap-2 shadow-lg active:scale-95"
+          >
+            <span>Analyse starten</span>
+            <ArrowRight className="w-4 h-4" />
+          </button>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => goToTab("video")}
+          aria-label="Nach unten scrollen"
+          className="absolute bottom-5 left-1/2 -translate-x-1/2 text-[#faf6ef]/80 hover:text-[#faf6ef] transition"
+        >
+          <ChevronDown className="w-6 h-6 animate-bounce" />
+        </button>
+      </section>
+
+      {/* Main Content Showcase */}
+      <main
+        ref={appRef}
+        className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-8 sm:py-10 flex flex-col gap-5 scroll-mt-16 sm:scroll-mt-[4.5rem]"
+      >
 
         {/* Global Loading Banner during Analysis (Apple Style) */}
         {isAnalyzing && (
@@ -358,7 +276,6 @@ export default function App() {
             {exerciseAnalysis ? (
               <CoachFeedbackView
                 data={exerciseAnalysis}
-                onOpenChatWithDiagnosis={handleOpenChatWithDiagnosis}
                 onStartNextSet={handleStartNextSet}
               />
             ) : (
@@ -374,7 +291,7 @@ export default function App() {
                 </p>
                 <button
                   type="button"
-                  onClick={() => setActiveTab("video")}
+                  onClick={() => goToTab("video")}
                   className="px-5 py-2.5 bg-[#2e2c27] hover:bg-[#1f1d19] text-[#faf6ef] rounded-full text-xs font-semibold shadow-sm transition flex items-center gap-1.5"
                 >
                   <span>Video aufnehmen oder hochladen</span>
@@ -385,19 +302,6 @@ export default function App() {
           </div>
         )}
 
-        {/* Tab 3: Multi-Turn Coach Dialog (gemini-3.1-pro-preview / 3.5-flash / 3.1-flash-lite) */}
-        {activeTab === "chat" && (
-          <GeminiChatBot
-            messages={chatMessages}
-            onSendMessage={handleSendMessage}
-            isLoading={isChatLoading}
-            activeRole={activeChatRole}
-            onChangeRole={setActiveChatRole}
-            currentExerciseContext={exerciseAnalysis}
-            onClearHistory={() => setChatMessages([])}
-            initialPromptSuggestion={initialChatPrompt}
-          />
-        )}
       </main>
 
       {/* Floating Apple-style Toast Notification */}
