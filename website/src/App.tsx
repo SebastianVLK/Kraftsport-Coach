@@ -178,43 +178,52 @@ export default function App() {
         </div>
       </header>
 
-      {/* Full-bleed opening shot — the app itself starts below the fold */}
-      <section className="relative w-full h-[calc(100svh-4rem)] sm:h-[calc(100svh-4.5rem)] min-h-[420px] overflow-hidden">
-        <img
-          src="/hero.png"
-          alt="Athlet an der Klimmzugstange"
-          className="absolute inset-0 w-full h-full object-cover object-center"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#2e2c27]/90 via-[#2e2c27]/30 to-[#2e2c27]/10" />
+      {/* Opening shot. The photo carries its own analysis overlay — live badge,
+          rep counter, form-quality card — so nothing of ours is laid over it
+          beyond the scroll cue; the headline sits in the band underneath. */}
+      <section className="relative w-full">
+        <div className="relative w-full h-[calc(100svh-4rem)] sm:h-[calc(100svh-4.5rem)] min-h-[380px] overflow-hidden bg-[#000000]">
+          <img
+            src="/hero.png"
+            width={1698}
+            height={926}
+            fetchPriority="high"
+            alt="Liegestütze in der Seitenansicht, mit eingeblendeter Technikanalyse: Kopfhaltung, Körperlinie, Ellenbogenwinkel und Beinstreckung"
+            className="absolute inset-0 w-full h-full object-cover object-center"
+          />
 
-        <div className="relative h-full max-w-7xl mx-auto px-4 sm:px-6 flex flex-col justify-end pb-16 sm:pb-24">
-          <h1 className="text-[#faf6ef] font-black uppercase tracking-[-0.03em] leading-[0.92] text-4xl sm:text-6xl md:text-7xl max-w-3xl">
+          {/* just enough darkening at the very bottom to carry the cue */}
+          <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-[#000000]/70 to-transparent" />
+
+          <button
+            type="button"
+            onClick={() => goToTab("video")}
+            aria-label="Nach unten scrollen"
+            className="absolute bottom-5 left-1/2 -translate-x-1/2 text-[#faf6ef]/80 hover:text-[#faf6ef] transition"
+          >
+            <ChevronDown className="w-6 h-6 animate-bounce" />
+          </button>
+        </div>
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-10 sm:pt-16">
+          <h1 className="font-black uppercase tracking-[-0.03em] leading-[0.92] text-4xl sm:text-6xl md:text-7xl max-w-3xl text-[#2e2c27]">
             Präzision am
             <br />
             Umkehrpunkt.
           </h1>
-          <p className="mt-4 sm:mt-5 text-[#faf6ef]/85 text-sm sm:text-base max-w-xl leading-relaxed">
+          <p className="mt-4 sm:mt-5 text-[#6f6759] text-sm sm:text-base max-w-xl leading-relaxed">
             Objektive Beurteilung von Bewegungsumfang, Tempo, Gelenkachsen und Rumpfspannung
             ohne Verharmlosung.
           </p>
           <button
             type="button"
             onClick={() => goToTab("video")}
-            className="mt-7 self-start px-6 py-3 rounded-full bg-[#faf6ef] hover:bg-[#e8e2d6] text-[#2e2c27] text-sm font-semibold transition flex items-center gap-2 shadow-lg active:scale-95"
+            className="mt-7 px-6 py-3 rounded-full bg-[#2e2c27] hover:bg-[#1f1d19] text-[#faf6ef] text-sm font-semibold transition inline-flex items-center gap-2 shadow-sm active:scale-95"
           >
             <span>Analyse starten</span>
             <ArrowRight className="w-4 h-4" />
           </button>
         </div>
-
-        <button
-          type="button"
-          onClick={() => goToTab("video")}
-          aria-label="Nach unten scrollen"
-          className="absolute bottom-5 left-1/2 -translate-x-1/2 text-[#faf6ef]/80 hover:text-[#faf6ef] transition"
-        >
-          <ChevronDown className="w-6 h-6 animate-bounce" />
-        </button>
       </section>
 
       {/* Main Content Showcase */}
