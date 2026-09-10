@@ -20,6 +20,8 @@ export interface PoseMetrics {
   armToTorsoMax: number | null;
   hipOffsetMax: number | null;
   hipOffsetMin: number | null;
+  kneeOverFootAtDepth: number | null;
+  footOverShoulderMedian: number | null;
   worstBodyLineAt: number | null;
   deepestAt: number | null;
 }
@@ -95,6 +97,36 @@ export function findingsFromMetrics(
   }
 
   if (squat) {
+    // Knee spacing over stance width at the bottom. The reference
+    // implementation treats 0.7 to 1.1 as sound at depth; below that the knees
+    // are travelling inwards, which the dataset's own bottom frames agree with
+    // (median 0.80, 5th percentile 0.70).
+    if (m.kneeOverFootAtDepth !== null && m.kneeOverFootAtDepth < 0.7) {
+      out.push({
+        severity: "kritisch",
+        label: "Knie kippen nach innen",
+        detail: `Im tiefsten Punkt stehen die Knie nur ${Math.round(
+          m.kneeOverFootAtDepth * 100
+        )}% so weit auseinander wie die Füsse; ab etwa 70% aufwärts spuren sie sauber.`,
+        atSecond: m.deepestAt,
+      });
+    }
+    if (m.footOverShoulderMedian !== null && m.footOverShoulderMedian < 1.2) {
+      out.push({
+        severity: "relevant",
+        label: "Stand zu eng",
+        detail: `Die Füsse stehen nur ${m.footOverShoulderMedian}-mal schulterbreit; üblich sind 1.2 bis 2.8.`,
+        atSecond: m.deepestAt,
+      });
+    }
+    if (m.footOverShoulderMedian !== null && m.footOverShoulderMedian > 2.8) {
+      out.push({
+        severity: "relevant",
+        label: "Stand zu breit",
+        detail: `Die Füsse stehen ${m.footOverShoulderMedian}-mal schulterbreit; üblich sind 1.2 bis 2.8.`,
+        atSecond: m.deepestAt,
+      });
+    }
     if (m.kneeMin !== null && m.kneeMin > 100) {
       out.push({
         severity: "relevant",
@@ -157,6 +189,12 @@ Urteile allein nach dem Bildmaterial und sage im Feld "wasNichtBeurteilbar", das
       : `${(m.hipOffsetMax * 100).toFixed(0)}% tiefster, ${((m.hipOffsetMin ?? 0) * 100).toFixed(0)}% höchster Ausschlag (0% = exakt auf der Linie, positiv = durchhängend)`
   }
 - Oberarm zum Rumpf: max ${n(m.armToTorsoMax)}
+- Knieabstand zu Fussabstand im tiefsten Punkt: ${
+    m.kneeOverFootAtDepth === null ? "nicht messbar (keine Frontalansicht)" : m.kneeOverFootAtDepth
+  }
+- Standbreite zu Schulterbreite: ${
+    m.footOverShoulderMedian === null ? "nicht messbar" : m.footOverShoulderMedian
+  }
 - Tiefster Punkt bei etwa ${n(m.deepestAt, "s")}
 
 ${

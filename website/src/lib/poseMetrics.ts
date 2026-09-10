@@ -16,6 +16,8 @@ export interface FrameMeasurement {
   bodyLine: number | null;
   armToTorso: number | null;
   hipOffset: number | null;
+  kneeOverFoot: number | null;
+  footOverShoulder: number | null;
 }
 
 export interface PoseMetrics {
@@ -34,6 +36,10 @@ export interface PoseMetrics {
   hipOffsetMax: number | null;
   /** Most the hip rose above it (negative = piking). */
   hipOffsetMin: number | null;
+  /** Knee spacing over foot spacing at the deepest point; under ~0.7 the knees cave in. */
+  kneeOverFootAtDepth: number | null;
+  /** Stance width over shoulder width; the reference range is 1.2 to 2.8. */
+  footOverShoulderMedian: number | null;
   /** Second at which the body line deviated most from straight. */
   worstBodyLineAt: number | null;
   /** Second of the deepest point, by the smaller of elbow/knee flexion. */
@@ -103,6 +109,33 @@ function hipOffsetFrom(sh: LM, hip: LM, ankle: LM): number | null {
   return (cross / len) * (ax >= 0 ? 1 : -1);
 }
 
+const dist = (a: LM, b: LM) => Math.hypot(a.x - b.x, a.y - b.y);
+
+/**
+ * Knee and stance spacing, for judging knees caving in.
+ *
+ * Only meaningful from the front: seen from the side both widths collapse and
+ * the ratio is noise, so the shoulders must be far enough apart relative to the
+ * torso for the view to count as frontal at all.
+ */
+function widthRatios(im: LM[]): { kneeOverFoot: number | null; footOverShoulder: number | null } {
+  const need = [11, 12, 23, 24, 25, 26, 31, 32];
+  if (need.some((i) => (im[i]?.visibility ?? 0) < V)) {
+    return { kneeOverFoot: null, footOverShoulder: null };
+  }
+  const shoulder = dist(im[11], im[12]);
+  const torso = dist(im[11], im[23]);
+  if (!shoulder || !torso || shoulder / torso < 0.35) {
+    return { kneeOverFoot: null, footOverShoulder: null };
+  }
+  const feet = dist(im[31], im[32]);
+  const knees = dist(im[25], im[26]);
+  return {
+    kneeOverFoot: feet > 1e-6 ? knees / feet : null,
+    footOverShoulder: feet / shoulder,
+  };
+}
+
 function measureFrame(lm: LM[], image: LM[], t: number): FrameMeasurement {
   const s = pickSide(lm);
   const j =
@@ -120,6 +153,7 @@ function measureFrame(lm: LM[], image: LM[], t: number): FrameMeasurement {
     // how far the upper arm is swung away from the torso
     armToTorso: angle(lm[j.hip], lm[j.sh], lm[j.el]),
     hipOffset: hipOffsetFrom(image[j.sh], image[j.hip], image[j.an]),
+    ...widthRatios(image),
   };
 }
 
@@ -165,6 +199,17 @@ function summarise(rows: FrameMeasurement[], sampled: number): PoseMetrics {
     armToTorsoMax: max(col("armToTorso")),
     hipOffsetMax: hipOffsets.length ? round3(Math.max(...hipOffsets)) : null,
     hipOffsetMin: hipOffsets.length ? round3(Math.min(...hipOffsets)) : null,
+    kneeOverFootAtDepth:
+      deepest && typeof deepest.kneeOverFoot === "number"
+        ? round3(deepest.kneeOverFoot)
+        : null,
+    footOverShoulderMedian: (() => {
+      const v = rows
+        .map((r) => r.footOverShoulder)
+        .filter((x): x is number => typeof x === "number")
+        .sort((a, b) => a - b);
+      return v.length ? round3(v[Math.floor(v.length / 2)]) : null;
+    })(),
     worstBodyLineAt: worst ? Number(worst.t.toFixed(1)) : null,
     deepestAt: deepest ? Number(deepest.t.toFixed(1)) : null,
   };

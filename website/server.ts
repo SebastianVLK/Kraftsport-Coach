@@ -200,6 +200,7 @@ app.post("/api/analyze-exercise-video", async (req, res) => {
           `Ellenbogen ${p.elbowMin}–${p.elbowMax}° | Knie ${p.kneeMin}–${p.kneeMax}° | ` +
           `Hüfte min ${p.hipMin}° | Körperlinie ${p.bodyLineMin}–${p.bodyLineMax}° | ` +
           `Becken ${p.hipOffsetMax} bis ${p.hipOffsetMin} (>0.05 = durchhängend) | ` +
+          `Knie/Fuss ${p.kneeOverFootAtDepth} Stand/Schulter ${p.footOverShoulderMedian} | ` +
           `Oberarm/Rumpf max ${p.armToTorsoMax}°`
       );
       if (measured.length) {
