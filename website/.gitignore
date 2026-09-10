@@ -6,3 +6,7 @@ coverage/
 *.log
 .env*
 !.env.example
+
+# pose-tracking runtime, restored by `npm run setup:pose`
+public/mediapipe/
+public/models/

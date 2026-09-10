@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Pause, Play, AlertTriangle } from "lucide-react";
 import { ExerciseAnalysisData, FaultMoment } from "../types";
+import { PoseOverlay } from "./PoseOverlay";
 
 interface AnalysedVideoStageProps {
   videoUrl: string;
@@ -82,6 +83,13 @@ export const AnalysedVideoStage: React.FC<AnalysedVideoStageProps> = ({
             onPlay={() => setIsPlaying(true)}
             onPause={() => setIsPlaying(false)}
             className="w-full h-auto max-h-[62svh] object-contain bg-[#000000]"
+          />
+
+          {/* live skeleton, joints of the current finding lit up */}
+          <PoseOverlay
+            videoRef={videoRef}
+            activeFaultLabel={activeMoment ? `${activeMoment.label} ${activeMoment.hinweis ?? ""}` : null}
+            exerciseName={data.exerciseName}
           />
 
           {/* corner badge, like a live readout */}

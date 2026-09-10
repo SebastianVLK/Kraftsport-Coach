@@ -29,36 +29,48 @@ die reinen Schlüsselbilder zurück.
 Voraussetzung: Node.js (getestet mit v24 LTS).
 
 ```bash
-npm install
+npm install            # holt dabei auch das Pose-Modell (~5.5 MB)
 echo 'GEMINI_API_KEY="dein-key"' > .env.local
 npm run dev
 ```
 
-Läuft dann auf http://localhost:3000.
+Das Live-Skelett über dem Video braucht die MediaPipe-Runtime und ein
+Pose-Modell. Beides sind grosse Binärdateien und liegen deshalb nicht im
+Repository — `npm install` holt sie über `npm run setup:pose` nach. Falls der
+Schritt einmal fehlschlägt, lässt er sich jederzeit einzeln nachholen:
+
+```bash
+npm run setup:pose
+```
+
+Ohne diese Dateien läuft die App normal weiter; nur das Skelett bleibt aus und
+sagt es im Video an.
+
+Die App läuft dann auf http://localhost:3000.
 
 Den Key gibt es unter https://aistudio.google.com/apikey. Er bleibt
 serverseitig und erreicht den Browser nie — `.env*` ist in `.gitignore`.
 
-Ohne Key startet die App trotzdem: Oberfläche und die fünf Beispiel-Analysen
-unter „Beispiel-Sets" sind statische Daten. Videoanalyse und Dialog brauchen
-ihn.
+Ohne Key startet die App, aber jede Analyse schlägt fehl — Videoanalyse und
+Drill-Generierung laufen beide über Gemini.
 
 ## Aufbau
 
 | Datei | Rolle |
 | --- | --- |
 | `server.ts` | Express-Server, drei Gemini-Endpunkte |
-| `src/App.tsx` | Tabs Video, Coach-Urteil, Dialog |
-| `src/components/VideoRecorderAndUploader.tsx` | Upload und Keyframe-Extraktion |
-| `src/components/CoachFeedbackView.tsx` | Urteil, Cue-Matrix, Drill-Timer |
-| `src/components/GeminiChatBot.tsx` | Dialog mit drei Coach-Rollen |
-| `src/data/exercisePresets.ts` | fünf Beispiel-Analysen |
+| `src/App.tsx` | Kopfzeile, Eröffnungsbild, Tabs Video und Coach-Urteil |
+| `src/components/VideoRecorderAndUploader.tsx` | Upload, Live-Aufnahme, Keyframes |
+| `src/components/CoachFeedbackView.tsx` | Urteil, Anmerkungen, Technik-Schritte |
+| `src/components/AnalysedVideoStage.tsx` | Wiedergabe der Aufnahme mit Zeitmarken |
+| `src/components/PoseOverlay.tsx` | Live-Skelett per MediaPipe |
+| `src/data/techniqueVideos.ts` | geprüfte YouTube-Technikvideos je Übung |
 
 ### Endpunkte
 
 - `POST /api/analyze-exercise-video` — die Videoanalyse
 - `POST /api/agent-action` — Drill generieren, Cues variieren, Satz simulieren
-- `POST /api/chat` — Multi-Turn-Dialog
+- `POST /api/chat` — Multi-Turn-Dialog (Endpunkt vorhanden, im UI derzeit ungenutzt)
 - `GET /api/health` — Status, zeigt ob ein Key geladen ist
 
 ### Modelle
