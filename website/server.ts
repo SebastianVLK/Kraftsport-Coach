@@ -4,7 +4,7 @@ import dotenv from "dotenv";
 import { GoogleGenAI, Type } from "@google/genai";
 import { createServer as createViteServer } from "vite";
 
-dotenv.config();
+dotenv.config({ path: [".env.local", ".env"] });
 
 const app = express();
 const PORT = 3000;
