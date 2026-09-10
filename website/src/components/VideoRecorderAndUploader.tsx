@@ -347,20 +347,28 @@ export const VideoRecorderAndUploader: React.FC<VideoRecorderAndUploaderProps> =
     );
   };
 
-  // Planned Exercises
-  const commonExercises = [
-    "Liegestütze (Push-ups)",
-    "Dips (Barrenstütz)",
+  // The eight everyone recognises get the scrolling row; the rest live behind
+  // "Andere", together with free text for anything not listed at all.
+  const primaryExercises = [
     "Kniebeuge (Squat)",
     "Kreuzheben (Deadlift)",
     "Bankdrücken (Bench Press)",
     "Klimmzüge (Pull-ups)",
-    "Rumänisches Kreuzheben (RDL)",
+    "Liegestütze (Push-ups)",
     "Schulterdrücken (Overhead Press)",
     "Langhantelrudern (Barbell Row)",
+    "Dips (Barrenstütz)",
+  ];
+
+  const moreExercises = [
+    "Rumänisches Kreuzheben (RDL)",
     "Ausfallschritte (Lunges)",
     "Hip Thrusts",
   ];
+
+  // A pick from the overflow menu has no pill in the row, so the button itself
+  // has to show it — otherwise the choice would be invisible.
+  const isOtherSelected = !primaryExercises.includes(selectedExerciseHint);
 
   // Shared result view: identical after an upload and after a live recording
   const videoResultPanel = (
@@ -514,61 +522,111 @@ export const VideoRecorderAndUploader: React.FC<VideoRecorderAndUploaderProps> =
           <span>Fokus-Übung:</span>
         </span>
 
-        <div className="flex flex-wrap items-center gap-1.5 flex-1">
-          {commonExercises.map((ex) => (
+        {/* One row that scrolls sideways; "Andere" is a sibling of the scroll
+            container, not inside it, so it stays put while the pills move. */}
+        <div className="flex items-center gap-2 flex-1 min-w-0">
+          <div className="flex-1 min-w-0 overflow-x-auto exercise-scroll">
+            <div className="flex items-center gap-2 w-max py-0.5">
+              {primaryExercises.map((ex) => (
+                <button
+                  key={ex}
+                  type="button"
+                  onClick={() => {
+                    onChangeExerciseHint(ex);
+                    setShowCustomInput(false);
+                  }}
+                  className={`shrink-0 whitespace-nowrap px-4 py-2 rounded-full transition text-[13px] font-medium ${
+                    selectedExerciseHint === ex
+                      ? "bg-[#2e2c27] text-[#faf6ef] font-semibold shadow-sm"
+                      : "bg-[#eee8dd] text-[#6f6759] hover:text-[#2e2c27] border border-[#2e2c27]/[0.06]"
+                  }`}
+                >
+                  {ex}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="relative shrink-0">
             <button
-              key={ex}
+              id="btn-other-exercise"
               type="button"
-              onClick={() => {
-                onChangeExerciseHint(ex);
-                setShowCustomInput(false);
-              }}
-              className={`px-3 py-1 rounded-full transition text-[11px] font-medium ${
-                selectedExerciseHint === ex && !showCustomInput
+              onClick={() => setShowCustomInput(!showCustomInput)}
+              className={`shrink-0 whitespace-nowrap px-4 py-2 rounded-full transition text-[13px] font-medium flex items-center gap-1.5 ${
+                isOtherSelected || showCustomInput
                   ? "bg-[#2e2c27] text-[#faf6ef] font-semibold shadow-sm"
                   : "bg-[#eee8dd] text-[#6f6759] hover:text-[#2e2c27] border border-[#2e2c27]/[0.06]"
               }`}
             >
-              {ex}
+              <PlusCircle className="w-3.5 h-3.5" />
+              <span>{isOtherSelected ? selectedExerciseHint : "Andere"}</span>
             </button>
-          ))}
 
-          <button
-            type="button"
-            onClick={() => setShowCustomInput(!showCustomInput)}
-            className={`px-3 py-1 rounded-full transition text-[11px] font-medium flex items-center gap-1 ${
-              showCustomInput
-                ? "bg-[#2e2c27] text-[#faf6ef]"
-                : "bg-[#eee8dd] text-[#6f6759] hover:text-[#2e2c27] border border-[#2e2c27]/[0.06]"
-            }`}
-          >
-            <PlusCircle className="w-3 h-3" />
-            <span>Andere</span>
-          </button>
+            {showCustomInput && (
+              <>
+                {/* click-away catcher */}
+                <div
+                  className="fixed inset-0 z-40"
+                  onClick={() => setShowCustomInput(false)}
+                />
+                <div className="absolute right-0 top-full mt-2 z-50 w-64 p-2 rounded-2xl bg-[#ffffff] border border-[#2e2c27]/10 shadow-xl">
+                  <div className="flex flex-col gap-1">
+                    {moreExercises.map((ex) => (
+                      <button
+                        key={ex}
+                        type="button"
+                        onClick={() => {
+                          onChangeExerciseHint(ex);
+                          setShowCustomInput(false);
+                        }}
+                        className={`text-left px-3 py-2 rounded-xl text-[13px] transition ${
+                          selectedExerciseHint === ex
+                            ? "bg-[#2e2c27] text-[#faf6ef] font-semibold"
+                            : "text-[#2e2c27] hover:bg-[#eee8dd]"
+                        }`}
+                      >
+                        {ex}
+                      </button>
+                    ))}
+                  </div>
 
-          {showCustomInput && (
-            <div className="flex items-center gap-1.5 w-full sm:w-auto mt-1 sm:mt-0">
-              <input
-                id="input-custom-exercise"
-                type="text"
-                value={customExerciseText}
-                onChange={(e) => setCustomExerciseText(e.target.value)}
-                placeholder="z. B. Frontkniebeuge..."
-                className="bg-[#eee8dd] border border-[#2e2c27]/20 rounded-full px-3 py-1 text-xs text-[#2e2c27] placeholder-[#6f6759] focus:outline-none focus:border-[#c23a20]"
-              />
-              <button
-                type="button"
-                onClick={() => {
-                  if (customExerciseText.trim()) {
-                    onChangeExerciseHint(customExerciseText.trim());
-                  }
-                }}
-                className="px-3 py-1 bg-[#2e2c27] hover:bg-[#1f1d19] text-[#faf6ef] text-[11px] font-semibold rounded-full shadow-sm"
-              >
-                Setzen
-              </button>
-            </div>
-          )}
+                  <div className="mt-2 pt-2 border-t border-[#2e2c27]/10">
+                    <span className="block px-1 pb-1.5 text-[11px] text-[#6f6759]">
+                      Andere Übung eingeben
+                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <input
+                        id="input-custom-exercise"
+                        type="text"
+                        value={customExerciseText}
+                        onChange={(e) => setCustomExerciseText(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" && customExerciseText.trim()) {
+                            onChangeExerciseHint(customExerciseText.trim());
+                            setShowCustomInput(false);
+                          }
+                        }}
+                        placeholder="z. B. Frontkniebeuge"
+                        className="min-w-0 flex-1 bg-[#eee8dd] border border-[#2e2c27]/20 rounded-full px-3 py-1.5 text-[13px] text-[#2e2c27] placeholder-[#6f6759] focus:outline-none focus:border-[#c23a20]"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (customExerciseText.trim()) {
+                            onChangeExerciseHint(customExerciseText.trim());
+                            setShowCustomInput(false);
+                          }
+                        }}
+                        className="shrink-0 px-3 py-1.5 bg-[#2e2c27] hover:bg-[#1f1d19] text-[#faf6ef] text-[12px] font-semibold rounded-full shadow-sm"
+                      >
+                        Setzen
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
         </div>
       </div>
 

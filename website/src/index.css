@@ -35,6 +35,20 @@
   background: #c2b8a5;
 }
 
+/* Focus-exercise row: scrolls sideways without a visible bar, with the right
+   edge faded so it reads as "there is more over here". */
+.exercise-scroll {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  -webkit-mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 32px), transparent 100%);
+  mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 32px), transparent 100%);
+}
+.exercise-scroll::-webkit-scrollbar {
+  display: none;
+}
+
 .markdown-body p {
   margin-bottom: 0.5rem;
 }
