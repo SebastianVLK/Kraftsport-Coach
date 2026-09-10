@@ -94,7 +94,7 @@ export const VideoRecorderAndUploader: React.FC<VideoRecorderAndUploaderProps> =
       setIsVideoProcessing(false);
       setProcessingStatus(
         extracted.length > 0
-          ? `${extracted.length} Phasen-Bilder extrahiert – Bereit für Video-Coach`
+          ? `${extracted.length} Phasen-Bilder extrahiert – bereit für den Coach`
           : "Video aufbereitet"
       );
     };
@@ -109,15 +109,13 @@ export const VideoRecorderAndUploader: React.FC<VideoRecorderAndUploaderProps> =
       const canvas = document.createElement("canvas");
       const ctx = canvas.getContext("2d");
 
-      // Extract 6 evenly spaced keyframes across repetition duration
-      const sampleTimes = [
-        duration * 0.15,
-        duration * 0.3,
-        duration * 0.45,
-        duration * 0.6,
-        duration * 0.75,
-        duration * 0.9,
-      ];
+      // Eight frames across the clip. Six at 640x360 were too coarse to judge
+      // a joint angle from — the extra reach and resolution is what the coach
+      // actually reasons on.
+      const sampleTimes = Array.from(
+        { length: 8 },
+        (_, i) => duration * (0.06 + (i * 0.88) / 7)
+      );
 
       let sampled = 0;
 
@@ -133,10 +131,16 @@ export const VideoRecorderAndUploader: React.FC<VideoRecorderAndUploaderProps> =
       video.onseeked = () => {
         if (ctx) {
           try {
-            canvas.width = 640;
-            canvas.height = 360;
-            ctx.drawImage(video, 0, 0, 640, 360);
-            const dataUrl = canvas.toDataURL("image/jpeg", 0.72);
+            // Keep the source aspect ratio: squashing a portrait clip into
+            // 16:9 distorts every angle the coach is asked to judge.
+            const maxSide = 960;
+            const vw = video.videoWidth || 960;
+            const vh = video.videoHeight || 540;
+            const f = Math.min(1, maxSide / Math.max(vw, vh));
+            canvas.width = Math.round(vw * f);
+            canvas.height = Math.round(vh * f);
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
             if (dataUrl && dataUrl.startsWith("data:image")) {
               frames.push(dataUrl);
             }

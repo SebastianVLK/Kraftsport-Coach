@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   CalendarDays,
   List,
@@ -75,6 +75,15 @@ export const CoachingsView: React.FC<CoachingsViewProps> = ({
   const [view, setView] = useState<"calendar" | "list">("calendar");
   const [cursor, setCursor] = useState(() => new Date());
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
+  const dayDetailRef = useRef<HTMLDivElement>(null);
+
+  // The day's coachings open below the grid, which is easy to miss on a tall
+  // calendar — bring them into view when a day is picked.
+  useEffect(() => {
+    if (selectedDay) {
+      dayDetailRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+  }, [selectedDay]);
 
   const byDay = useMemo(() => {
     const map = new Map<string, CoachingSummary[]>();
@@ -258,8 +267,12 @@ export const CoachingsView: React.FC<CoachingsViewProps> = ({
             })}
           </div>
 
+          <p className="mt-4 text-center text-xs text-[#6f6759]">
+            Tippe auf einen Tag mit Punkten, um die Coachings dieses Tages zu öffnen.
+          </p>
+
           {selectedDay && (
-            <div className="mt-7 pt-6 border-t border-[#2e2c27]/10">
+            <div ref={dayDetailRef} className="mt-7 pt-6 border-t border-[#2e2c27]/10 scroll-mt-24">
               <h4 className="text-sm font-bold text-[#2e2c27] mb-1">{longDate(selectedDay)}</h4>
               <p className="text-xs text-[#6f6759] mb-2">
                 {selected.length} Coaching{selected.length === 1 ? "" : "s"}

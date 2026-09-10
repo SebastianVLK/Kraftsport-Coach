@@ -20,6 +20,7 @@ export const AnalysedVideoStage: React.FC<AnalysedVideoStageProps> = ({
   const [duration, setDuration] = useState<number>(0);
   const [currentTime, setCurrentTime] = useState<number>(0);
   const [isPlaying, setIsPlaying] = useState<boolean>(true);
+  const [ended, setEnded] = useState<boolean>(false);
 
   const moments: FaultMoment[] = (data.fehlerZeitpunkte ?? [])
     .filter((m) => typeof m.sekunde === "number" && m.sekunde >= 0)
@@ -54,8 +55,11 @@ export const AnalysedVideoStage: React.FC<AnalysedVideoStageProps> = ({
     const v = videoRef.current;
     if (!v) return;
     if (v.paused) {
+      // Once it has run to the end, play starts the clip over
+      if (ended || v.currentTime >= (v.duration || 0) - 0.05) v.currentTime = 0;
       v.play();
       setIsPlaying(true);
+      setEnded(false);
     } else {
       v.pause();
       setIsPlaying(false);
@@ -66,6 +70,7 @@ export const AnalysedVideoStage: React.FC<AnalysedVideoStageProps> = ({
     const v = videoRef.current;
     if (!v) return;
     v.currentTime = Math.max(0, Math.min(seconds, v.duration || seconds));
+    setEnded(false);
     if (v.paused) {
       v.play();
       setIsPlaying(true);
@@ -81,7 +86,6 @@ export const AnalysedVideoStage: React.FC<AnalysedVideoStageProps> = ({
           <video
             ref={videoRef}
             src={videoUrl}
-            loop
             autoPlay
             muted
             playsInline
@@ -91,8 +95,15 @@ export const AnalysedVideoStage: React.FC<AnalysedVideoStageProps> = ({
               setDuration(v.duration || 0);
             }}
             onTimeUpdate={(e) => setCurrentTime(e.currentTarget.currentTime)}
-            onPlay={() => setIsPlaying(true)}
+            onPlay={() => {
+              setIsPlaying(true);
+              setEnded(false);
+            }}
             onPause={() => setIsPlaying(false)}
+            onEnded={() => {
+              setIsPlaying(false);
+              setEnded(true);
+            }}
             className="w-full h-auto max-h-[62svh] object-contain bg-[#000000]"
           />
 
@@ -139,6 +150,19 @@ export const AnalysedVideoStage: React.FC<AnalysedVideoStageProps> = ({
                 </div>
               </div>
             </div>
+          )}
+
+          {ended && (
+            <button
+              type="button"
+              onClick={togglePlay}
+              aria-label="Erneut abspielen"
+              className="absolute inset-0 flex items-center justify-center bg-[#000000]/45 group"
+            >
+              <span className="w-16 h-16 rounded-full bg-[#faf6ef] flex items-center justify-center shadow-xl group-hover:scale-105 transition">
+                <Play className="w-7 h-7 text-[#2e2c27] fill-[#2e2c27] ml-1" />
+              </span>
+            </button>
           )}
 
           {/* transport: play/pause plus a scrub bar carrying the findings */}
