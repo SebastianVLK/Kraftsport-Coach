@@ -198,6 +198,7 @@ app.post("/api/analyze-exercise-video", async (req, res) => {
       const p = poseMetrics;
       console.log(
         `[messung] Bilder=${p.frames} Abdeckung=${(p.coverage * 100).toFixed(0)}% | ` +
+          `Perspektive ${p.view ?? "?"} ${p.viewAngle ?? "-"}° | ` +
           `Ellenbogen ${p.elbowMin}–${p.elbowMax}° | Knie ${p.kneeMin}–${p.kneeMax}° | ` +
           `Hüfte min ${p.hipMin}° | Körperlinie ${p.bodyLineMin}–${p.bodyLineMax}° | ` +
           `Becken ${p.hipOffsetMax} bis ${p.hipOffsetMin} (>0.05 = durchhängend) | ` +

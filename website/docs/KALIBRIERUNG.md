@@ -14,14 +14,15 @@ belegten Zahl schnell wieder eine geratene.
 
 ## Was gemessen wird
 
-Alles wird in **2D-Bildkoordinaten** gerechnet, mit `atan2` von Kreuz- gegen
-Skalarprodukt.
+Alles wird in der **Bildebene** gerechnet, in echten Pixelproportionen und mit
+`atan2` von Kreuz- gegen Skalarprodukt. Vorher wird aus der 3D-Pose bestimmt,
+von wo die Kamera filmt (siehe „Kameraperspektive").
 
-| Grösse | Berechnung |
-| --- | --- |
-| Gelenkwinkel (Ellenbogen, Knie, Hüfte) | Winkel in der Bildebene |
-| Beckenlage zur Linie Schulter–Sprunggelenk | vorzeichenbehaftet, auf Körperlänge normiert |
-| Knieabstand zu Fussabstand, Standbreite | nur bei Frontalansicht |
+| Grösse | Berechnung | messbar |
+| --- | --- | --- |
+| Gelenkwinkel (Ellenbogen, Knie, Hüfte) | Winkel in der Bildebene, auf Seitenansicht zurückgerechnet | seitlich, schräg |
+| Beckenlage zur Linie Schulter–Sprunggelenk | vorzeichenbehaftet, auf Körperlänge normiert, nur mit gestreckten Beinen | seitlich, schräg |
+| Knieabstand zu Fussabstand, Standbreite | Verhältnis zweier Breiten | ab 45° von der Seite weg |
 
 **Warum 2D und nicht 3D:** MediaPipe liefert auch Weltkoordinaten, und ein
 schräg gefilmter Körper erscheint im Bild perspektivisch verkürzt — das spricht
@@ -44,14 +45,96 @@ Das Perspektiv-Argument betraf ohnehin vor allem die Körperlinie — und die wi
 gar nicht mehr als Winkel gemessen, sondern als vorzeichenbehafteter Abstand,
 kalibriert an gelabelten Daten.
 
+## Seitenverhältnis
+
+MediaPipe teilt x durch die Bildbreite und y durch die Bildhöhe. Wer damit
+direkt Winkel rechnet, staucht im Querformat jede waagrechte Strecke auf 56 %
+— als filmte man 56° schräg. Im Hochformat ist es umgekehrt. Bis `89cedbf`
+wurde genau so gerechnet.
+
+An den beiden Liegestütz-Aufnahmen (1920×1080) gemessen:
+
+| | normiert (alt) | echte Proportionen (neu) |
+| --- | --- | --- |
+| Ellenbogen im tiefsten Punkt | 85° | 68° |
+| Ellenbogen, halbe Tiefe | 116° | 90° |
+| Beckenlage, stärkster Durchhang | +14 % | +8 % |
+
+Dasselbe betrifft die Kalibrierung. Der Plank-Datensatz ist ebenfalls normiert
+gespeichert, aus Querformat-Videos: Das Verhältnis von senkrechtem Arm zu
+waagrechtem Bein liegt dort bei 0.612, im bekannt 16:9 aufgenommenen
+Demo-Video desselben Projekts bei 0.663 — ein Seitenverhältnis von etwa 1.64.
+Der alte Grenzwert +0.05 galt damit nur für Querformat; ein Hochformat-Video
+brauchte den dreifachen Durchhang, um ihn zu reissen. Die Werte unten sind in
+echten Proportionen neu erhoben und so gewählt, dass sie für 4:3 wie für 16:9
+halten.
+
+## Kameraperspektive
+
+Ein Winkel in der Bildebene stimmt nur, wenn die Bewegung parallel zum Bild
+läuft. Wie weit er sonst danebenliegt, ist reine Geometrie (Kamera auf
+Körperhöhe):
+
+| Kamera von der Seite weg | Knie, echt 85° | Ellenbogen, echt 130° | Beckenlage, echt 3 % |
+| --- | --- | --- | --- |
+| 0° | 85° | 130° | 3.0 % |
+| 15° | 86° | 131° | 3.1 % |
+| 30° | 91° | 134° | 3.5 % |
+| 45° | 99° | 140° | 4.2 % |
+| 60° | 113° | 149° | 6.0 % |
+| 75° | 138° | 163° | 11.6 % |
+
+Bei 60° liest sich eine korrekte Kniebeuge also als „nicht tief genug" und ein
+Durchhang doppelt so gross, wie er ist.
+
+**Wie die Perspektive bestimmt wird:** aus der Links-rechts-Achse von Schultern
+und Hüften in MediaPipes 3D-Ausgabe. Von der Seite zeigt diese Achse auf die
+Kamera, von vorn liegt sie quer im Bild. So beschriftet
+[arXiv:1609.05522](https://arxiv.org/abs/1609.05522) seine Blickwinkel-Klassen,
+und es ist die geometrische Baseline von
+[3DPCNet](https://arxiv.org/abs/2509.23455). Gezählt wird nur der waagrechte
+Anteil, damit eine erhöht gehaltene Kamera nicht als schräg gilt. Über den Clip
+wird der Median genommen.
+
+| Perspektive | Winkel | was passiert |
+| --- | --- | --- |
+| seitlich | bis 30° | gemessen wie gehabt; die Rückrechnung ist vernachlässigbar |
+| schräg | 30–60° | waagrechte Strecken um 1/cos(Winkel) gestreckt, zurück auf Seitenansicht |
+| frontal | über 60° | Tiefe, Gelenkwinkel, Körperlinie und Wiederholungen **nicht** gemessen; Gemini beurteilt sie am Bild und muss die Einschränkung nennen |
+
+Die Grenzen folgen aus der Tabelle: Bis 30° bleibt der Fehler innerhalb der
+Gelenktoleranz; ab 60° müsste das Bild mindestens auf das Doppelte gestreckt
+werden, und das verstärkt das Rauschen des Pose-Modells ebenso.
+
+Die Breitenverhältnisse (Knie, Stand) brauchen keine Rückrechnung: Dreht sich
+der Körper weg, schrumpfen beide Breiten um denselben Faktor. Gemessen werden
+sie erst ab 45°, weil beide Breiten darunter ins Rauschen fallen.
+
+**Geprüft:** An den beiden Liegestütz-Clips erkennt die Messung „seitlich" mit
+4° und 2°, von Bild zu Bild um 2–3° schwankend — passend zu dem, was auf den
+Bildern zu sehen ist. Dieselben Posen, synthetisch aus der Seitenansicht
+weggedreht: Die Beckenlage bleibt bis 55° auf ±0.01 stabil, bei 68° schaltet die
+Messung korrekt auf „frontal".
+
+**Was die Rückrechnung nicht kann:** Sie korrigiert nur Bewegung in der
+Körperebene. Der Ellenbogen im Liegestütz wandert teils seitlich nach aussen;
+im synthetischen Test lag er bei 55° deshalb bis zu 24° zu hoch. Die
+Ellenbogen-Toleranz von 40° fängt das ab, aber knapp.
+
+**Kamerahöhe:** Eine von oben filmende Kamera lässt die Kniebeuge tiefer und den
+Durchhang kleiner erscheinen — sie verschweigt Fehler, erfindet aber keine.
+[MoViD](https://arxiv.org/abs/2604.03299) misst bei erhöhten Seitenansichten die
+grössten Fehler aller Blickwinkel. Deshalb bleibt der Hinweis in der App: auf
+Hüfthöhe filmen.
+
 ## Die Grenzwerte
 
 ### Liegestütze, Planke, Dips
 
 | Regel | Wert | Herkunft |
 | --- | --- | --- |
-| Hüfte hängt durch | Beckenlage > +0.05 | 28 500 gelabelte Bilder, siehe unten |
-| Hüfte steht zu hoch | Beckenlage < −0.30 | dieselbe Quelle |
+| Hüfte hängt durch | Beckenlage > +0.035 | 28 500 gelabelte Bilder, siehe unten |
+| Hüfte steht zu hoch | Beckenlage < −0.20 | dieselbe Quelle |
 | Bewegungsumfang verkürzt | Ellenbogen > 130° | Ziel 90°, plus 40° Messtoleranz |
 | Ellenbogen flügeln | Oberarm–Rumpf > 85° | Ziel ~45°, konservativ gesetzt |
 
@@ -64,7 +147,16 @@ Gemessen an diesen Daten:
 | Trennschärfe | erkannt | Fehlalarm |
 | --- | --- | --- |
 | Körperlinien-**Winkel**, bester Wert | 82.7 % | 32.4 % |
-| **Beckenlage**, gewählter Wert +0.05 | 98.8 % | 0.23 % |
+| Beckenlage +0.05, normiert (bis `89cedbf`) | 98.8 % | 0.23 % |
+| **Beckenlage +0.035**, echte Proportionen | 98.2–99.1 % | 0.16–0.25 % |
+| **Hüfte zu hoch −0.20**, echte Proportionen | 96.0–100 % | 0.00–0.13 % |
+
+Die Spannen reichen von 16:9 bis 4:3, je nachdem, welches Seitenverhältnis der
+Datensatz tatsächlich hatte. Gezählt werden nur Bilder mit dem Knie über 140°:
+Das verwirft Hinknien und Aufstehen und trifft 0.0–0.23 % der gelabelten Bilder
+jeder Klasse. Ohne diese Sperre erzeugte das Aufstehen am Ende eines sauberen
+Satzes zwei kritische Befunde auf einmal — „Hüfte steht zu hoch" (62 %) und
+„Ellenbogen flügeln" (111°).
 
 Der Winkel wurde deshalb verworfen. Er kann die beiden Fehler ausserdem nicht
 unterscheiden: Eine angehobene Hüfte schliesst ihn genauso wie eine
@@ -100,6 +192,13 @@ Beide Tore müssen durchlaufen werden, sonst zählt die Wiederholung nicht — d
 verwirft die halbe Wiederholung, die nie wieder hochkam. Aus den Tiefstwerten
 je Wiederholung folgt ausserdem der Befund „Tiefe nimmt über den Satz ab" ab
 15° Unterschied zwischen erster und letzter.
+
+**Stichprobendichte:** Eine Wiederholung dauert rund eine Sekunde. Mit den
+früheren 26 Bildern pro Clip fand der Zähler in einem 17-Sekunden-Satz nur 6
+oder 7 von 10 Wiederholungen — und der Prompt verbot Gemini, weitere zu nennen.
+Am 10-fps-Verlauf nachgerechnet, zählt der Automat ab 3.3 Bildern pro Sekunde
+bei jeder Phasenlage alle 10. Gemessen wird deshalb mit 4 Bildern pro Sekunde,
+mindestens 26 und höchstens 120.
 
 Vorher beschrieb das Modell Wiederholungen, die niemand gezählt hatte. Der
 Prompt sagt jetzt ausdrücklich, dass diese Zahlen gemessen sind und keine
@@ -143,13 +242,27 @@ unabhängig bestätigt, das Liegestütze bei 90° unten und 145° oben zählt.
 ## Wenn nicht gemessen werden kann
 
 Sind weniger als die Hälfte der Stichproben verwertbar, wird **kein** Befund
-erzeugt. Die Breitenverhältnisse brauchen zusätzlich eine Frontalansicht; von
-der Seite kollabieren beide Breiten und das Verhältnis wäre Rauschen.
+erzeugt. Von vorn (über 60°) werden Tiefe, Gelenkwinkel, Körperlinie und
+Wiederholungen nicht gemessen, von der Seite (unter 45°) die
+Breitenverhältnisse nicht. Der Prompt sagt Gemini jeweils, was aus der
+gemessenen Perspektive offenbleibt.
 
 Das ist Absicht: Ein erfundener Befund wäre schlimmer als ein fehlender.
 
 ## Was noch offen ist
 
+- **Schräge Perspektiven sind nur synthetisch geprüft.** „Seitlich" ist an
+  echten Aufnahmen bestätigt, 30–60° nur an gedrehten Posen. Nächster Schritt:
+  denselben Satz einmal von der Seite und einmal 45° schräg filmen und die
+  `[messung]`-Zeilen vergleichen.
+- Das Seitenverhältnis des Plank-Datensatzes ist geschätzt (1.64), nicht
+  bekannt. Die Grenzwerte sind deshalb so gewählt, dass sie für 4:3 und 16:9
+  halten.
+- **Flache Wiederholungen werden nicht gezählt.** Das untere Tor (115° am
+  Ellenbogen) verwirft jede Wiederholung, die es nicht erreicht — im zweiten
+  Liegestütz-Clip 3 von 7. Ein Zähler über die Schwingungsweite statt über feste
+  Tore (25° hinunter und wieder hinauf) fand dort alle 7 und im sauberen Clip
+  dieselben 10. Zwei Clips sind zu wenig, um ihn schon einzubauen.
 - Die Grenzwerte für Kniebeuge, Klimmzug und Ausfallschritt stammen aus einer
   fremden Implementierung, nicht aus gelabelten Daten. Nur die Beckenlage ist
   wirklich validiert.
@@ -176,3 +289,8 @@ Das ist Absicht: Ein erfundener Befund wäre schlimmer als ein fehlender.
 | [REHAB24-6 / Zenodo](https://zenodo.org/records/13305826) | **Möglicher Kalibrierungsvorrat.** Reha-Übungen inkl. Kniebeugen mit mehreren Ansichten; noch nicht ausgewertet |
 | [mm-fit](https://github.com/KDMStromback/mm-fit) | **Nicht ausgewertet.** Multimodale Fitnessdaten, Schwerpunkt Aktivitätserkennung |
 | [UI-PRMD-Port](https://github.com/tejas1904/UI-PRMD-Visualize-python-port) | **Nur Visualisierung.** Keine Grenzwerte |
+| [arXiv:1609.05522](https://arxiv.org/abs/1609.05522) | **Brauchbar, ohne das Netz.** Blickwinkel in 45°-Klassen, Gier-Winkel aus beiden Schultern — die Idee hinter der Perspektiven-Erkennung. Das CNN selbst ist überflüssig, weil MediaPipe die 3D-Schultern schon liefert; es irrte sich zwischen Personen in 20 % der Fälle |
+| [3DPCNet / arXiv:2509.23455](https://arxiv.org/abs/2509.23455) | **Brauchbar als Referenz.** Seine geometrische Baseline (Ebene aus Schultern und Hüften) ist das hier eingebaute Verfahren; dort ~21° Fehler für die volle 3D-Rotation. Das gelernte Netz (3.6°) braucht PyTorch, nicht im Browser lauffähig |
+| [MoViD / arXiv:2604.03299](https://arxiv.org/abs/2604.03299) | **Bestätigend.** Fehler je Blickwinkel 57.6–81.7 mm, erhöhte Seitenansichten am schlechtesten — daher „auf Hüfthöhe filmen". Das Modell braucht eine GPU |
+| [V-VIPE / arXiv:2407.07092](https://arxiv.org/abs/2407.07092) | **Nicht übertragbar.** Blickunabhängige Einbettung für die Suche nach ähnlichen Posen; liefert weder Winkel noch Grenzwerte |
+| [Heliyon 2024, e27596](https://pmc.ncbi.nlm.nih.gov/articles/PMC10951609/) | **Massstab.** 3D-Winkel auf 2–6° genau, aber nur mit eigens trainiertem Modell und Vicon-Daten; das Augenmass von Physiotherapeuten liegt bei ~12°. Keine Ergebnisse je Blickwinkel |

@@ -26,7 +26,12 @@ export interface PoseMetrics {
   deepestAt: number | null;
   reps: { at: number; bottom: number }[];
   depthDrift: number | null;
+  /** Degrees away from a pure side view: 0 from the side, 90 from the front. */
+  viewAngle?: number | null;
+  view?: CameraView | null;
 }
+
+type CameraView = "seitlich" | "schräg" | "frontal";
 
 export type Severity = "kritisch" | "relevant";
 
@@ -75,13 +80,16 @@ export function findingsFromMetrics(
 
   if (plank) {
     // Thresholds read off 28,500 labelled plank frames (correct / hip low /
-    // hip high) from the Exercise-Correction dataset, with a safety margin
-    // chosen so a correct rep is almost never flagged: at +0.05 the sag rule
-    // catches 98.8% of sagging frames while misfiring on 0.23% of correct
-    // ones, and at -0.30 the pike rule catches 98.9% at 0.01%.
+    // hip high) from the Exercise-Correction dataset, in true proportions. The
+    // dataset stores each axis normalised to landscape footage — its body
+    // proportions put the frame at about 1.64:1 — so the earlier +0.05 held for
+    // landscape clips only, and a portrait clip needed three times the sag to
+    // trip it. The values here hold whether that footage was 4:3 or 16:9: the
+    // sag rule catches 98–99% of sagging frames at 0.16–0.25% false alarms,
+    // the pike rule 96–100% at no more than 0.13%.
     const pct = (v: number) => `${Math.round(v * 100)}% der Körperlänge`;
 
-    if (m.hipOffsetMax !== null && m.hipOffsetMax > 0.05) {
+    if (m.hipOffsetMax !== null && m.hipOffsetMax > 0.035) {
       out.push({
         severity: "kritisch",
         label: "Hüfte hängt durch",
@@ -89,7 +97,7 @@ export function findingsFromMetrics(
         atSecond: m.worstBodyLineAt,
       });
     }
-    if (m.hipOffsetMin !== null && m.hipOffsetMin < -0.3) {
+    if (m.hipOffsetMin !== null && m.hipOffsetMin < -0.2) {
       out.push({
         severity: "kritisch",
         label: "Hüfte steht zu hoch",
@@ -234,29 +242,29 @@ export function findingsFromMetrics(
  * 0.64 to 0.76, then collapsed to 0.42 at four. Three is the peak, and more is
  * actively worse — hence exactly three, never a fourth.
  *
- * The numbers are the class medians from the 28,500 labelled plank frames and
- * the squat reference, so the examples describe real executions rather than
- * invented ones.
+ * The numbers are the class medians from the 28,500 labelled plank frames, in
+ * true proportions, and the squat reference, so the examples describe real
+ * executions rather than invented ones.
  */
 export function fewShotBlock(): string {
   return `BEISPIELE — SO WIRD AUS MESSWERTEN EIN URTEIL:
 
 Beispiel 1
-  Beckenlage: -8% tiefster Ausschlag | Ellenbogen min 88° | Oberarm/Rumpf max 48°
+  Beckenlage: -5% tiefster Ausschlag | Ellenbogen min 88° | Oberarm/Rumpf max 48°
   Abgeleitete Befunde: keine
   Urteil: gut
   Begründung: Kein kritischer und kein relevanter Befund — die Linie steht, die
   Tiefe stimmt. Der Cue zielt auf Halten, nicht auf eine erfundene Korrektur.
 
 Beispiel 2
-  Beckenlage: +14% tiefster Ausschlag | Ellenbogen min 92° | Oberarm/Rumpf max 51°
+  Beckenlage: +9% tiefster Ausschlag | Ellenbogen min 92° | Oberarm/Rumpf max 51°
   Abgeleitete Befunde: [KRITISCH] Hüfte hängt durch
   Urteil: mangelhaft
   Begründung: Ein kritischer Befund genügt. Die Tiefe war in Ordnung, das ändert
   nichts — Sicherheit geht vor Bewegungsumfang.
 
 Beispiel 3
-  Beckenlage: -6% tiefster Ausschlag | Ellenbogen min 138° | Oberarm/Rumpf max 55°
+  Beckenlage: -4% tiefster Ausschlag | Ellenbogen min 138° | Oberarm/Rumpf max 55°
   Abgeleitete Befunde: [RELEVANT] Bewegungsumfang verkürzt
   Urteil: brauchbar
   Begründung: Kein kritischer Befund, aber die Tiefe fehlt deutlich. Ein einzelner
@@ -265,6 +273,17 @@ Beispiel 3
 
 Beurteile die folgende Aufnahme nach demselben Muster.`;
 }
+
+/**
+ * What each camera view lets the measurement say, so the model knows which
+ * questions are left to its own eyes.
+ */
+const VIEW_NOTE: Record<CameraView, string> = {
+  seitlich: "Tiefe, Gelenkwinkel und Körperlinie sind direkt messbar.",
+  schräg:
+    "Gelenkwinkel und Körperlinie sind auf die Seitenansicht zurückgerechnet und damit etwas unsicherer als direkt von der Seite.",
+  frontal: `Tiefe, Gelenkwinkel und Körperlinie lassen sich von vorn nicht messen. Beurteile sie nur am Bildmaterial und nenne die Einschränkung in "wasNichtBeurteilbar".`,
+};
 
 /** Human-readable block for the prompt. */
 export function metricsBlock(
@@ -277,8 +296,14 @@ Urteile allein nach dem Bildmaterial und sage im Feld "wasNichtBeurteilbar", das
   }
 
   const n = (v: number | null, unit = "°") => (v === null ? "nicht messbar" : `${v}${unit}`);
+  const frontal = m.view === "frontal";
 
   return `GEMESSENE GEOMETRIE (aus ${m.frames} Einzelbildern per Pose-Tracking, keine Schätzung):
+- Kameraperspektive: ${
+    m.view
+      ? `${m.view}, etwa ${m.viewAngle}° von der reinen Seitenansicht entfernt. ${VIEW_NOTE[m.view]}`
+      : "nicht bestimmbar"
+  }
 - Ellenbogenwinkel: min ${n(m.elbowMin)}, max ${n(m.elbowMax)} (unsicherste Messung, bis zu 40° Abweichung möglich — daraus keine knappen Schlüsse ziehen)
 - Kniewinkel: min ${n(m.kneeMin)}, max ${n(m.kneeMax)}
 - Hüftwinkel (Schulter–Hüfte–Knie): min ${n(m.hipMin)}
@@ -286,25 +311,34 @@ Urteile allein nach dem Bildmaterial und sage im Feld "wasNichtBeurteilbar", das
 - Beckenlage zur Linie Schulter–Sprunggelenk: ${
     m.hipOffsetMax === null
       ? "nicht messbar"
-      : `${(m.hipOffsetMax * 100).toFixed(0)}% tiefster, ${((m.hipOffsetMin ?? 0) * 100).toFixed(0)}% höchster Ausschlag (0% = exakt auf der Linie, positiv = durchhängend)`
+      : `${(m.hipOffsetMax * 100).toFixed(0)}% tiefster, ${((m.hipOffsetMin ?? 0) * 100).toFixed(0)}% höchster Ausschlag (0% = exakt auf der Linie, positiv = durchhängend; nur Bilder mit gestreckten Beinen)`
   }
 - Oberarm zum Rumpf: max ${n(m.armToTorsoMax)}
 - Knieabstand zu Fussabstand im tiefsten Punkt: ${
-    m.kneeOverFootAtDepth === null ? "nicht messbar (keine Frontalansicht)" : m.kneeOverFootAtDepth
+    m.kneeOverFootAtDepth === null
+      ? "nicht messbar (dafür muss die Kamera mindestens halb von vorn filmen)"
+      : m.kneeOverFootAtDepth
   }
 - Standbreite zu Schulterbreite: ${
     m.footOverShoulderMedian === null ? "nicht messbar" : m.footOverShoulderMedian
   }
 - Tiefster Punkt bei etwa ${n(m.deepestAt, "s")}
 - Gezählte Wiederholungen: ${
-    m.reps.length === 0
+    frontal
+      ? "aus der Frontalansicht nicht zählbar"
+      : m.reps.length === 0
       ? "keine vollständige erkannt"
       : m.reps
           .map((r, i) => `Wdh. ${i + 1} bei ${r.at}s, tiefster Winkel ${r.bottom}°`)
           .join("; ")
   }
-Diese Wiederholungen sind gezählt, nicht geschätzt. Beziehe dich in
-"repetitionDetails" ausschliesslich auf sie und erfinde keine weiteren.
+${
+  frontal
+    ? `Beschreibe in "repetitionDetails" nur, was im Bildmaterial eindeutig zu sehen
+ist, und nenne dort keine Winkel.`
+    : `Diese Wiederholungen sind gezählt, nicht geschätzt. Beziehe dich in
+"repetitionDetails" ausschliesslich auf sie und erfinde keine weiteren.`
+}
 
 ${
   findings.length
