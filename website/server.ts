@@ -157,8 +157,9 @@ app.get("/api/health", (_req, res) => {
 // Technique video for an exercise outside the vetted catalogue
 app.get("/api/technique-video", async (req, res) => {
   const exercise = String(req.query.exercise ?? "").slice(0, 120);
+  const lang = req.query.lang === "en" ? "en" : "de";
   try {
-    res.json({ video: await findVideoBySearch(exercise) });
+    res.json({ video: await findVideoBySearch(exercise, lang) });
   } catch (err) {
     console.warn(`[video] Suche für "${exercise}" fehlgeschlagen:`, err);
     res.json({ video: null });
@@ -174,9 +175,12 @@ app.post("/api/analyze-exercise-video", async (req, res) => {
       mimeType = "video/webm",
       exerciseHint = "",
       poseMetrics = null,
+      language = "de",
     } = req.body;
 
-    const measured = findingsFromMetrics(poseMetrics, exerciseHint);
+    const lang: "de" | "en" = language === "en" ? "en" : "de";
+    const tx = (de: string, en: string) => (lang === "en" ? en : de);
+    const measured = findingsFromMetrics(poseMetrics, exerciseHint, lang);
 
     const hasVideo = typeof videoBase64 === "string" && videoBase64.length > 100;
     const hasFrames = Array.isArray(videoFrames) && videoFrames.length > 0;
@@ -228,7 +232,7 @@ app.post("/api/analyze-exercise-video", async (req, res) => {
     }
 
     console.log(
-      `[analyse] Übung="${exerciseHint || "?"}" | Messung: ${
+      `[analyse] Übung="${exerciseHint || "?"}" | Sprache=${lang} | Messung: ${
         poseMetrics ? `${poseMetrics.frames} Bilder, ${measured.length} Befund(e)` : "keine"
       } | Video: ${
         hasVideo ? `${(videoBase64.length / 1024 / 1024).toFixed(1)} MB base64, ${mimeType}` : "keins"
@@ -370,9 +374,16 @@ Gib ausschließlich ein JSON-Objekt mit folgenden Feldern zurück:
   "rawOutputText": "URTEIL: ...\\n\\nBEGRÜNDUNG: ...\\n\\nDER WICHTIGSTE FEHLER: ...\\n\\nKORREKTUR: ...\\n\\nGEWICHT: ...\\n\\nWAS ICH NICHT BEURTEILEN KONNTE: ..."
 }`;
 
+    // The rules stay German; on an English page only the answer changes language.
+    // The fixed values stay German because the interface maps them to its labels.
+    const languageRule =
+      lang === "en"
+        ? `\n\nAUSGABESPRACHE: ENGLISCH. Schreibe jeden Textwert im JSON auf Englisch — auch exerciseName, alle Befunde, den Cue, den Drill, agentTrace und rawOutputText. Unverändert auf Deutsch bleiben nur die Feldnamen und die festen Werte von "urteil" ("gut" | "brauchbar" | "mangelhaft" | "nicht_beurteilbar"), "gewicht.empfehlung" ("hochgehen" | "gleich bleiben" | "runtergehen") und "schwere" ("fehler" | "hinweis").`
+        : "";
+
     const promptText = `${systemPrompt}\n\n${fewShotBlock()}\n\n${metricsBlock(poseMetrics, measured)}\n\n${
       exerciseHint ? `Athleten-Angabe zur Übung: "${exerciseHint}"` : "Analysiere die gezeigte Kraftsport-Übung im Bild- und Videomaterial."
-    }`;
+    }${languageRule}`;
 
     // Prepare helper to build parts
     const buildParts = (includeVideo: boolean, includeFrames: boolean) => {
@@ -489,33 +500,36 @@ Gib ausschließlich ein JSON-Objekt mit folgenden Feldern zurück:
       parsed.agentTrace = [
         {
           phaseId: "triage",
-          name: "Perspektiven- & Sichtfeldprüfung",
+          name: tx("Perspektiven- & Sichtfeldprüfung", "Camera angle & field of view"),
           status: "done",
-          summary: "Videomaterial erfolgreich verarbeitet.",
+          summary: tx("Videomaterial erfolgreich verarbeitet.", "Video processed successfully."),
         },
         {
           phaseId: "segmentation",
-          name: "Phasen- & Umkehrpunkt-Erkennung",
+          name: tx("Phasen- & Umkehrpunkt-Erkennung", "Phases & turning point"),
           status: "done",
-          summary: "Wiederholungen und Umkehrpunkt analysiert.",
+          summary: tx(
+            "Wiederholungen und Umkehrpunkt analysiert.",
+            "Repetitions and turning point analysed."
+          ),
         },
         {
           phaseId: "biomechanics",
-          name: "Biomechanischer Regelprüfer",
+          name: tx("Biomechanischer Regelprüfer", "Biomechanics check"),
           status: parsed.urteil === "mangelhaft" ? "warning" : "done",
-          summary: parsed.derWichtigsteFehler || "Gelenkachsen geprüft.",
+          summary: parsed.derWichtigsteFehler || tx("Gelenkachsen geprüft.", "Joint alignment checked."),
         },
         {
           phaseId: "verdict",
-          name: "Schiedsrichter-Urteil",
+          name: tx("Schiedsrichter-Urteil", "Verdict"),
           status: "done",
-          summary: `URTEIL: ${(parsed.urteil || "brauchbar").toUpperCase()}`,
+          summary: `${tx("URTEIL", "VERDICT")}: ${(parsed.urteil || "brauchbar").toUpperCase()}`,
         },
         {
           phaseId: "drill",
-          name: "Korrektur-Drill Synthese",
+          name: tx("Korrektur-Drill Synthese", "Corrective drill"),
           status: "done",
-          summary: parsed.korrektur || "Cue formuliert.",
+          summary: parsed.korrektur || tx("Cue formuliert.", "Cue written."),
         },
       ];
     }
@@ -524,7 +538,7 @@ Gib ausschließlich ein JSON-Objekt mit folgenden Feldern zurück:
       parsed.rawOutputText = `URTEIL: ${parsed.urteil || "brauchbar"}\n\nBEGRÜNDUNG: ${parsed.begruendung || ""}\n\nDER WICHTIGSTE FEHLER: ${parsed.derWichtigsteFehler || "Keiner identifiziert."}\n\nKORREKTUR: ${parsed.korrektur || ""}\n\nGEWICHT: ${parsed.gewicht?.empfehlung || "gleich bleiben"} – ${parsed.gewicht?.begruendung || ""}\n\nWAS ICH NICHT BEURTEILEN KONNTE: ${parsed.wasNichtBeurteilbar || ""}`;
     }
 
-    const forced = enforceVerdict(parsed, measured);
+    const forced = enforceVerdict(parsed, measured, lang);
     if (forced.changed) {
       console.log(
         `[analyse] Urteil per Messung von "${forced.from}" auf "${parsed.urteil}" korrigiert`
@@ -553,7 +567,7 @@ Gib ausschließlich ein JSON-Objekt mit folgenden Feldern zurück:
 // 0b. Dedicated Agent Action Endpoint (Drill generator, Cue variation, Simulation)
 app.post("/api/agent-action", async (req, res) => {
   try {
-    const { actionType, exerciseContext } = req.body;
+    const { actionType, exerciseContext, language } = req.body;
 
     if (!exerciseContext) {
       res.status(400).json({ success: false, error: "Kein Übungskontext vorhanden." });
@@ -601,6 +615,10 @@ Korrektur-Cue: ${exerciseContext.korrektur}.
 Gib in 3 prägnanten Sätzen zurück, worauf beim ersten Anheben, am Umkehrpunkt und im Lockout zu achten ist.
 Gib ein JSON-Objekt zurück mit:
 { "simulationPlan": "Text mit Hinweisen" }`;
+    }
+
+    if (language === "en") {
+      prompt += `\n\nAntworte auf Englisch: jeder Textwert im JSON auf Englisch, die Feldnamen unverändert.`;
     }
 
     const response = await ai.models.generateContent({

@@ -64,8 +64,12 @@ const PULL_LIKE = /klimmzug|klimmz(ü|ue)ge|pull[\s-]?up|chin[\s-]?up|latzug/i;
 
 export function findingsFromMetrics(
   m: PoseMetrics | null | undefined,
-  exercise: string
+  exercise: string,
+  lang: "de" | "en" = "de"
 ): MeasuredFinding[] {
+  // Findings reach the verdict text word for word, so they speak the page's language
+  const tx = (de: string, en: string) => (lang === "en" ? en : de);
+
   // Too few usable frames means the camera angle did not allow a measurement.
   // Saying nothing is correct here; inventing a finding would not be.
   if (!m || m.coverage < 0.5 || m.frames < 4) return [];
@@ -87,21 +91,28 @@ export function findingsFromMetrics(
     // trip it. The values here hold whether that footage was 4:3 or 16:9: the
     // sag rule catches 98–99% of sagging frames at 0.16–0.25% false alarms,
     // the pike rule 96–100% at no more than 0.13%.
-    const pct = (v: number) => `${Math.round(v * 100)}% der Körperlänge`;
+    const pct = (v: number) =>
+      `${Math.round(v * 100)}% ${tx("der Körperlänge", "of body length")}`;
 
     if (m.hipOffsetMax !== null && m.hipOffsetMax > 0.035) {
       out.push({
         severity: "kritisch",
-        label: "Hüfte hängt durch",
-        detail: `Das Becken sinkt ${pct(m.hipOffsetMax)} unter die Linie Schulter–Sprunggelenk.`,
+        label: tx("Hüfte hängt durch", "Hip sags"),
+        detail: tx(
+          `Das Becken sinkt ${pct(m.hipOffsetMax)} unter die Linie Schulter–Sprunggelenk.`,
+          `The pelvis drops ${pct(m.hipOffsetMax)} below the shoulder–ankle line.`
+        ),
         atSecond: m.worstBodyLineAt,
       });
     }
     if (m.hipOffsetMin !== null && m.hipOffsetMin < -0.2) {
       out.push({
         severity: "kritisch",
-        label: "Hüfte steht zu hoch",
-        detail: `Das Becken steht ${pct(Math.abs(m.hipOffsetMin))} über der Linie Schulter–Sprunggelenk.`,
+        label: tx("Hüfte steht zu hoch", "Hips too high"),
+        detail: tx(
+          `Das Becken steht ${pct(Math.abs(m.hipOffsetMin))} über der Linie Schulter–Sprunggelenk.`,
+          `The pelvis sits ${pct(Math.abs(m.hipOffsetMin))} above the shoulder–ankle line.`
+        ),
         atSecond: m.worstBodyLineAt,
       });
     }
@@ -110,16 +121,22 @@ export function findingsFromMetrics(
     if (m.elbowMin !== null && m.elbowMin > 90 + ELBOW_TOLERANCE) {
       out.push({
         severity: "relevant",
-        label: "Bewegungsumfang verkürzt",
-        detail: `Der Ellenbogen beugt sich nur bis ${m.elbowMin}°; für volle Tiefe wären etwa 90° oder weniger nötig.`,
+        label: tx("Bewegungsumfang verkürzt", "Range of motion cut short"),
+        detail: tx(
+          `Der Ellenbogen beugt sich nur bis ${m.elbowMin}°; für volle Tiefe wären etwa 90° oder weniger nötig.`,
+          `The elbow only bends to ${m.elbowMin}°; full depth needs about 90° or less.`
+        ),
         atSecond: m.deepestAt,
       });
     }
     if (m.armToTorsoMax !== null && m.armToTorsoMax > 85) {
       out.push({
         severity: "kritisch",
-        label: "Ellenbogen flügeln nach aussen",
-        detail: `Oberarm steht bis zu ${m.armToTorsoMax}° vom Rumpf ab; sicher sind etwa 45°.`,
+        label: tx("Ellenbogen flügeln nach aussen", "Elbows flare out"),
+        detail: tx(
+          `Oberarm steht bis zu ${m.armToTorsoMax}° vom Rumpf ab; sicher sind etwa 45°.`,
+          `The upper arm moves up to ${m.armToTorsoMax}° away from the torso; about 45° is safe.`
+        ),
         atSecond: m.deepestAt,
       });
     }
@@ -133,42 +150,59 @@ export function findingsFromMetrics(
     if (m.kneeOverFootAtDepth !== null && m.kneeOverFootAtDepth < 0.7) {
       out.push({
         severity: "kritisch",
-        label: "Knie kippen nach innen",
-        detail: `Im tiefsten Punkt stehen die Knie nur ${Math.round(
-          m.kneeOverFootAtDepth * 100
-        )}% so weit auseinander wie die Füsse; ab etwa 70% aufwärts spuren sie sauber.`,
+        label: tx("Knie kippen nach innen", "Knees cave in"),
+        detail: tx(
+          `Im tiefsten Punkt stehen die Knie nur ${Math.round(
+            m.kneeOverFootAtDepth * 100
+          )}% so weit auseinander wie die Füsse; ab etwa 70% aufwärts spuren sie sauber.`,
+          `At the bottom the knees are only ${Math.round(
+            m.kneeOverFootAtDepth * 100
+          )}% as far apart as the feet; from about 70% up they track cleanly.`
+        ),
         atSecond: m.deepestAt,
       });
     }
     if (m.footOverShoulderMedian !== null && m.footOverShoulderMedian < 1.2) {
       out.push({
         severity: "relevant",
-        label: "Stand zu eng",
-        detail: `Die Füsse stehen nur ${m.footOverShoulderMedian}-mal schulterbreit; üblich sind 1.2 bis 2.8.`,
+        label: tx("Stand zu eng", "Stance too narrow"),
+        detail: tx(
+          `Die Füsse stehen nur ${m.footOverShoulderMedian}-mal schulterbreit; üblich sind 1.2 bis 2.8.`,
+          `The feet are only ${m.footOverShoulderMedian} times shoulder width apart; 1.2 to 2.8 is usual.`
+        ),
         atSecond: m.deepestAt,
       });
     }
     if (m.footOverShoulderMedian !== null && m.footOverShoulderMedian > 2.8) {
       out.push({
         severity: "relevant",
-        label: "Stand zu breit",
-        detail: `Die Füsse stehen ${m.footOverShoulderMedian}-mal schulterbreit; üblich sind 1.2 bis 2.8.`,
+        label: tx("Stand zu breit", "Stance too wide"),
+        detail: tx(
+          `Die Füsse stehen ${m.footOverShoulderMedian}-mal schulterbreit; üblich sind 1.2 bis 2.8.`,
+          `The feet are ${m.footOverShoulderMedian} times shoulder width apart; 1.2 to 2.8 is usual.`
+        ),
         atSecond: m.deepestAt,
       });
     }
     if (m.kneeMin !== null && m.kneeMin > 90 + KNEE_TOLERANCE) {
       out.push({
         severity: "relevant",
-        label: "Nicht tief genug",
-        detail: `Das Knie beugt sich nur bis ${m.kneeMin}°; für Parallele oder tiefer wären etwa 90° oder weniger nötig.`,
+        label: tx("Nicht tief genug", "Not deep enough"),
+        detail: tx(
+          `Das Knie beugt sich nur bis ${m.kneeMin}°; für Parallele oder tiefer wären etwa 90° oder weniger nötig.`,
+          `The knee only bends to ${m.kneeMin}°; parallel or deeper needs about 90° or less.`
+        ),
         atSecond: m.deepestAt,
       });
     }
     if (m.hipMin !== null && m.hipMin < 25) {
       out.push({
         severity: "relevant",
-        label: "Sehr starke Hüftbeugung",
-        detail: `Hüftwinkel bis ${m.hipMin}° — prüfen, ob der Rücken dabei neutral bleibt.`,
+        label: tx("Sehr starke Hüftbeugung", "Very deep hip flexion"),
+        detail: tx(
+          `Hüftwinkel bis ${m.hipMin}° — prüfen, ob der Rücken dabei neutral bleibt.`,
+          `Hip angle down to ${m.hipMin}° — check that the back stays neutral.`
+        ),
         atSecond: m.deepestAt,
       });
     }
@@ -177,8 +211,11 @@ export function findingsFromMetrics(
   if (hinge && m.hipMin !== null && m.hipMin > 140) {
     out.push({
       severity: "relevant",
-      label: "Hüfte wird kaum gebeugt",
-      detail: `Hüftwinkel bleibt bei ${m.hipMin}°; beim Hüftbeugemuster wäre deutlich mehr Beugung zu erwarten.`,
+      label: tx("Hüfte wird kaum gebeugt", "Hips barely hinge"),
+      detail: tx(
+        `Hüftwinkel bleibt bei ${m.hipMin}°; beim Hüftbeugemuster wäre deutlich mehr Beugung zu erwarten.`,
+        `The hip angle stays at ${m.hipMin}°; a hinge should show clearly more flexion.`
+      ),
       atSecond: m.deepestAt,
     });
   }
@@ -189,8 +226,11 @@ export function findingsFromMetrics(
   if (lunge && m.kneeMin !== null && m.kneeMin > 125 + KNEE_TOLERANCE) {
     out.push({
       severity: "relevant",
-      label: "Ausfallschritt zu flach",
-      detail: `Das vordere Knie beugt sich nur bis ${m.kneeMin}°; im tiefsten Punkt wären etwa 90° zu erwarten.`,
+      label: tx("Ausfallschritt zu flach", "Lunge too shallow"),
+      detail: tx(
+        `Das vordere Knie beugt sich nur bis ${m.kneeMin}°; im tiefsten Punkt wären etwa 90° zu erwarten.`,
+        `The front knee only bends to ${m.kneeMin}°; about 90° is expected at the bottom.`
+      ),
       atSecond: m.deepestAt,
     });
   }
@@ -201,8 +241,11 @@ export function findingsFromMetrics(
   if (pull && m.elbowMax !== null && m.elbowMax < 130) {
     out.push({
       severity: "relevant",
-      label: "Arme werden unten nicht gestreckt",
-      detail: `Der Ellenbogen öffnet sich nur bis ${m.elbowMax}°; eine volle Wiederholung beginnt nahezu gestreckt bei etwa 160° oder mehr.`,
+      label: tx("Arme werden unten nicht gestreckt", "Arms not straightened at the bottom"),
+      detail: tx(
+        `Der Ellenbogen öffnet sich nur bis ${m.elbowMax}°; eine volle Wiederholung beginnt nahezu gestreckt bei etwa 160° oder mehr.`,
+        `The elbow only opens to ${m.elbowMax}°; a full repetition starts nearly straight, at about 160° or more.`
+      ),
       atSecond: null,
     });
   }
@@ -210,8 +253,11 @@ export function findingsFromMetrics(
   if (press && m.elbowMin !== null && m.elbowMin > 90 + ELBOW_TOLERANCE) {
     out.push({
       severity: "relevant",
-      label: "Bewegungsumfang verkürzt",
-      detail: `Der Ellenbogen beugt sich nur bis ${m.elbowMin}°.`,
+      label: tx("Bewegungsumfang verkürzt", "Range of motion cut short"),
+      detail: tx(
+        `Der Ellenbogen beugt sich nur bis ${m.elbowMin}°.`,
+        `The elbow only bends to ${m.elbowMin}°.`
+      ),
       atSecond: m.deepestAt,
     });
   }
@@ -223,8 +269,11 @@ export function findingsFromMetrics(
     const last = m.reps[m.reps.length - 1];
     out.push({
       severity: "relevant",
-      label: "Tiefe nimmt über den Satz ab",
-      detail: `Die letzte Wiederholung bleibt ${m.depthDrift}° flacher als die erste (${m.reps[0].bottom}° gegenüber ${last.bottom}°).`,
+      label: tx("Tiefe nimmt über den Satz ab", "Depth fades over the set"),
+      detail: tx(
+        `Die letzte Wiederholung bleibt ${m.depthDrift}° flacher als die erste (${m.reps[0].bottom}° gegenüber ${last.bottom}°).`,
+        `The last repetition is ${m.depthDrift}° shallower than the first (${m.reps[0].bottom}° versus ${last.bottom}°).`
+      ),
       atSecond: last.at,
     });
   }
@@ -361,7 +410,8 @@ Schulterposition) — prüfe diese weiterhin am Bildmaterial.`
  */
 export function enforceVerdict(
   parsed: any,
-  findings: MeasuredFinding[]
+  findings: MeasuredFinding[],
+  lang: "de" | "en" = "de"
 ): { changed: boolean; from?: string } {
   const worst = findings.some((f) => f.severity === "kritisch")
     ? "kritisch"
@@ -379,6 +429,8 @@ export function enforceVerdict(
   const from = parsed.urteil;
   parsed.urteil = floor;
   const measured = findings.map((f) => `${f.label} (${f.detail})`).join(" ");
-  parsed.begruendung = `${parsed.begruendung ?? ""} Messung: ${measured}`.trim();
+  parsed.begruendung = `${parsed.begruendung ?? ""} ${
+    lang === "en" ? "Measured:" : "Messung:"
+  } ${measured}`.trim();
   return { changed: true, from };
 }

@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { Pause, Play, AlertTriangle } from "lucide-react";
 import { ExerciseAnalysisData, FaultMoment } from "../types";
 import { PoseOverlay } from "./PoseOverlay";
+import { useT } from "../i18n";
 
 interface AnalysedVideoStageProps {
   videoUrl: string;
@@ -15,6 +16,7 @@ export const AnalysedVideoStage: React.FC<AnalysedVideoStageProps> = ({
   videoUrl,
   data,
 }) => {
+  const t = useT();
   const videoRef = useRef<HTMLVideoElement>(null);
   const [ratio, setRatio] = useState<number | null>(null);
   const [duration, setDuration] = useState<number>(0);
@@ -119,7 +121,7 @@ export const AnalysedVideoStage: React.FC<AnalysedVideoStageProps> = ({
           <div className="absolute top-3 left-3 flex items-center gap-2 px-2.5 py-1 rounded-full bg-[#000000]/60 backdrop-blur-md">
             <span className="w-1.5 h-1.5 rounded-full bg-[#7bd44e] animate-pulse" />
             <span className="text-[10px] uppercase tracking-[0.14em] font-semibold text-[#faf6ef]">
-              Analyse
+              {t("Analyse", "Analysis")}
             </span>
           </div>
 
@@ -156,7 +158,7 @@ export const AnalysedVideoStage: React.FC<AnalysedVideoStageProps> = ({
             <button
               type="button"
               onClick={togglePlay}
-              aria-label="Erneut abspielen"
+              aria-label={t("Erneut abspielen", "Play again")}
               className="absolute inset-0 flex items-center justify-center bg-[#000000]/45 group"
             >
               <span className="w-16 h-16 rounded-full bg-[#faf6ef] flex items-center justify-center shadow-xl group-hover:scale-105 transition">
@@ -171,7 +173,7 @@ export const AnalysedVideoStage: React.FC<AnalysedVideoStageProps> = ({
               <button
                 type="button"
                 onClick={togglePlay}
-                aria-label={isPlaying ? "Pausieren" : "Abspielen"}
+                aria-label={isPlaying ? t("Pausieren", "Pause") : t("Abspielen", "Play")}
                 className="shrink-0 w-9 h-9 rounded-full bg-[#faf6ef] text-[#2e2c27] flex items-center justify-center hover:bg-[#e8e2d6] transition"
               >
                 {isPlaying ? (
@@ -193,7 +195,7 @@ export const AnalysedVideoStage: React.FC<AnalysedVideoStageProps> = ({
                       type="button"
                       onClick={() => seekTo(m.sekunde)}
                       title={`${m.sekunde.toFixed(1)}s – ${m.label}`}
-                      aria-label={`Zu ${m.label} springen`}
+                      aria-label={t(`Zu ${m.label} springen`, `Jump to ${m.label}`)}
                       className="absolute -top-1 w-3.5 h-3.5 -translate-x-1/2 rounded-full border-2 border-[#000000]/50 hover:scale-125 transition"
                       style={{
                         left: `${Math.min(100, (m.sekunde / duration) * 100)}%`,
@@ -213,13 +215,19 @@ export const AnalysedVideoStage: React.FC<AnalysedVideoStageProps> = ({
 
         {moments.length > 0 ? (
           <p className="mt-3 text-center text-xs text-[#6f6759]">
-            {moments.length} markierte{moments.length === 1 ? "r" : ""} Zeitpunkt
-            {moments.length === 1 ? "" : "e"} — auf einen Punkt tippen, um dorthin zu springen.
+            {t(
+              `${moments.length} markierte${moments.length === 1 ? "r" : ""} Zeitpunkt${
+                moments.length === 1 ? "" : "e"
+              } — auf einen Punkt tippen, um dorthin zu springen.`,
+              `${moments.length} marked moment${moments.length === 1 ? "" : "s"} — tap a dot to jump there.`
+            )}
           </p>
         ) : (
           <p className="mt-3 text-center text-xs text-[#6f6759]">
-            Für diese Aufnahme hat der Coach keine Zeitpunkte verortet — der Befund steht
-            unten.
+            {t(
+              "Für diese Aufnahme hat der Coach keine Zeitpunkte verortet — der Befund steht unten.",
+              "The coach placed no moments in this clip — the finding is below."
+            )}
           </p>
         )}
       </div>

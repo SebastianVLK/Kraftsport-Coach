@@ -16,6 +16,25 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { measureClip, type PoseMetrics } from "../lib/poseMetrics";
+import { useT } from "../i18n";
+
+/**
+ * The picker keeps its German values, which the server reads, and shows them in
+ * the page's language.
+ */
+const EXERCISE_EN: Record<string, string> = {
+  "Kniebeuge (Squat)": "Squat",
+  "Kreuzheben (Deadlift)": "Deadlift",
+  "Bankdrücken (Bench Press)": "Bench press",
+  "Klimmzüge (Pull-ups)": "Pull-ups",
+  "Liegestütze (Push-ups)": "Push-ups",
+  "Schulterdrücken (Overhead Press)": "Overhead press",
+  "Langhantelrudern (Barbell Row)": "Barbell row",
+  "Dips (Barrenstütz)": "Dips",
+  "Rumänisches Kreuzheben (RDL)": "Romanian deadlift (RDL)",
+  "Ausfallschritte (Lunges)": "Lunges",
+  "Hip Thrusts": "Hip thrusts",
+};
 
 interface VideoRecorderAndUploaderProps {
   onAnalyzeVideo: (
@@ -39,6 +58,8 @@ export const VideoRecorderAndUploader: React.FC<VideoRecorderAndUploaderProps> =
   selectedExerciseHint,
   onChangeExerciseHint,
 }) => {
+  const t = useT();
+  const exerciseLabel = (ex: string) => t(ex, EXERCISE_EN[ex] ?? ex);
   const [mode, setMode] = useState<"upload" | "record">("upload");
 
   // Video upload states
@@ -78,7 +99,12 @@ export const VideoRecorderAndUploader: React.FC<VideoRecorderAndUploaderProps> =
   // Frame extraction utility using offscreen video & canvas
   const extractFramesFromVideoUrl = (videoUrl: string) => {
     setIsVideoProcessing(true);
-    setProcessingStatus("Extrahiere Phasen-Schlüsselbilder (Umkehrpunkt, Exzentrik, Lockout)...");
+    setProcessingStatus(
+      t(
+        "Extrahiere Phasen-Schlüsselbilder (Umkehrpunkt, Exzentrik, Lockout)...",
+        "Extracting key frames (turning point, eccentric, lockout)..."
+      )
+    );
 
     const video = document.createElement("video");
     video.src = videoUrl;
@@ -98,8 +124,11 @@ export const VideoRecorderAndUploader: React.FC<VideoRecorderAndUploaderProps> =
       setIsVideoProcessing(false);
       setProcessingStatus(
         extracted.length > 0
-          ? `${extracted.length} Phasen-Bilder extrahiert – bereit für den Coach`
-          : "Video aufbereitet"
+          ? t(
+              `${extracted.length} Phasen-Bilder extrahiert – bereit für den Coach`,
+              `${extracted.length} key frames extracted – ready for the coach`
+            )
+          : t("Video aufbereitet", "Video prepared")
       );
     };
 
@@ -181,7 +210,7 @@ export const VideoRecorderAndUploader: React.FC<VideoRecorderAndUploaderProps> =
     setUploadedBlobUrl(url);
 
     setIsVideoProcessing(true);
-    setProcessingStatus("Video wird geladen & aufbereitet...");
+    setProcessingStatus(t("Video wird geladen & aufbereitet...", "Loading and preparing the video..."));
 
     const fileSizeMb = file.size / (1024 * 1024);
 
@@ -240,7 +269,10 @@ export const VideoRecorderAndUploader: React.FC<VideoRecorderAndUploaderProps> =
     try {
       if (!navigator.mediaDevices?.getUserMedia) {
         throw new Error(
-          "Dieser Browser stellt keine Kamera bereit. Die Aufnahme braucht eine sichere Verbindung (https oder localhost)."
+          t(
+            "Dieser Browser stellt keine Kamera bereit. Die Aufnahme braucht eine sichere Verbindung (https oder localhost).",
+            "This browser offers no camera. Recording needs a secure connection (https or localhost)."
+          )
         );
       }
 
@@ -267,10 +299,13 @@ export const VideoRecorderAndUploader: React.FC<VideoRecorderAndUploaderProps> =
       const name = err?.name || "";
       setCameraError(
         name === "NotAllowedError"
-          ? "Kamerazugriff wurde abgelehnt. Erlaube ihn in den Browser-Einstellungen für diese Seite."
+          ? t(
+              "Kamerazugriff wurde abgelehnt. Erlaube ihn in den Browser-Einstellungen für diese Seite.",
+              "Camera access was denied. Allow it for this page in the browser settings."
+            )
           : name === "NotFoundError"
-          ? "Keine Kamera gefunden."
-          : err?.message || "Die Kamera konnte nicht gestartet werden."
+          ? t("Keine Kamera gefunden.", "No camera found.")
+          : err?.message || t("Die Kamera konnte nicht gestartet werden.", "The camera could not be started.")
       );
       setIsCameraOn(false);
     } finally {
@@ -290,7 +325,12 @@ export const VideoRecorderAndUploader: React.FC<VideoRecorderAndUploaderProps> =
 
     const mimeType = pickRecordingMimeType();
     if (!mimeType) {
-      setCameraError("Dieser Browser unterstützt keine Videoaufnahme (MediaRecorder).");
+      setCameraError(
+        t(
+          "Dieser Browser unterstützt keine Videoaufnahme (MediaRecorder).",
+          "This browser does not support video recording (MediaRecorder)."
+        )
+      );
       return;
     }
 
@@ -312,7 +352,7 @@ export const VideoRecorderAndUploader: React.FC<VideoRecorderAndUploaderProps> =
       const blob = new Blob(chunksRef.current, { type: mimeType });
       chunksRef.current = [];
       if (blob.size === 0) {
-        setCameraError("Die Aufnahme war leer. Bitte erneut versuchen.");
+        setCameraError(t("Die Aufnahme war leer. Bitte erneut versuchen.", "The recording was empty. Please try again."));
         return;
       }
 
@@ -356,7 +396,12 @@ export const VideoRecorderAndUploader: React.FC<VideoRecorderAndUploaderProps> =
     let metrics: PoseMetrics | null = null;
     if (uploadedBlobUrl) {
       setIsMeasuring(true);
-      setProcessingStatus("Bewegung wird vermessen (Gelenkwinkel, Körperlinie)...");
+      setProcessingStatus(
+        t(
+          "Bewegung wird vermessen (Gelenkwinkel, Körperlinie)...",
+          "Measuring the movement (joint angles, body line)..."
+        )
+      );
       try {
         metrics = await measureClip(uploadedBlobUrl);
       } finally {
@@ -416,7 +461,13 @@ export const VideoRecorderAndUploader: React.FC<VideoRecorderAndUploaderProps> =
             {isVideoProcessing && (
               <div className="p-3 bg-[#eee8dd] border border-[#2e2c27]/[0.08] rounded-xl flex items-center gap-2.5 text-xs text-[#2e2c27]">
                 <Loader2 className="w-4 h-4 text-[#c23a20] animate-spin shrink-0" />
-                <span>{processingStatus || "Videosegmente werden für die Biomechanik aufbereitet..."}</span>
+                <span>
+                  {processingStatus ||
+                    t(
+                      "Videosegmente werden für die Biomechanik aufbereitet...",
+                      "Preparing video segments for the biomechanics..."
+                    )}
+                </span>
               </div>
             )}
 
@@ -425,9 +476,14 @@ export const VideoRecorderAndUploader: React.FC<VideoRecorderAndUploaderProps> =
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] font-semibold text-[#6f6759] flex items-center gap-1.5">
                     <Layers className="w-3.5 h-3.5 text-[#c23a20]" />
-                    <span>{extractedFrames.length} Phasen-Bilder extrahiert (Umkehrpunkt & Exzentrik)</span>
+                    <span>
+                      {t(
+                        `${extractedFrames.length} Phasen-Bilder extrahiert (Umkehrpunkt & Exzentrik)`,
+                        `${extractedFrames.length} key frames extracted (turning point & eccentric)`
+                      )}
+                    </span>
                   </span>
-                  <span className="text-[10px] text-[#5f6b25] font-medium">Bereit</span>
+                  <span className="text-[10px] text-[#5f6b25] font-medium">{t("Bereit", "Ready")}</span>
                 </div>
                 <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
                   {extractedFrames.map((frm, idx) => (
@@ -466,7 +522,7 @@ export const VideoRecorderAndUploader: React.FC<VideoRecorderAndUploaderProps> =
                   }}
                   className="px-4 py-2 bg-[#eee8dd] hover:bg-[#e2dacb] text-[#2e2c27] rounded-full text-xs font-semibold transition border border-[#2e2c27]/10"
                 >
-                  {mode === "record" ? "Neu aufnehmen" : "Anderes Video"}
+                  {mode === "record" ? t("Neu aufnehmen", "Record again") : t("Anderes Video", "Other video")}
                 </button>
 
                 <button
@@ -481,7 +537,11 @@ export const VideoRecorderAndUploader: React.FC<VideoRecorderAndUploaderProps> =
                   ) : (
                     <Activity className="w-4 h-4" />
                   )}
-                  <span>{isAnalyzing ? "Coach analysiert..." : "Jetzt analysieren"}</span>
+                  <span>
+                    {isAnalyzing
+                      ? t("Coach analysiert...", "Coach is analysing...")
+                      : t("Jetzt analysieren", "Analyse now")}
+                  </span>
                 </button>
               </div>
             </div>
@@ -498,7 +558,7 @@ export const VideoRecorderAndUploader: React.FC<VideoRecorderAndUploaderProps> =
               <Activity className="w-4 h-4" />
             </span>
             <h2 className="text-sm sm:text-base font-semibold tracking-tight text-[#2e2c27]">
-              Video-Technikanalyse
+              {t("Video-Technikanalyse", "Video technique analysis")}
             </h2>
           </div>
         </div>
@@ -516,7 +576,7 @@ export const VideoRecorderAndUploader: React.FC<VideoRecorderAndUploaderProps> =
             }`}
           >
             <Upload className="w-3.5 h-3.5" />
-            <span>Video-Upload</span>
+            <span>{t("Video-Upload", "Video upload")}</span>
           </button>
 
           <button
@@ -530,7 +590,7 @@ export const VideoRecorderAndUploader: React.FC<VideoRecorderAndUploaderProps> =
             }`}
           >
             <Camera className="w-3.5 h-3.5" />
-            <span>Live-Aufnahme</span>
+            <span>{t("Live-Aufnahme", "Live recording")}</span>
           </button>
         </div>
       </div>
@@ -539,7 +599,7 @@ export const VideoRecorderAndUploader: React.FC<VideoRecorderAndUploaderProps> =
       <div className="px-5 py-3.5 bg-[#eee8dd]/40 border-b border-[#2e2c27]/[0.06] flex flex-col sm:flex-row sm:items-center gap-2.5 text-xs">
         <span className="text-[#6f6759] font-medium shrink-0 flex items-center gap-1.5">
           <Dumbbell className="w-3.5 h-3.5 text-[#c23a20]" />
-          <span>Fokus-Übung:</span>
+          <span>{t("Fokus-Übung:", "Exercise:")}</span>
         </span>
 
         {/* One row that scrolls sideways; "Andere" is a sibling of the scroll
@@ -561,7 +621,7 @@ export const VideoRecorderAndUploader: React.FC<VideoRecorderAndUploaderProps> =
                       : "bg-[#eee8dd] text-[#6f6759] hover:text-[#2e2c27] border border-[#2e2c27]/[0.06]"
                   }`}
                 >
-                  {ex}
+                  {exerciseLabel(ex)}
                 </button>
               ))}
             </div>
@@ -579,7 +639,7 @@ export const VideoRecorderAndUploader: React.FC<VideoRecorderAndUploaderProps> =
               }`}
             >
               <PlusCircle className="w-3.5 h-3.5" />
-              <span>{isOtherSelected ? selectedExerciseHint : "Andere"}</span>
+              <span>{isOtherSelected ? exerciseLabel(selectedExerciseHint) : t("Andere", "Other")}</span>
             </button>
 
             {showCustomInput && (
@@ -605,14 +665,14 @@ export const VideoRecorderAndUploader: React.FC<VideoRecorderAndUploaderProps> =
                             : "text-[#2e2c27] hover:bg-[#eee8dd]"
                         }`}
                       >
-                        {ex}
+                        {exerciseLabel(ex)}
                       </button>
                     ))}
                   </div>
 
                   <div className="mt-2 pt-2 border-t border-[#2e2c27]/10">
                     <span className="block px-1 pb-1.5 text-[11px] text-[#6f6759]">
-                      Andere Übung eingeben
+                      {t("Andere Übung eingeben", "Enter another exercise")}
                     </span>
                     <div className="flex items-center gap-1.5">
                       <input
@@ -626,7 +686,7 @@ export const VideoRecorderAndUploader: React.FC<VideoRecorderAndUploaderProps> =
                             setShowCustomInput(false);
                           }
                         }}
-                        placeholder="z. B. Frontkniebeuge"
+                        placeholder={t("z. B. Frontkniebeuge", "e.g. front squat")}
                         className="min-w-0 flex-1 bg-[#eee8dd] border border-[#2e2c27]/20 rounded-full px-3 py-1.5 text-[13px] text-[#2e2c27] placeholder-[#6f6759] focus:outline-none focus:border-[#c23a20]"
                       />
                       <button
@@ -639,7 +699,7 @@ export const VideoRecorderAndUploader: React.FC<VideoRecorderAndUploaderProps> =
                         }}
                         className="shrink-0 px-3 py-1.5 bg-[#2e2c27] hover:bg-[#1f1d19] text-[#faf6ef] text-[12px] font-semibold rounded-full shadow-sm"
                       >
-                        Setzen
+                        {t("Setzen", "Set")}
                       </button>
                     </div>
                   </div>
@@ -677,14 +737,17 @@ export const VideoRecorderAndUploader: React.FC<VideoRecorderAndUploaderProps> =
               </div>
               <div className="space-y-1">
                 <h4 className="text-sm sm:text-base font-semibold text-[#2e2c27]">
-                  Übungsvideo auswählen oder hierhin ziehen
+                  {t("Übungsvideo auswählen oder hierhin ziehen", "Choose an exercise video or drop it here")}
                 </h4>
                 <p className="text-xs text-[#6f6759] max-w-sm mx-auto leading-relaxed">
-                  Unterstützt MP4, WebM, MOV. Ideal sind 1–5 saubere Wiederholungen (5–20 Sekunden), gefilmt aus 45° bis 90° Blickwinkel.
+                  {t(
+                    "Unterstützt MP4, WebM, MOV. Ideal sind 1–5 saubere Wiederholungen (5–20 Sekunden), gefilmt aus 45° bis 90° Blickwinkel.",
+                    "Supports MP4, WebM and MOV. 1–5 clean repetitions (5–20 seconds) are ideal, filmed from a 45° to 90° angle."
+                  )}
                 </p>
               </div>
               <span className="text-xs text-[#faf6ef] bg-[#2e2c27] hover:bg-[#1f1d19] px-4 py-2 rounded-full transition shadow-sm">
-                Video-Datei auswählen
+                {t("Video-Datei auswählen", "Choose video file")}
               </span>
             </div>
           ) : (
@@ -712,11 +775,13 @@ export const VideoRecorderAndUploader: React.FC<VideoRecorderAndUploaderProps> =
               </div>
               <div className="space-y-1">
                 <h4 className="text-sm sm:text-base font-semibold text-[#2e2c27]">
-                  Satz direkt mit der Kamera aufnehmen
+                  {t("Satz direkt mit der Kamera aufnehmen", "Record a set straight from the camera")}
                 </h4>
                 <p className="text-xs text-[#6f6759] max-w-sm mx-auto leading-relaxed">
-                  Stelle das Gerät seitlich bis 45° auf Hüfthöhe auf, sodass alle Gelenke im Bild
-                  bleiben. Ideal sind 1–5 Wiederholungen, maximal {MAX_RECORDING_SECONDS} Sekunden.
+                  {t(
+                    `Stelle das Gerät seitlich bis 45° auf Hüfthöhe auf, sodass alle Gelenke im Bild bleiben. Ideal sind 1–5 Wiederholungen, maximal ${MAX_RECORDING_SECONDS} Sekunden.`,
+                    `Place the device at hip height, from the side or up to 45° off it, so every joint stays in frame. 1–5 repetitions are ideal, ${MAX_RECORDING_SECONDS} seconds at most.`
+                  )}
                 </p>
               </div>
               <button
@@ -731,7 +796,11 @@ export const VideoRecorderAndUploader: React.FC<VideoRecorderAndUploaderProps> =
                 ) : (
                   <Camera className="w-3.5 h-3.5" />
                 )}
-                <span>{isStartingCamera ? "Kamera wird gestartet..." : "Kamera starten"}</span>
+                <span>
+                  {isStartingCamera
+                    ? t("Kamera wird gestartet...", "Starting camera...")
+                    : t("Kamera starten", "Start camera")}
+                </span>
               </button>
             </div>
           ) : (
@@ -765,10 +834,10 @@ export const VideoRecorderAndUploader: React.FC<VideoRecorderAndUploaderProps> =
                     onClick={() => startCamera(facingMode === "user" ? "environment" : "user")}
                     disabled={isRecording || isStartingCamera}
                     className="px-4 py-2 bg-[#eee8dd] hover:bg-[#e2dacb] disabled:opacity-40 text-[#2e2c27] rounded-full text-xs font-semibold transition border border-[#2e2c27]/10 flex items-center gap-1.5"
-                    title="Zwischen Front- und Rückkamera wechseln"
+                    title={t("Zwischen Front- und Rückkamera wechseln", "Switch between front and rear camera")}
                   >
                     <SwitchCamera className="w-3.5 h-3.5" />
-                    <span className="hidden sm:inline">Kamera wechseln</span>
+                    <span className="hidden sm:inline">{t("Kamera wechseln", "Switch camera")}</span>
                   </button>
 
                   <button
@@ -778,7 +847,7 @@ export const VideoRecorderAndUploader: React.FC<VideoRecorderAndUploaderProps> =
                     className="px-4 py-2 bg-[#eee8dd] hover:bg-[#e2dacb] disabled:opacity-40 text-[#2e2c27] rounded-full text-xs font-semibold transition border border-[#2e2c27]/10 flex items-center gap-1.5"
                   >
                     <CameraOff className="w-3.5 h-3.5" />
-                    <span className="hidden sm:inline">Kamera aus</span>
+                    <span className="hidden sm:inline">{t("Kamera aus", "Camera off")}</span>
                   </button>
                 </div>
 
@@ -790,7 +859,7 @@ export const VideoRecorderAndUploader: React.FC<VideoRecorderAndUploaderProps> =
                     className="px-6 py-2.5 bg-[#c23a20] hover:bg-[#b02f1a] text-[#2e2c27] rounded-full text-xs sm:text-sm font-semibold transition flex items-center gap-2 shadow-lg shadow-[#c23a20]/25 active:scale-95"
                   >
                     <Circle className="w-4 h-4 fill-current" />
-                    <span>Aufnahme starten</span>
+                    <span>{t("Aufnahme starten", "Start recording")}</span>
                   </button>
                 ) : (
                   <button
@@ -800,7 +869,7 @@ export const VideoRecorderAndUploader: React.FC<VideoRecorderAndUploaderProps> =
                     className="px-6 py-2.5 bg-[#2e2c27] hover:bg-[#2e2c27] text-[#faf6ef] rounded-full text-xs sm:text-sm font-semibold transition flex items-center gap-2 shadow-lg active:scale-95"
                   >
                     <Square className="w-4 h-4 fill-current" />
-                    <span>Aufnahme beenden</span>
+                    <span>{t("Aufnahme beenden", "Stop recording")}</span>
                   </button>
                 )}
               </div>

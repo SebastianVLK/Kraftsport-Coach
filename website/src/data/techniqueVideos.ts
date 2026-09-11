@@ -87,12 +87,12 @@ export function findTechniqueVideo(exerciseName: string): TechniqueVideo | null 
 }
 
 /** What gets searched for without a vetted clip — shared by the link and the lookup. */
-export function techniqueSearchQuery(exerciseName: string): string {
-  return `${exerciseName} Technik richtig ausführen`;
+export function techniqueSearchQuery(exerciseName: string, lang: "de" | "en" = "de"): string {
+  return `${exerciseName} ${lang === "en" ? "proper form technique" : "Technik richtig ausführen"}`;
 }
 
-export function youtubeSearchUrl(exerciseName: string): string {
+export function youtubeSearchUrl(exerciseName: string, lang: "de" | "en" = "de"): string {
   return `https://www.youtube.com/results?search_query=${encodeURIComponent(
-    techniqueSearchQuery(exerciseName)
+    techniqueSearchQuery(exerciseName, lang)
   )}`;
 }

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Loader2, LogIn, UserPlus, AlertCircle, Eye, EyeOff } from "lucide-react";
+import { useLang, useT, serverMessage } from "../i18n";
 
 export interface AccountUser {
   id: string;
@@ -15,6 +16,8 @@ interface AuthPanelProps {
 }
 
 export const AuthPanel: React.FC<AuthPanelProps> = ({ onAuthenticated, reason }) => {
+  const { lang } = useLang();
+  const t = useT();
   const [mode, setMode] = useState<"login" | "register">("login");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -38,11 +41,13 @@ export const AuthPanel: React.FC<AuthPanelProps> = ({ onAuthenticated, reason })
       });
       const data = await res.json();
       if (!res.ok || !data.success) {
-        throw new Error(data.error || "Anmeldung fehlgeschlagen.");
+        throw new Error(
+          data.error ? serverMessage(data.error, lang) : t("Anmeldung fehlgeschlagen.", "Sign-in failed.")
+        );
       }
       onAuthenticated(data.user);
     } catch (err: any) {
-      setError(err.message || "Anmeldung fehlgeschlagen.");
+      setError(err.message || t("Anmeldung fehlgeschlagen.", "Sign-in failed."));
     } finally {
       setBusy(false);
     }
@@ -51,13 +56,16 @@ export const AuthPanel: React.FC<AuthPanelProps> = ({ onAuthenticated, reason })
   return (
     <section className="rounded-3xl bg-[#ffffff] border border-[#2e2c27]/[0.08] p-6 sm:p-9 shadow-sm max-w-md mx-auto">
       <h3 className="text-xl sm:text-2xl font-black uppercase tracking-[-0.02em] text-[#2e2c27]">
-        {mode === "login" ? "Anmelden" : "Konto erstellen"}
+        {mode === "login" ? t("Anmelden", "Sign in") : t("Konto erstellen", "Create account")}
       </h3>
       <p className="mt-2 text-sm text-[#6f6759] leading-relaxed">
         {reason ??
           (mode === "register"
-            ? "Benutzername, E-Mail und Passwort — mehr wird nicht gespeichert."
-            : "Mit E-Mail und Passwort anmelden.")}
+            ? t(
+                "Benutzername, E-Mail und Passwort — mehr wird nicht gespeichert.",
+                "Username, email and password — nothing more is stored."
+              )
+            : t("Mit E-Mail und Passwort anmelden.", "Sign in with email and password."))}
       </p>
 
       <form onSubmit={submit} className="mt-6 space-y-4">
@@ -67,7 +75,7 @@ export const AuthPanel: React.FC<AuthPanelProps> = ({ onAuthenticated, reason })
               htmlFor="auth-name"
               className="block text-[11px] uppercase tracking-[0.14em] font-semibold text-[#6f6759] mb-1.5"
             >
-              Benutzername
+              {t("Benutzername", "Username")}
             </label>
             <input
               id="auth-name"
@@ -79,7 +87,7 @@ export const AuthPanel: React.FC<AuthPanelProps> = ({ onAuthenticated, reason })
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="w-full bg-[#faf6ef] border border-[#2e2c27]/15 rounded-xl px-4 py-3 text-[15px] text-[#2e2c27] placeholder-[#6f6759] focus:outline-none focus:border-[#c23a20]"
-              placeholder="Wie sollen wir dich nennen?"
+              placeholder={t("Wie sollen wir dich nennen?", "What should we call you?")}
             />
           </div>
         )}
@@ -89,7 +97,7 @@ export const AuthPanel: React.FC<AuthPanelProps> = ({ onAuthenticated, reason })
             htmlFor="auth-email"
             className="block text-[11px] uppercase tracking-[0.14em] font-semibold text-[#6f6759] mb-1.5"
           >
-            E-Mail
+            {t("E-Mail", "Email")}
           </label>
           <input
             id="auth-email"
@@ -99,7 +107,7 @@ export const AuthPanel: React.FC<AuthPanelProps> = ({ onAuthenticated, reason })
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className="w-full bg-[#faf6ef] border border-[#2e2c27]/15 rounded-xl px-4 py-3 text-[15px] text-[#2e2c27] placeholder-[#6f6759] focus:outline-none focus:border-[#c23a20]"
-            placeholder="du@example.com"
+            placeholder={t("du@example.com", "you@example.com")}
           />
         </div>
 
@@ -108,7 +116,7 @@ export const AuthPanel: React.FC<AuthPanelProps> = ({ onAuthenticated, reason })
             htmlFor="auth-password"
             className="block text-[11px] uppercase tracking-[0.14em] font-semibold text-[#6f6759] mb-1.5"
           >
-            Passwort
+            {t("Passwort", "Password")}
           </label>
           <div className="relative">
             <input
@@ -120,14 +128,20 @@ export const AuthPanel: React.FC<AuthPanelProps> = ({ onAuthenticated, reason })
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full bg-[#faf6ef] border border-[#2e2c27]/15 rounded-xl pl-4 pr-12 py-3 text-[15px] text-[#2e2c27] placeholder-[#6f6759] focus:outline-none focus:border-[#c23a20]"
-              placeholder={mode === "register" ? "mindestens 8 Zeichen" : "••••••••"}
+              placeholder={
+                mode === "register" ? t("mindestens 8 Zeichen", "at least 8 characters") : "••••••••"
+              }
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              aria-label={showPassword ? "Passwort verbergen" : "Passwort anzeigen"}
+              aria-label={
+                showPassword ? t("Passwort verbergen", "Hide password") : t("Passwort anzeigen", "Show password")
+              }
               aria-pressed={showPassword}
-              title={showPassword ? "Passwort verbergen" : "Passwort anzeigen"}
+              title={
+                showPassword ? t("Passwort verbergen", "Hide password") : t("Passwort anzeigen", "Show password")
+              }
               className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-lg text-[#6f6759] hover:text-[#2e2c27] hover:bg-[#eee8dd] transition"
             >
               {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -154,7 +168,7 @@ export const AuthPanel: React.FC<AuthPanelProps> = ({ onAuthenticated, reason })
           ) : (
             <UserPlus className="w-4 h-4" />
           )}
-          <span>{mode === "login" ? "Anmelden" : "Konto erstellen"}</span>
+          <span>{mode === "login" ? t("Anmelden", "Sign in") : t("Konto erstellen", "Create account")}</span>
         </button>
       </form>
 
@@ -167,8 +181,8 @@ export const AuthPanel: React.FC<AuthPanelProps> = ({ onAuthenticated, reason })
         className="mt-5 w-full text-sm text-[#6f6759] hover:text-[#2e2c27] transition"
       >
         {mode === "login"
-          ? "Noch kein Konto? Jetzt erstellen"
-          : "Schon ein Konto? Zur Anmeldung"}
+          ? t("Noch kein Konto? Jetzt erstellen", "No account yet? Create one")
+          : t("Schon ein Konto? Zur Anmeldung", "Already have an account? Sign in")}
       </button>
     </section>
   );

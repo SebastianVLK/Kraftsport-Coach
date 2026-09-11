@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { FilesetResolver, PoseLandmarker } from "@mediapipe/tasks-vision";
+import { useT } from "../i18n";
 
 /** BlazePose indices we care about by name, so the mapping below reads. */
 const J = {
@@ -20,22 +21,29 @@ const J = {
 
 /**
  * Which joints a finding is about. The coach writes prose, so the link is made
- * on the words it actually uses; anything unmatched highlights nothing rather
- * than guessing at a joint.
+ * on the words it actually uses — German or English, as the page asks for;
+ * anything unmatched highlights nothing rather than guessing at a joint.
  */
 const FAULT_JOINTS: { test: RegExp; joints: number[] }[] = [
-  { test: /h(ü|ue)fte|becken|lordose|hohlkreuz|durchh(ä|ae)ng/i, joints: [J.hipL, J.hipR] },
   {
-    test: /r(ü|ue)cken|wirbels(ä|ae)ule|lws|rundr(ü|ue)cken|einrund/i,
+    test: /h(ü|ue)fte|becken|lordose|hohlkreuz|durchh(ä|ae)ng|\bhips?\b|pelvi|\bsag|lordosis/i,
+    joints: [J.hipL, J.hipR],
+  },
+  {
+    test: /r(ü|ue)cken|wirbels(ä|ae)ule|lws|rundr(ü|ue)cken|einrund|\bback\b|spine|spinal|lumbar/i,
     joints: [J.shoulderL, J.shoulderR, J.hipL, J.hipR],
   },
-  { test: /ell(en)?bogen|flügel|fl(ü|ue)gel|t-form/i, joints: [J.elbowL, J.elbowR] },
-  { test: /schulter|impingement|retraktion/i, joints: [J.shoulderL, J.shoulderR] },
-  { test: /knie|valgus|x-bein/i, joints: [J.kneeL, J.kneeR] },
-  { test: /kopf|nacken|hals|blick/i, joints: [J.nose] },
-  { test: /fu(ß|ss)|ferse|sprunggelenk|zehen/i, joints: [J.ankleL, J.ankleR] },
-  { test: /handgelenk|hand/i, joints: [J.wristL, J.wristR] },
-  { test: /tiefe|umkehrpunkt|rom|bewegungsumfang/i, joints: [J.elbowL, J.elbowR, J.kneeL, J.kneeR] },
+  { test: /ell(en)?bogen|flügel|fl(ü|ue)gel|t-form|elbow|flar(e|ing)/i, joints: [J.elbowL, J.elbowR] },
+  { test: /schulter|impingement|retraktion|shoulder|retraction/i, joints: [J.shoulderL, J.shoulderR] },
+  { test: /knie|valgus|x-bein|\bknees?\b/i, joints: [J.kneeL, J.kneeR] },
+  { test: /kopf|nacken|hals|blick|\bhead\b|\bneck\b|gaze/i, joints: [J.nose] },
+  { test: /fu(ß|ss)|ferse|sprunggelenk|zehen|\bfoot\b|\bfeet\b|heel|ankle|\btoes?\b/i, joints: [J.ankleL, J.ankleR] },
+  { test: /handgelenk|hand|wrist/i, joints: [J.wristL, J.wristR] },
+  // \brom\b, not rom: in English prose the bare letters sit inside every "from"
+  {
+    test: /tiefe|umkehrpunkt|\brom\b|bewegungsumfang|depth|range of motion|turning point/i,
+    joints: [J.elbowL, J.elbowR, J.kneeL, J.kneeR],
+  },
 ];
 
 function jointsForFault(label?: string | null): Set<number> {
@@ -45,11 +53,16 @@ function jointsForFault(label?: string | null): Set<number> {
 }
 
 /** Joint whose angle is worth reading out, by exercise family. */
-function measuredJoint(exercise: string): { a: number; b: number; c: number; name: string } {
+function measuredJoint(exercise: string): {
+  a: number;
+  b: number;
+  c: number;
+  name: [string, string];
+} {
   if (/kniebeuge|squat|ausfallschritt|lunge|hip thrust/i.test(exercise)) {
-    return { a: J.hipR, b: J.kneeR, c: J.ankleR, name: "Knie" };
+    return { a: J.hipR, b: J.kneeR, c: J.ankleR, name: ["Knie", "Knee"] };
   }
-  return { a: J.shoulderR, b: J.elbowR, c: J.wristR, name: "Ellenbogen" };
+  return { a: J.shoulderR, b: J.elbowR, c: J.wristR, name: ["Ellenbogen", "Elbow"] };
 }
 
 function angleAt(
@@ -87,6 +100,7 @@ export const PoseOverlay: React.FC<PoseOverlayProps> = ({
   faultTexts = [],
   exerciseName,
 }) => {
+  const t = useT();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const landmarkerRef = useRef<PoseLandmarker | null>(null);
   const rafRef = useRef<number | null>(null);
@@ -306,25 +320,31 @@ export const PoseOverlay: React.FC<PoseOverlayProps> = ({
 
       {status === "loading" && (
         <span className="absolute top-3 left-1/2 -translate-x-1/2 px-2.5 py-1 rounded-full bg-[#000000]/60 backdrop-blur-md text-[10px] uppercase tracking-[0.14em] font-semibold text-[#faf6ef]">
-          Skelett wird geladen…
+          {t("Skelett wird geladen…", "Loading skeleton…")}
         </span>
       )}
 
       {status === "unavailable" && (
         <span className="absolute top-3 left-1/2 -translate-x-1/2 px-2.5 py-1 rounded-full bg-[#000000]/60 backdrop-blur-md text-[10px] text-[#faf6ef]">
-          Pose-Tracking nicht verfügbar — „npm run setup:pose"
+          {t(
+            "Pose-Tracking nicht verfügbar — „npm run setup:pose“",
+            "Pose tracking unavailable — “npm run setup:pose”"
+          )}
         </span>
       )}
 
       {status === "ready" && unmappedFault && (
         <span className="absolute top-11 left-1/2 -translate-x-1/2 px-2.5 py-1 rounded-full bg-[#000000]/60 backdrop-blur-md text-[10px] text-[#faf6ef] text-center max-w-[90%]">
-          Befund keinem Gelenk zuzuordnen — keine Freigabe der übrigen Punkte
+          {t(
+            "Befund keinem Gelenk zuzuordnen — keine Freigabe der übrigen Punkte",
+            "Finding not tied to a joint — the other points are not cleared"
+          )}
         </span>
       )}
 
       {status === "ready" && angle !== null && (
         <span className="absolute bottom-16 right-3 px-2.5 py-1 rounded-full bg-[#000000]/60 backdrop-blur-md text-[10px] uppercase tracking-[0.14em] font-semibold text-[#faf6ef]">
-          {measuredJoint(exerciseName).name} {angle}°
+          {t(...measuredJoint(exerciseName).name)} {angle}°
         </span>
       )}
     </>

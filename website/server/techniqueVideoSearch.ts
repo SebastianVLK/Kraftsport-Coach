@@ -19,25 +19,30 @@ export interface FoundVideo {
 
 const found = new Map<string, FoundVideo>();
 
-const HEADERS = {
+const headers = (lang: "de" | "en") => ({
   "User-Agent":
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126 Safari/537.36",
-  "Accept-Language": "de-CH,de;q=0.9",
+  "Accept-Language": lang === "en" ? "en-GB,en;q=0.9" : "de-CH,de;q=0.9",
   // skips the cookie-consent page YouTube puts in front of European visitors
   Cookie: "CONSENT=YES+1",
-};
+});
 
-export async function findVideoBySearch(exercise: string): Promise<FoundVideo | null> {
-  const key = exercise.trim().toLowerCase();
-  if (!key) return null;
+export async function findVideoBySearch(
+  exercise: string,
+  lang: "de" | "en" = "de"
+): Promise<FoundVideo | null> {
+  const name = exercise.trim().toLowerCase();
+  if (!name) return null;
+  // an English page gets an English tutorial, so each language is cached apart
+  const key = `${lang}:${name}`;
   const cached = found.get(key);
   if (cached) return cached;
 
   const page = await fetch(
-    `https://www.youtube.com/results?hl=de&search_query=${encodeURIComponent(
-      techniqueSearchQuery(exercise.trim())
+    `https://www.youtube.com/results?hl=${lang}&search_query=${encodeURIComponent(
+      techniqueSearchQuery(exercise.trim(), lang)
     )}`,
-    { headers: HEADERS, signal: AbortSignal.timeout(8000) }
+    { headers: headers(lang), signal: AbortSignal.timeout(8000) }
   );
   if (!page.ok) return null;
   const html = await page.text();

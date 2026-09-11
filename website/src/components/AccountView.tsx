@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import type { AccountUser } from "./AuthPanel";
 import { CoachingsView, type CoachingSummary } from "./CoachingsView";
+import { useLang, useT, localeOf, serverMessage, verdictLabel } from "../i18n";
 
 interface AccountViewProps {
   user: AccountUser;
@@ -30,12 +31,12 @@ const dayKey = (iso: string) => {
   return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
 };
 
-const greeting = () => {
+const greeting = (t: (de: string, en: string) => string) => {
   const h = new Date().getHours();
-  if (h < 5) return "Noch wach";
-  if (h < 11) return "Guten Morgen";
-  if (h < 18) return "Hallo";
-  return "Guten Abend";
+  if (h < 5) return t("Noch wach", "Still up");
+  if (h < 11) return t("Guten Morgen", "Good morning");
+  if (h < 18) return t("Hallo", "Hello");
+  return t("Guten Abend", "Good evening");
 };
 
 /** Inline editor inside the dark profile block, so it keeps the same skin. */
@@ -43,6 +44,8 @@ const AccountEditor: React.FC<{
   user: AccountUser;
   onDone: (user: AccountUser) => void;
 }> = ({ user, onDone }) => {
+  const { lang } = useLang();
+  const t = useT();
   const [name, setName] = useState(user.name);
   const [email, setEmail] = useState(user.email);
   const [newPassword, setNewPassword] = useState("");
@@ -71,10 +74,14 @@ const AccountEditor: React.FC<{
         }),
       });
       const data = await res.json();
-      if (!res.ok || !data.success) throw new Error(data.error || "Speichern fehlgeschlagen.");
+      if (!res.ok || !data.success) {
+        throw new Error(
+          data.error ? serverMessage(data.error, lang) : t("Speichern fehlgeschlagen.", "Saving failed.")
+        );
+      }
       onDone(data.user);
     } catch (err: any) {
-      setError(err.message || "Speichern fehlgeschlagen.");
+      setError(err.message || t("Speichern fehlgeschlagen.", "Saving failed."));
     } finally {
       setBusy(false);
     }
@@ -92,7 +99,7 @@ const AccountEditor: React.FC<{
     >
       <div>
         <label htmlFor="edit-name" className={label}>
-          Benutzername
+          {t("Benutzername", "Username")}
         </label>
         <input
           id="edit-name"
@@ -106,7 +113,7 @@ const AccountEditor: React.FC<{
 
       <div>
         <label htmlFor="edit-email" className={label}>
-          E-Mail
+          {t("E-Mail", "Email")}
         </label>
         <input
           id="edit-email"
@@ -119,7 +126,8 @@ const AccountEditor: React.FC<{
 
       <div>
         <label htmlFor="edit-new-password" className={label}>
-          Neues Passwort <span className="normal-case tracking-normal">(optional)</span>
+          {t("Neues Passwort", "New password")}{" "}
+          <span className="normal-case tracking-normal">(optional)</span>
         </label>
         <div className="relative">
           <input
@@ -128,12 +136,14 @@ const AccountEditor: React.FC<{
             className={`${field} pr-12`}
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
-            placeholder="leer lassen, um es zu behalten"
+            placeholder={t("leer lassen, um es zu behalten", "leave empty to keep it")}
           />
           <button
             type="button"
             onClick={() => setShow(!show)}
-            aria-label={show ? "Passwort verbergen" : "Passwort anzeigen"}
+            aria-label={
+              show ? t("Passwort verbergen", "Hide password") : t("Passwort anzeigen", "Show password")
+            }
             aria-pressed={show}
             className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-lg text-[#faf6ef]/60 hover:text-[#faf6ef] hover:bg-[#faf6ef]/10 transition"
           >
@@ -144,7 +154,7 @@ const AccountEditor: React.FC<{
 
       <div>
         <label htmlFor="edit-current-password" className={label}>
-          Aktuelles Passwort
+          {t("Aktuelles Passwort", "Current password")}
         </label>
         <input
           id="edit-current-password"
@@ -153,7 +163,11 @@ const AccountEditor: React.FC<{
           value={currentPassword}
           onChange={(e) => setCurrentPassword(e.target.value)}
           required={sensitive}
-          placeholder={sensitive ? "zur Bestätigung nötig" : "nur bei E-Mail oder Passwort nötig"}
+          placeholder={
+            sensitive
+              ? t("zur Bestätigung nötig", "needed to confirm")
+              : t("nur bei E-Mail oder Passwort nötig", "only needed for email or password")
+          }
         />
       </div>
 
@@ -171,11 +185,11 @@ const AccountEditor: React.FC<{
           className="px-6 py-3 rounded-full bg-[#faf6ef] hover:bg-[#e8e2d6] disabled:opacity-60 text-[#2e2c27] text-sm font-semibold transition inline-flex items-center gap-2"
         >
           {busy && <Loader2 className="w-4 h-4 animate-spin" />}
-          <span>Änderungen speichern</span>
+          <span>{t("Änderungen speichern", "Save changes")}</span>
         </button>
         {newPassword && (
           <span className="text-xs text-[#faf6ef]/60">
-            Andere Geräte werden abgemeldet.
+            {t("Andere Geräte werden abgemeldet.", "Other devices will be signed out.")}
           </span>
         )}
       </div>
@@ -193,20 +207,23 @@ export const AccountView: React.FC<AccountViewProps> = ({
   onUpdated,
   openingId,
 }) => {
+  const { lang } = useLang();
+  const t = useT();
   const [editing, setEditing] = useState(false);
   const trainingDays = new Set(coachings.map((c) => dayKey(c.created_at))).size;
   const clean = coachings.filter((c) => c.urteil === "gut").length;
 
-  const memberSince = new Date(user.createdAt).toLocaleDateString("de-CH", {
+  const memberSince = new Date(user.createdAt).toLocaleDateString(localeOf(lang), {
     day: "numeric",
     month: "long",
     year: "numeric",
   });
 
+  const good = verdictLabel("gut", lang).toLowerCase();
   const stats = [
     { icon: Dumbbell, label: "Coachings", value: coachings.length },
-    { icon: CalendarCheck, label: "Trainingstage", value: trainingDays },
-    { icon: TrendingUp, label: "Urteil „gut“", value: clean },
+    { icon: CalendarCheck, label: t("Trainingstage", "Training days"), value: trainingDays },
+    { icon: TrendingUp, label: t(`Urteil „${good}“`, `Verdict “${good}”`), value: clean },
   ];
 
   return (
@@ -216,12 +233,14 @@ export const AccountView: React.FC<AccountViewProps> = ({
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-5">
           <div className="min-w-0">
             <span className="block text-[11px] uppercase tracking-[0.14em] font-semibold text-[#faf6ef]/60">
-              {greeting()}
+              {greeting(t)}
             </span>
             <h2 className="mt-1 font-black uppercase tracking-[-0.02em] leading-[0.95] text-3xl sm:text-5xl text-[#faf6ef] truncate">
               {user.name}
             </h2>
-            <p className="mt-2 text-sm text-[#faf6ef]/70">dabei seit {memberSince}</p>
+            <p className="mt-2 text-sm text-[#faf6ef]/70">
+              {t(`dabei seit ${memberSince}`, `member since ${memberSince}`)}
+            </p>
           </div>
 
           <div className="shrink-0 self-start flex items-center gap-2">
@@ -231,7 +250,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
               className="px-5 py-2.5 rounded-full bg-[#faf6ef]/10 hover:bg-[#faf6ef]/20 text-[#faf6ef] text-sm font-semibold transition inline-flex items-center gap-2 border border-[#faf6ef]/20"
             >
               {editing ? <X className="w-4 h-4" /> : <Pencil className="w-4 h-4" />}
-              <span>{editing ? "Schliessen" : "Konto bearbeiten"}</span>
+              <span>{editing ? t("Schliessen", "Close") : t("Konto bearbeiten", "Edit account")}</span>
             </button>
             <button
               type="button"
@@ -239,7 +258,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
               className="px-5 py-2.5 rounded-full bg-[#faf6ef]/10 hover:bg-[#faf6ef]/20 text-[#faf6ef] text-sm font-semibold transition inline-flex items-center gap-2 border border-[#faf6ef]/20"
             >
               <LogOut className="w-4 h-4" />
-              <span>Abmelden</span>
+              <span>{t("Abmelden", "Sign out")}</span>
             </button>
           </div>
         </div>

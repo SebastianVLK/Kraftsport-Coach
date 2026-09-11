@@ -8,6 +8,7 @@ import {
   Activity,
   ArrowRight,
   ChevronDown,
+  LogIn,
 } from "lucide-react";
 import { VideoRecorderAndUploader } from "./components/VideoRecorderAndUploader";
 import { CoachFeedbackView } from "./components/CoachFeedbackView";
@@ -16,18 +17,21 @@ import { AuthPanel, type AccountUser } from "./components/AuthPanel";
 import { type CoachingSummary } from "./components/CoachingsView";
 import { AccountView } from "./components/AccountView";
 import { ExerciseAnalysisData } from "./types";
+import { LanguageProvider, useLang, useT, serverMessage, verdictLabel } from "./i18n";
 
 type ActiveTab = "video" | "feedback" | "account";
 
-const NAV_ITEMS: { id: ActiveTab; label: string; signedInOnly?: boolean }[] = [
-  { id: "video", label: "Home" },
-  { id: "feedback", label: "Coach-Urteil" },
+const NAV_ITEMS: { id: ActiveTab; label: [string, string]; signedInOnly?: boolean }[] = [
+  { id: "video", label: ["Home", "Home"] },
+  { id: "feedback", label: ["Coach-Urteil", "Verdict"] },
   // Signed out, the "Anmelden" button on the right already leads here — a nav
   // link to an empty account view would just say the same thing twice.
-  { id: "account", label: "Konto", signedInOnly: true },
+  { id: "account", label: ["Konto", "Account"], signedInOnly: true },
 ];
 
-export default function App() {
+function AppShell() {
+  const { lang, setLang } = useLang();
+  const t = useT();
   const [activeTab, setActiveTab] = useState<ActiveTab>("video");
   const appRef = useRef<HTMLElement>(null);
   const [selectedExerciseHint, setSelectedExerciseHint] = useState<string>("Liegestütze (Push-ups)");
@@ -102,13 +106,17 @@ export default function App() {
         body: JSON.stringify({ analysis: exerciseAnalysis }),
       });
       const data = await res.json();
-      if (!res.ok || !data.success) throw new Error(data.error || "Speichern fehlgeschlagen.");
+      if (!res.ok || !data.success) {
+        throw new Error(
+          data.error ? serverMessage(data.error, lang) : t("Speichern fehlgeschlagen.", "Saving failed.")
+        );
+      }
       setSaveState("saved");
-      showToast("Coaching gespeichert", "success");
+      showToast(t("Coaching gespeichert", "Coaching saved"), "success");
       loadCoachings();
     } catch (err: any) {
       setSaveState("idle");
-      showToast(err.message || "Speichern fehlgeschlagen", "error");
+      showToast(err.message || t("Speichern fehlgeschlagen", "Saving failed"), "error");
     }
   };
 
@@ -117,14 +125,20 @@ export default function App() {
     try {
       const res = await fetch(`/api/coachings/${id}`);
       const data = await res.json();
-      if (!res.ok || !data.success) throw new Error(data.error || "Konnte nicht geladen werden.");
+      if (!res.ok || !data.success) {
+        throw new Error(
+          data.error
+            ? serverMessage(data.error, lang)
+            : t("Konnte nicht geladen werden.", "Could not be loaded.")
+        );
+      }
       setExerciseAnalysis(data.coaching.analysis);
       // The clip itself is not stored, only the analysis
       setAnalysedFile(null);
       setSaveState("saved");
       goToTab("feedback");
     } catch (err: any) {
-      showToast(err.message || "Konnte nicht geladen werden", "error");
+      showToast(err.message || t("Konnte nicht geladen werden", "Could not be loaded"), "error");
     } finally {
       setOpeningId(null);
     }
@@ -135,9 +149,9 @@ export default function App() {
       const res = await fetch(`/api/coachings/${id}`, { method: "DELETE" });
       if (!res.ok) throw new Error();
       setCoachingList((prev) => prev.filter((c) => c.id !== id));
-      showToast("Coaching gelöscht", "success");
+      showToast(t("Coaching gelöscht", "Coaching deleted"), "success");
     } catch {
-      showToast("Löschen fehlgeschlagen", "error");
+      showToast(t("Löschen fehlgeschlagen", "Deleting failed"), "error");
     }
   };
 
@@ -145,7 +159,7 @@ export default function App() {
     await fetch("/api/auth/logout", { method: "POST" }).catch(() => {});
     setUser(null);
     setActiveTab("video");
-    showToast("Abgemeldet", "success");
+    showToast(t("Abgemeldet", "Signed out"), "success");
   };
 
   // Nav and hero buttons both switch tab and carry you past the opening shot
@@ -179,7 +193,13 @@ export default function App() {
     setIsAnalyzing(true);
     setAnalysedFile(file ?? null);
     setAnalysisError(null);
-    showToast("Übungsvideo wird analysiert – Coach prüft Umkehrpunkt...", "success");
+    showToast(
+      t(
+        "Übungsvideo wird analysiert – Coach prüft Umkehrpunkt...",
+        "Analysing your video – the coach is checking the turning point..."
+      ),
+      "success"
+    );
 
     try {
       const shouldIncludeVideo =
@@ -196,7 +216,7 @@ export default function App() {
           videoFrames: frames,
           exerciseHint: exerciseHint || selectedExerciseHint,
           poseMetrics: metrics ?? null,
-          language: "de",
+          language: lang,
         }),
       });
 
@@ -208,22 +228,38 @@ export default function App() {
         console.error("Non-JSON response received:", resText.slice(0, 300));
         throw new Error(
           res.status === 413
-            ? "Die Aufnahme war zu gross. Bitte eine kürzere Aufnahme (5–12 Sek.) wählen."
-            : `Server antwortete mit Status ${res.status}. Bitte erneut versuchen.`
+            ? t(
+                "Die Aufnahme war zu gross. Bitte eine kürzere Aufnahme (5–12 Sek.) wählen.",
+                "The recording was too large. Please choose a shorter one (5–12 s)."
+              )
+            : t(
+                `Server antwortete mit Status ${res.status}. Bitte erneut versuchen.`,
+                `The server answered with status ${res.status}. Please try again.`
+              )
         );
       }
 
       if (!res.ok || !data.success) {
-        throw new Error(data.error || "Videoanalyse konnte nicht abgeschlossen werden.");
+        throw new Error(
+          data.error
+            ? serverMessage(data.error, lang)
+            : t(
+                "Videoanalyse konnte nicht abgeschlossen werden.",
+                "The video analysis could not be completed."
+              )
+        );
       }
 
       setExerciseAnalysis(data.data);
       goToTab("feedback");
-      showToast(`Coach-Urteil: ${data.data.urteil.toUpperCase()}`, "success");
+      showToast(
+        `${t("Coach-Urteil", "Verdict")}: ${verdictLabel(data.data.urteil, lang).toUpperCase()}`,
+        "success"
+      );
     } catch (err: any) {
       console.error("Fehler bei Videoanalyse:", err);
-      setAnalysisError(err.message || "Analyse fehlgeschlagen.");
-      showToast(err.message || "Analyse fehlgeschlagen", "error");
+      setAnalysisError(err.message || t("Analyse fehlgeschlagen.", "Analysis failed."));
+      showToast(err.message || t("Analyse fehlgeschlagen", "Analysis failed"), "error");
     } finally {
       setIsAnalyzing(false);
     }
@@ -236,15 +272,21 @@ export default function App() {
       setSelectedExerciseHint(exerciseName);
     }
     goToTab("video");
-    showToast(`Nächster Satz vorbereitet: "${cue || "Fokus am Umkehrpunkt"}"`, "success");
+    showToast(
+      t(
+        `Nächster Satz vorbereitet: "${cue || "Fokus am Umkehrpunkt"}"`,
+        `Next set ready: "${cue || "Focus on the turning point"}"`
+      ),
+      "success"
+    );
   };
 
   return (
     <div className="min-h-screen text-[#2e2c27] flex flex-col font-sans selection:bg-[#c23a20]/30 selection:text-[#2e2c27]">
       {/* Nav in the oace cut: links left, wordmark centred, status right */}
       <header className="sticky top-0 z-50 bg-[#faf6ef]/90 backdrop-blur-xl border-b border-[#2e2c27]/10">
-        <div className="w-full px-4 sm:px-6 h-16 sm:h-18 grid grid-cols-[1fr_auto_1fr] items-center gap-3">
-          <nav className="justify-self-start flex items-center gap-4 sm:gap-7">
+        <div className="w-full px-3 sm:px-6 h-16 sm:h-18 grid grid-cols-[1fr_auto_1fr] items-center gap-2 sm:gap-3">
+          <nav className="justify-self-start flex items-center gap-3 sm:gap-7">
             {NAV_ITEMS.filter((item) => user || !item.signedInOnly).map((item) => {
               const active = activeTab === item.id;
               return (
@@ -253,11 +295,15 @@ export default function App() {
                   id={`tab-btn-${item.id}`}
                   type="button"
                   onClick={() => goToTab(item.id)}
-                  className={`relative flex items-center gap-1.5 text-[11px] sm:text-xs uppercase tracking-[0.08em] font-semibold transition ${
+                  // On a phone the avatar on the right already leads to the
+                  // account, and the row has no room for a third link
+                  className={`relative ${
+                    item.id === "account" ? "hidden sm:flex" : "flex"
+                  } items-center gap-1.5 text-[11px] sm:text-xs uppercase tracking-[0.08em] font-semibold transition ${
                     active ? "text-[#2e2c27]" : "text-[#6f6759] hover:text-[#2e2c27]"
                   }`}
                 >
-                  <span>{item.label}</span>
+                  <span>{t(...item.label)}</span>
                   {item.id === "feedback" && exerciseAnalysis && (
                     <span
                       className={`w-1.5 h-1.5 rounded-full ${
@@ -284,24 +330,45 @@ export default function App() {
             onClick={() => goToTab("video")}
             className="justify-self-center flex items-center gap-2 group"
           >
-            <span className="text-lg sm:text-2xl lg:text-3xl font-black uppercase tracking-[-0.02em] leading-none text-[#2e2c27] whitespace-nowrap group-hover:text-[#1f1d19] transition">
+            <span className="text-base sm:text-2xl lg:text-3xl font-black uppercase tracking-[-0.02em] leading-none text-[#2e2c27] whitespace-nowrap group-hover:text-[#1f1d19] transition">
               Form Coach
             </span>
           </button>
 
           <div className="justify-self-end flex items-center gap-2 text-xs text-[#6f6759]">
+            <div
+              role="group"
+              aria-label={t("Sprache", "Language")}
+              className="flex items-center rounded-full border border-[#2e2c27]/15 bg-[#ffffff] p-0.5"
+            >
+              {(["de", "en"] as const).map((l) => (
+                <button
+                  key={l}
+                  id={`btn-lang-${l}`}
+                  type="button"
+                  onClick={() => setLang(l)}
+                  aria-pressed={lang === l}
+                  className={`px-1.5 sm:px-2 py-1 rounded-full text-[10px] sm:text-[11px] font-semibold uppercase tracking-[0.08em] transition ${
+                    lang === l ? "bg-[#2e2c27] text-[#faf6ef]" : "text-[#6f6759] hover:text-[#2e2c27]"
+                  }`}
+                >
+                  {l}
+                </button>
+              ))}
+            </div>
             {user ? (
               <>
                 <button
                   type="button"
                   onClick={() => goToTab("account")}
-                  title="Zum Konto"
-                  className="inline-flex items-center gap-2 pl-1 pr-3 py-1 rounded-full bg-[#ffffff] border border-[#2e2c27]/[0.06] hover:border-[#2e2c27]/25 transition max-w-[200px]"
+                  title={t("Zum Konto", "Your account")}
+                  className="inline-flex items-center gap-2 pl-1 pr-1 sm:pr-3 py-1 rounded-full bg-[#ffffff] border border-[#2e2c27]/[0.06] hover:border-[#2e2c27]/25 transition max-w-[200px]"
                 >
                   <span className="shrink-0 w-6 h-6 rounded-full bg-[#2e2c27] text-[#faf6ef] text-[10px] font-black uppercase flex items-center justify-center">
                     {user.name.slice(0, 2)}
                   </span>
-                  <span className="text-[11px] font-semibold text-[#2e2c27] truncate">
+                  {/* on a phone the initials carry it; the header has no room for the name next to DE/EN */}
+                  <span className="hidden sm:inline text-[11px] font-semibold text-[#2e2c27] truncate">
                     {user.name}
                   </span>
                 </button>
@@ -311,9 +378,12 @@ export default function App() {
                 <button
                   type="button"
                   onClick={() => goToTab("account")}
-                  className="px-3.5 py-1.5 rounded-full bg-[#2e2c27] hover:bg-[#1f1d19] text-[#faf6ef] text-[11px] uppercase tracking-[0.08em] font-semibold transition"
+                  aria-label={t("Anmelden", "Sign in")}
+                  className="inline-flex items-center p-2 sm:px-3.5 sm:py-1.5 rounded-full bg-[#2e2c27] hover:bg-[#1f1d19] text-[#faf6ef] text-[11px] uppercase tracking-[0.08em] font-semibold whitespace-nowrap transition"
                 >
-                  Anmelden
+                  {/* an icon on phones, where the word no longer fits beside DE/EN */}
+                  <LogIn className="w-3.5 h-3.5 sm:hidden" />
+                  <span className="hidden sm:inline">{t("Anmelden", "Sign in")}</span>
                 </button>
               )
             )}
@@ -336,7 +406,10 @@ export default function App() {
             width={1698}
             height={680}
             fetchPriority="high"
-            alt="Liegestütze in der Seitenansicht, mit eingeblendeter Technikanalyse: Kopfhaltung, Körperlinie, Ellenbogenwinkel und Beinstreckung"
+            alt={t(
+              "Liegestütze in der Seitenansicht, mit eingeblendeter Technikanalyse: Kopfhaltung, Körperlinie, Ellenbogenwinkel und Beinstreckung",
+              "Push-ups seen from the side, with the technique analysis overlaid: head position, body line, elbow angle and leg extension"
+            )}
             className="absolute inset-0 w-full h-full object-cover object-center"
           />
 
@@ -346,7 +419,7 @@ export default function App() {
           <button
             type="button"
             onClick={() => goToTab("video")}
-            aria-label="Nach unten scrollen"
+            aria-label={t("Nach unten scrollen", "Scroll down")}
             className="absolute bottom-5 left-1/2 -translate-x-1/2 text-[#faf6ef]/80 hover:text-[#faf6ef] transition"
           >
             <ChevronDown className="w-6 h-6 animate-bounce" />
@@ -355,13 +428,15 @@ export default function App() {
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-10 sm:pt-16">
           <h1 className="font-black uppercase tracking-[-0.03em] leading-[0.92] text-4xl sm:text-6xl md:text-7xl max-w-3xl text-[#2e2c27]">
-            Präzision am
+            {t("Präzision am", "Precision at the")}
             <br />
-            Umkehrpunkt.
+            {t("Umkehrpunkt.", "turning point.")}
           </h1>
           <p className="mt-4 sm:mt-5 text-[#6f6759] text-sm sm:text-base max-w-xl leading-relaxed">
-            Objektive Beurteilung von Bewegungsumfang, Tempo, Gelenkachsen und Rumpfspannung
-            ohne Verharmlosung.
+            {t(
+              "Objektive Beurteilung von Bewegungsumfang, Tempo, Gelenkachsen und Rumpfspannung ohne Verharmlosung.",
+              "Objective assessment of range of motion, tempo, joint alignment and core tension, without sugar-coating."
+            )}
           </p>
           {/* Once a verdict exists the call to action has been answered, so it
               only shows while the analysis tab is where you still need to go. */}
@@ -371,7 +446,7 @@ export default function App() {
             onClick={() => goToTab("video")}
             className="mt-8 px-9 py-4 sm:px-10 sm:py-[18px] rounded-full bg-[#2e2c27] hover:bg-[#1f1d19] text-[#faf6ef] text-base sm:text-lg font-semibold transition inline-flex items-center gap-2.5 shadow-sm active:scale-95"
           >
-            <span>Analyse starten</span>
+            <span>{t("Analyse starten", "Start analysis")}</span>
             <ArrowRight className="w-5 h-5" />
           </button>
         </div>
@@ -391,15 +466,18 @@ export default function App() {
               <div className="w-5 h-5 rounded-full border-2 border-[#c23a20] border-t-transparent animate-spin" />
               <div>
                 <p className="text-xs sm:text-sm font-semibold text-[#2e2c27]">
-                  Form Coach analysiert die Bewegung...
+                  {t("Form Coach analysiert die Bewegung...", "Form Coach is analysing the movement...")}
                 </p>
                 <p className="text-[11px] text-[#6f6759]">
-                  Phasen-Segmentierung, tiefster Punkt, Ellenbogenwinkel und Lastpfad.
+                  {t(
+                    "Phasen-Segmentierung, tiefster Punkt, Ellenbogenwinkel und Lastpfad.",
+                    "Phase segmentation, bottom position, elbow angle and bar path."
+                  )}
                 </p>
               </div>
             </div>
             <span className="text-[10px] text-[#c23a20] font-mono px-2.5 py-1 bg-[#c23a20]/10 rounded-full border border-[#c23a20]/20">
-              Analysiere
+              {t("Analysiere", "Analysing")}
             </span>
           </div>
         )}
@@ -416,7 +494,7 @@ export default function App() {
               onClick={() => setAnalysisError(null)}
               className="text-[#6f6759] hover:text-[#2e2c27] text-xs underline"
             >
-              Schliessen
+              {t("Schliessen", "Close")}
             </button>
           </div>
         )}
@@ -446,7 +524,10 @@ export default function App() {
           ) : (
             <AuthPanel
               onAuthenticated={setUser}
-              reason="Mit einem Konto bleiben deine Analysen erhalten und lassen sich später wieder aufrufen."
+              reason={t(
+                "Mit einem Konto bleiben deine Analysen erhalten und lassen sich später wieder aufrufen.",
+                "With an account your analyses are kept and can be opened again later."
+              )}
             />
           ))}
 
@@ -468,17 +549,20 @@ export default function App() {
                   <Dumbbell className="w-6 h-6" />
                 </div>
                 <h3 className="text-sm sm:text-base font-semibold text-[#2e2c27] mb-1">
-                  Noch keine Videoanalyse vorhanden
+                  {t("Noch keine Videoanalyse vorhanden", "No video analysis yet")}
                 </h3>
                 <p className="text-xs text-[#6f6759] max-w-sm mb-5 leading-relaxed">
-                  Nimm einen Satz direkt mit der Kamera auf oder lade ein Video deiner Liegestütze, Kniebeuge oder deines Kreuzhebens hoch.
+                  {t(
+                    "Nimm einen Satz direkt mit der Kamera auf oder lade ein Video deiner Liegestütze, Kniebeuge oder deines Kreuzhebens hoch.",
+                    "Record a set straight from the camera or upload a video of your push-ups, squats or deadlifts."
+                  )}
                 </p>
                 <button
                   type="button"
                   onClick={() => goToTab("video")}
                   className="px-5 py-2.5 bg-[#2e2c27] hover:bg-[#1f1d19] text-[#faf6ef] rounded-full text-xs font-semibold shadow-sm transition flex items-center gap-1.5"
                 >
-                  <span>Video aufnehmen oder hochladen</span>
+                  <span>{t("Video aufnehmen oder hochladen", "Record or upload a video")}</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </button>
               </div>
@@ -513,20 +597,26 @@ export default function App() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-4">
           <div className="border-b border-[#000000]/15 pb-4 text-[13px] leading-relaxed text-[#000000]">
             <p>
-              1. Die Videoanalyse liefert technische Beobachtungen und biomechanische Orientierungshilfen am Umkehrpunkt. Sie dient sportwissenschaftlichen Zwecken und ersetzt keine medizinische, orthopädische oder physiotherapeutische Befundung.
+              {t(
+                "1. Die Videoanalyse liefert technische Beobachtungen und biomechanische Orientierungshilfen am Umkehrpunkt. Sie dient sportwissenschaftlichen Zwecken und ersetzt keine medizinische, orthopädische oder physiotherapeutische Befundung.",
+                "1. The video analysis provides technical observations and biomechanical guidance at the turning point. It serves sports-science purposes and does not replace a medical, orthopaedic or physiotherapeutic assessment."
+              )}
             </p>
           </div>
 
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3 text-[13px]">
             <span>
-              Copyright © 2026 Form Coach. Alle Rechte vorbehalten.
+              {t(
+                "Copyright © 2026 Form Coach. Alle Rechte vorbehalten.",
+                "Copyright © 2026 Form Coach. All rights reserved."
+              )}
             </span>
             <div className="flex flex-wrap items-center gap-4 text-[#000000]">
-              <span>Schweiz (Deutsch)</span>
+              <span>{t("Schweiz (Deutsch)", "Switzerland (English)")}</span>
               <span className="text-[#000000]/40">•</span>
-              <span>Datenschutz</span>
+              <span>{t("Datenschutz", "Privacy")}</span>
               <span className="text-[#000000]/40">•</span>
-              <span>Nutzungsbedingungen</span>
+              <span>{t("Nutzungsbedingungen", "Terms of use")}</span>
               <span className="text-[#000000]/40">•</span>
               <span className="font-mono">Gemini 3.5 &amp; 3.1 Pro</span>
             </div>
@@ -534,5 +624,13 @@ export default function App() {
         </div>
       </footer>
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <LanguageProvider>
+      <AppShell />
+    </LanguageProvider>
   );
 }

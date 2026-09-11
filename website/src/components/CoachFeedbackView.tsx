@@ -39,6 +39,7 @@ import {
   youtubeSearchUrl,
   type TechniqueVideo,
 } from "../data/techniqueVideos";
+import { useLang, useT, verdictLabel } from "../i18n";
 
 interface CoachFeedbackViewProps {
   data: ExerciseAnalysisData;
@@ -58,6 +59,8 @@ export const CoachFeedbackView: React.FC<CoachFeedbackViewProps> = ({
   saveState = "idle",
   isSignedIn = false,
 }) => {
+  const { lang } = useLang();
+  const t = useT();
   const [showDetails, setShowDetails] = useState<boolean>(false);
   const [videoStarted, setVideoStarted] = useState<boolean>(false);
 
@@ -74,7 +77,7 @@ export const CoachFeedbackView: React.FC<CoachFeedbackViewProps> = ({
     if (catalogued || !data.exerciseName) return;
     let cancelled = false;
     setSearching(true);
-    fetch(`/api/technique-video?exercise=${encodeURIComponent(data.exerciseName)}`)
+    fetch(`/api/technique-video?exercise=${encodeURIComponent(data.exerciseName)}&lang=${lang}`)
       .then((r) => (r.ok ? r.json() : null))
       .then((body) => {
         if (!cancelled) setSearched(body?.video ?? null);
@@ -86,7 +89,7 @@ export const CoachFeedbackView: React.FC<CoachFeedbackViewProps> = ({
     return () => {
       cancelled = true;
     };
-  }, [data.exerciseName, catalogued]);
+  }, [data.exerciseName, catalogued, lang]);
 
   // Active technique improvement workflow
   const [cueMemorized, setCueMemorized] = useState<boolean>(false);
@@ -132,7 +135,7 @@ export const CoachFeedbackView: React.FC<CoachFeedbackViewProps> = ({
       const res = await fetch("/api/agent-action", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ actionType: "generate_drill", exerciseContext: data }),
+        body: JSON.stringify({ actionType: "generate_drill", exerciseContext: data, language: lang }),
       });
 
       const resText = await res.text();
@@ -157,24 +160,24 @@ export const CoachFeedbackView: React.FC<CoachFeedbackViewProps> = ({
     switch (verdict) {
       case "gut":
         return {
-          label: "Gut",
-          title: "Technisch saubere Ausführung",
+          label: verdictLabel("gut", lang),
+          title: t("Technisch saubere Ausführung", "Technically clean execution"),
           accent: "#5f6b25",
           chip: "bg-[#5f6b25] text-[#faf6ef]",
           icon: CheckCircle2,
         };
       case "brauchbar":
         return {
-          label: "Brauchbar",
-          title: "Verbesserungsbedarf am tiefsten Punkt",
+          label: verdictLabel("brauchbar", lang),
+          title: t("Verbesserungsbedarf am tiefsten Punkt", "Room for improvement at the bottom"),
           accent: "#8f6413",
           chip: "bg-[#8f6413] text-[#faf6ef]",
           icon: AlertCircle,
         };
       case "mangelhaft":
         return {
-          label: "Mangelhaft",
-          title: "Kritischer Formverlust oder Kompensation",
+          label: verdictLabel("mangelhaft", lang),
+          title: t("Kritischer Formverlust oder Kompensation", "Critical loss of form or compensation"),
           accent: "#c33418",
           chip: "bg-[#c33418] text-[#faf6ef]",
           icon: XCircle,
@@ -182,8 +185,8 @@ export const CoachFeedbackView: React.FC<CoachFeedbackViewProps> = ({
       case "nicht_beurteilbar":
       default:
         return {
-          label: "Nicht beurteilbar",
-          title: "Kamerawinkel oder Licht unzureichend",
+          label: verdictLabel("nicht_beurteilbar", lang),
+          title: t("Kamerawinkel oder Licht unzureichend", "Camera angle or lighting insufficient"),
           accent: "#6f6759",
           chip: "bg-[#eee8dd] text-[#2e2c27]",
           icon: HelpCircle,
@@ -194,12 +197,24 @@ export const CoachFeedbackView: React.FC<CoachFeedbackViewProps> = ({
   const getWeightMeta = (rec: WeightRecommendation) => {
     switch (rec) {
       case "hochgehen":
-        return { label: "Gewicht steigern", chip: "bg-[#5f6b25] text-[#faf6ef]", icon: TrendingUp };
+        return {
+          label: t("Gewicht steigern", "Increase the weight"),
+          chip: "bg-[#5f6b25] text-[#faf6ef]",
+          icon: TrendingUp,
+        };
       case "runtergehen":
-        return { label: "Gewicht reduzieren", chip: "bg-[#c33418] text-[#faf6ef]", icon: TrendingDown };
+        return {
+          label: t("Gewicht reduzieren", "Reduce the weight"),
+          chip: "bg-[#c33418] text-[#faf6ef]",
+          icon: TrendingDown,
+        };
       case "gleich bleiben":
       default:
-        return { label: "Gewicht beibehalten", chip: "bg-[#8f6413] text-[#faf6ef]", icon: Minus };
+        return {
+          label: t("Gewicht beibehalten", "Keep the weight"),
+          chip: "bg-[#8f6413] text-[#faf6ef]",
+          icon: Minus,
+        };
     }
   };
 
@@ -209,17 +224,17 @@ export const CoachFeedbackView: React.FC<CoachFeedbackViewProps> = ({
   const WeightIcon = weight.icon;
 
   const video = catalogued ?? searched;
-  const searchUrl = youtubeSearchUrl(data.exerciseName);
+  const searchUrl = youtubeSearchUrl(data.exerciseName, lang);
 
   const positives = data.wasGutWar ?? [];
   const criteria = data.beobachteteKriterien ?? {};
   const criteriaRows: { label: string; value?: string }[] = [
-    { label: "Bewegungsumfang", value: criteria.bewegungsumfang },
-    { label: "Gelenkstellung", value: criteria.gelenkstellung },
-    { label: "Tempo & Umkehrpunkt", value: criteria.tempo },
-    { label: "Schwung / Nachfedern", value: criteria.schwung },
-    { label: "Symmetrie", value: criteria.symmetrie },
-    { label: "Konsistenz über die Sätze", value: criteria.konsistenz },
+    { label: t("Bewegungsumfang", "Range of motion"), value: criteria.bewegungsumfang },
+    { label: t("Gelenkstellung", "Joint alignment"), value: criteria.gelenkstellung },
+    { label: t("Tempo & Umkehrpunkt", "Tempo & turning point"), value: criteria.tempo },
+    { label: t("Schwung / Nachfedern", "Momentum / bouncing"), value: criteria.schwung },
+    { label: t("Symmetrie", "Symmetry"), value: criteria.symmetrie },
+    { label: t("Konsistenz über die Sätze", "Consistency across the set"), value: criteria.konsistenz },
   ].filter((r) => r.value);
 
   const agentTraceList = data.agentTrace ?? [];
@@ -266,13 +281,13 @@ export const CoachFeedbackView: React.FC<CoachFeedbackViewProps> = ({
       {/* ---------------------------------------------------------------- */}
       <section className="rounded-3xl bg-[#ffffff] border border-[#2e2c27]/[0.08] p-6 sm:p-9 shadow-sm space-y-7">
         <h3 className="text-lg sm:text-xl font-bold tracking-tight text-[#2e2c27]">
-          Anmerkungen des Coachs
+          {t("Anmerkungen des Coachs", "Coach's remarks")}
         </h3>
 
         <div>
           <span className="flex items-center gap-2 text-[11px] uppercase tracking-[0.14em] font-semibold text-[#5f6b25] mb-3">
             <ThumbsUp className="w-3.5 h-3.5" />
-            Das sitzt bereits
+            {t("Das sitzt bereits", "Already solid")}
           </span>
           {positives.length > 0 ? (
             <ul className="space-y-2.5">
@@ -285,8 +300,10 @@ export const CoachFeedbackView: React.FC<CoachFeedbackViewProps> = ({
             </ul>
           ) : (
             <p className="text-[15px] leading-relaxed text-[#6f6759]">
-              Der Coach hat an dieser Ausführung nichts gefunden, das er ohne Einschränkung
-              loben würde.
+              {t(
+                "Der Coach hat an dieser Ausführung nichts gefunden, das er ohne Einschränkung loben würde.",
+                "The coach found nothing in this execution to praise without reservation."
+              )}
             </p>
           )}
         </div>
@@ -294,7 +311,7 @@ export const CoachFeedbackView: React.FC<CoachFeedbackViewProps> = ({
         <div className="border-t border-[#2e2c27]/10 pt-6">
           <span className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.14em] font-semibold text-[#c23a20] mb-2">
             <Target className="w-3.5 h-3.5" />
-            Der wichtigste Fehler
+            {t("Der wichtigste Fehler", "The most important fault")}
           </span>
           <p className="text-lg sm:text-xl font-semibold leading-snug text-[#2e2c27]">
             {data.derWichtigsteFehler}
@@ -310,15 +327,17 @@ export const CoachFeedbackView: React.FC<CoachFeedbackViewProps> = ({
         <div className="flex flex-wrap items-end justify-between gap-3 mb-8">
           <div>
             <h3 className="text-2xl sm:text-3xl font-black uppercase tracking-[-0.02em] text-[#2e2c27]">
-              Technik aktiv verbessern
+              {t("Technik aktiv verbessern", "Improve your technique")}
             </h3>
             <p className="mt-1.5 text-sm text-[#6f6759] max-w-xl leading-relaxed">
-              Drei Schritte vor dem nächsten Satz: den Cue verinnerlichen, den Drill ausführen,
-              die Bewegung noch einmal sauber sehen.
+              {t(
+                "Drei Schritte vor dem nächsten Satz: den Cue verinnerlichen, den Drill ausführen, die Bewegung noch einmal sauber sehen.",
+                "Three steps before your next set: take in the cue, do the drill, watch the movement done properly once more."
+              )}
             </p>
           </div>
           <span className="text-[11px] uppercase tracking-[0.14em] font-semibold text-[#6f6759] whitespace-nowrap">
-            {stepsDone} von 3 erledigt
+            {t(`${stepsDone} von 3 erledigt`, `${stepsDone} of 3 done`)}
           </span>
         </div>
 
@@ -337,11 +356,15 @@ export const CoachFeedbackView: React.FC<CoachFeedbackViewProps> = ({
               </span>
               <div className="min-w-0 flex-1">
                 <p className="mt-2 text-xl sm:text-2xl font-bold leading-snug text-[#2e2c27]">
-                  „{data.korrektur}"
+                  {t("„", "“")}
+                  {data.korrektur}
+                  {t("“", "”")}
                 </p>
                 <p className="mt-3 text-sm text-[#6f6759] leading-relaxed">
-                  Nimm genau diesen einen Gedanken mit in den Satz. Mehrere Korrekturen
-                  gleichzeitig verschlechtern die Ausführung messbar.
+                  {t(
+                    "Nimm genau diesen einen Gedanken mit in den Satz. Mehrere Korrekturen gleichzeitig verschlechtern die Ausführung messbar.",
+                    "Take exactly this one thought into the set. Several corrections at once measurably worsen the execution."
+                  )}
                 </p>
 
                 <button
@@ -354,7 +377,9 @@ export const CoachFeedbackView: React.FC<CoachFeedbackViewProps> = ({
                   }`}
                 >
                   {cueMemorized ? <Check className="w-4 h-4" /> : null}
-                  <span>{cueMemorized ? "Cue sitzt" : "Cue verinnerlicht"}</span>
+                  <span>
+                    {cueMemorized ? t("Cue sitzt", "Cue locked in") : t("Cue verinnerlicht", "Cue memorised")}
+                  </span>
                 </button>
               </div>
             </div>
@@ -385,7 +410,7 @@ export const CoachFeedbackView: React.FC<CoachFeedbackViewProps> = ({
                     ) : (
                       <RefreshCw className="w-3.5 h-3.5" />
                     )}
-                    <span>Anderen Drill</span>
+                    <span>{t("Anderen Drill", "Another drill")}</span>
                   </button>
                 </div>
 
@@ -397,7 +422,7 @@ export const CoachFeedbackView: React.FC<CoachFeedbackViewProps> = ({
                     <div className="mt-4 grid gap-4 sm:grid-cols-3">
                       <div>
                         <span className="block text-[11px] uppercase tracking-[0.12em] font-semibold text-[#6f6759] mb-1">
-                          Umfang
+                          {t("Umfang", "Volume")}
                         </span>
                         <p className="text-sm text-[#2e2c27] leading-relaxed">
                           {activeDrill.setsAndReps}
@@ -405,7 +430,7 @@ export const CoachFeedbackView: React.FC<CoachFeedbackViewProps> = ({
                       </div>
                       <div>
                         <span className="block text-[11px] uppercase tracking-[0.12em] font-semibold text-[#6f6759] mb-1">
-                          Ausführung
+                          {t("Ausführung", "Execution")}
                         </span>
                         <p className="text-sm text-[#2e2c27] leading-relaxed">
                           {activeDrill.executionCue}
@@ -413,7 +438,7 @@ export const CoachFeedbackView: React.FC<CoachFeedbackViewProps> = ({
                       </div>
                       <div>
                         <span className="block text-[11px] uppercase tracking-[0.12em] font-semibold text-[#6f6759] mb-1">
-                          Zweck
+                          {t("Zweck", "Purpose")}
                         </span>
                         <p className="text-sm text-[#2e2c27] leading-relaxed">
                           {activeDrill.purpose}
@@ -423,8 +448,10 @@ export const CoachFeedbackView: React.FC<CoachFeedbackViewProps> = ({
                   </>
                 ) : (
                   <p className="mt-2 text-sm text-[#6f6759]">
-                    Für diesen Befund wurde kein eigener Drill erzeugt. „Anderen Drill" fragt
-                    den Coach gezielt danach.
+                    {t(
+                      "Für diesen Befund wurde kein eigener Drill erzeugt. „Anderen Drill“ fragt den Coach gezielt danach.",
+                      "No drill was generated for this finding. “Another drill” asks the coach for one."
+                    )}
                   </p>
                 )}
 
@@ -438,7 +465,7 @@ export const CoachFeedbackView: React.FC<CoachFeedbackViewProps> = ({
                       type="button"
                       onClick={() => setIsTimerRunning(!isTimerRunning)}
                       className="p-1.5 rounded-full bg-[#2e2c27] text-[#faf6ef] hover:bg-[#1f1d19] transition"
-                      aria-label={isTimerRunning ? "Pausieren" : "Starten"}
+                      aria-label={isTimerRunning ? t("Pausieren", "Pause") : t("Starten", "Start")}
                     >
                       {isTimerRunning ? (
                         <Pause className="w-3.5 h-3.5" />
@@ -453,7 +480,7 @@ export const CoachFeedbackView: React.FC<CoachFeedbackViewProps> = ({
                         setDrillTimerSeconds(45);
                       }}
                       className="p-1.5 rounded-full text-[#6f6759] hover:text-[#2e2c27] transition"
-                      aria-label="Zurücksetzen"
+                      aria-label={t("Zurücksetzen", "Reset")}
                     >
                       <RotateCcw className="w-3.5 h-3.5" />
                     </button>
@@ -469,7 +496,11 @@ export const CoachFeedbackView: React.FC<CoachFeedbackViewProps> = ({
                     }`}
                   >
                     {drillCompleted ? <Check className="w-4 h-4" /> : null}
-                    <span>{drillCompleted ? "Drill absolviert" : "Drill erledigt"}</span>
+                    <span>
+                      {drillCompleted
+                        ? t("Drill absolviert", "Drill completed")
+                        : t("Drill erledigt", "Mark drill done")}
+                    </span>
                   </button>
                 </div>
               </div>
@@ -498,7 +529,10 @@ export const CoachFeedbackView: React.FC<CoachFeedbackViewProps> = ({
                     <p className="mt-1.5 text-sm text-[#6f6759]">{video.channel}</p>
                     {!catalogued && (
                       <p className="mt-1 text-xs text-[#6f6759]">
-                        Oberster YouTube-Treffer für „{data.exerciseName}" — nicht redaktionell geprüft.
+                        {t(
+                          `Oberster YouTube-Treffer für „${data.exerciseName}“ — nicht redaktionell geprüft.`,
+                          `Top YouTube result for “${data.exerciseName}” — not reviewed by us.`
+                        )}
                       </p>
                     )}
 
@@ -516,7 +550,7 @@ export const CoachFeedbackView: React.FC<CoachFeedbackViewProps> = ({
                           type="button"
                           onClick={() => setVideoStarted(true)}
                           className="absolute inset-0 w-full h-full group"
-                          aria-label={`${video.title} abspielen`}
+                          aria-label={t(`${video.title} abspielen`, `Play ${video.title}`)}
                         >
                           <img
                             src={`https://i.ytimg.com/vi/${video.id}/hqdefault.jpg`}
@@ -540,7 +574,7 @@ export const CoachFeedbackView: React.FC<CoachFeedbackViewProps> = ({
                           className="px-5 py-2.5 rounded-full bg-[#2e2c27] hover:bg-[#1f1d19] text-[#faf6ef] text-sm font-semibold transition inline-flex items-center gap-2"
                         >
                           <Play className="w-4 h-4" />
-                          <span>Hier abspielen</span>
+                          <span>{t("Hier abspielen", "Play here")}</span>
                         </button>
                       )}
                       <a
@@ -550,7 +584,7 @@ export const CoachFeedbackView: React.FC<CoachFeedbackViewProps> = ({
                         className="px-5 py-2.5 rounded-full bg-[#eee8dd] hover:bg-[#e2dacb] text-[#2e2c27] text-sm font-semibold transition inline-flex items-center gap-2 border border-[#2e2c27]/10"
                       >
                         <Youtube className="w-4 h-4" />
-                        <span>In YouTube öffnen</span>
+                        <span>{t("In YouTube öffnen", "Open on YouTube")}</span>
                         <ExternalLink className="w-3.5 h-3.5" />
                       </a>
                     </div>
@@ -558,13 +592,20 @@ export const CoachFeedbackView: React.FC<CoachFeedbackViewProps> = ({
                 ) : searching ? (
                   <p className="mt-2 text-base text-[#6f6759] inline-flex items-center gap-2">
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>Suche ein Technikvideo für „{data.exerciseName}"…</span>
+                    <span>
+                      {t(
+                        `Suche ein Technikvideo für „${data.exerciseName}“…`,
+                        `Looking for a technique video for “${data.exerciseName}”…`
+                      )}
+                    </span>
                   </p>
                 ) : (
                   <>
                     <p className="mt-2 text-base text-[#2e2c27] leading-relaxed">
-                      Für „{data.exerciseName}" wurde kein Technikvideo gefunden — hier die
-                      YouTube-Suche.
+                      {t(
+                        `Für „${data.exerciseName}“ wurde kein Technikvideo gefunden — hier die YouTube-Suche.`,
+                        `No technique video was found for “${data.exerciseName}” — here is the YouTube search.`
+                      )}
                     </p>
                     <a
                       href={searchUrl}
@@ -574,7 +615,7 @@ export const CoachFeedbackView: React.FC<CoachFeedbackViewProps> = ({
                       className="mt-5 px-5 py-2.5 rounded-full bg-[#2e2c27] hover:bg-[#1f1d19] text-[#faf6ef] text-sm font-semibold transition inline-flex items-center gap-2"
                     >
                       <Youtube className="w-4 h-4" />
-                      <span>Auf YouTube suchen</span>
+                      <span>{t("Auf YouTube suchen", "Search on YouTube")}</span>
                       <ExternalLink className="w-3.5 h-3.5" />
                     </a>
                   </>
@@ -598,10 +639,13 @@ export const CoachFeedbackView: React.FC<CoachFeedbackViewProps> = ({
           <div>
             <h3 className="text-lg sm:text-xl font-bold tracking-tight text-[#2e2c27] flex items-center gap-2">
               <Ruler className="w-5 h-5 text-[#6f6759]" />
-              Analyse-Details
+              {t("Analyse-Details", "Analysis details")}
             </h3>
             <p className="mt-1 text-sm text-[#6f6759]">
-              Geprüfte Bewegungsparameter, Sichtgrenzen und der Weg des Coach-Agenten.
+              {t(
+                "Geprüfte Bewegungsparameter, Sichtgrenzen und der Weg des Coach-Agenten.",
+                "Checked movement parameters, visibility limits and the coach agent's path."
+              )}
             </p>
           </div>
           {showDetails ? (
@@ -617,7 +661,7 @@ export const CoachFeedbackView: React.FC<CoachFeedbackViewProps> = ({
               <div>
                 <span className="flex items-center gap-2 text-[11px] uppercase tracking-[0.14em] font-semibold text-[#6f6759] mb-4">
                   <Eye className="w-3.5 h-3.5" />
-                  Geprüfte Bewegungsparameter
+                  {t("Geprüfte Bewegungsparameter", "Checked movement parameters")}
                 </span>
                 <dl className="divide-y divide-[#2e2c27]/10">
                   {criteriaRows.map((row) => (
@@ -638,7 +682,7 @@ export const CoachFeedbackView: React.FC<CoachFeedbackViewProps> = ({
               <div>
                 <span className="flex items-center gap-2 text-[11px] uppercase tracking-[0.14em] font-semibold text-[#6f6759] mb-3">
                   <EyeOff className="w-3.5 h-3.5" />
-                  Optisch nicht beurteilbar
+                  {t("Optisch nicht beurteilbar", "Not visually assessable")}
                 </span>
                 <p className="text-sm leading-relaxed text-[#2e2c27]">
                   {data.wasNichtBeurteilbar}
@@ -650,7 +694,7 @@ export const CoachFeedbackView: React.FC<CoachFeedbackViewProps> = ({
               <div>
                 <span className="flex items-center gap-2 text-[11px] uppercase tracking-[0.14em] font-semibold text-[#6f6759] mb-4">
                   <Cpu className="w-3.5 h-3.5" />
-                  Prüf-Pipeline
+                  {t("Prüf-Pipeline", "Check pipeline")}
                 </span>
                 <ol className="space-y-3">
                   {agentTraceList.map((phase, i) => (
@@ -684,12 +728,18 @@ export const CoachFeedbackView: React.FC<CoachFeedbackViewProps> = ({
         <div>
           <h3 className="text-lg font-bold tracking-tight text-[#2e2c27] flex items-center gap-2">
             <Bookmark className="w-5 h-5 text-[#6f6759]" />
-            Als Coaching speichern
+            {t("Als Coaching speichern", "Save as coaching")}
           </h3>
           <p className="mt-1 text-sm text-[#6f6759] leading-relaxed max-w-lg">
             {isSignedIn
-              ? "Landet in deinem Kalender und lässt sich jederzeit wieder öffnen."
-              : "Mit einem Konto bleibt diese Analyse erhalten — E-Mail und Passwort genügen."}
+              ? t(
+                  "Landet in deinem Kalender und lässt sich jederzeit wieder öffnen.",
+                  "Goes into your calendar and can be opened again any time."
+                )
+              : t(
+                  "Mit einem Konto bleibt diese Analyse erhalten — E-Mail und Passwort genügen.",
+                  "With an account this analysis is kept — an email and a password are all it takes."
+                )}
           </p>
         </div>
 
@@ -708,10 +758,10 @@ export const CoachFeedbackView: React.FC<CoachFeedbackViewProps> = ({
             {saveState === "saved" && <Check className="w-4 h-4" />}
             <span>
               {saveState === "saved"
-                ? "Gespeichert"
+                ? t("Gespeichert", "Saved")
                 : saveState === "saving"
-                ? "Wird gespeichert…"
-                : "Coaching speichern"}
+                ? t("Wird gespeichert…", "Saving…")
+                : t("Coaching speichern", "Save coaching")}
             </span>
           </button>
         ) : (
@@ -720,7 +770,7 @@ export const CoachFeedbackView: React.FC<CoachFeedbackViewProps> = ({
             onClick={onRequestAccount}
             className="shrink-0 px-6 py-3 rounded-full bg-[#2e2c27] hover:bg-[#1f1d19] text-[#faf6ef] text-sm font-semibold transition inline-flex items-center gap-2"
           >
-            <span>Konto erstellen</span>
+            <span>{t("Konto erstellen", "Create account")}</span>
             <ArrowRight className="w-4 h-4" />
           </button>
         )}
@@ -733,11 +783,13 @@ export const CoachFeedbackView: React.FC<CoachFeedbackViewProps> = ({
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
           <div className="min-w-0">
             <h3 className="text-2xl sm:text-3xl font-black uppercase tracking-[-0.02em] text-[#faf6ef]">
-              Nächsten Satz aufnehmen
+              {t("Nächsten Satz aufnehmen", "Record your next set")}
             </h3>
             <p className="mt-2 text-sm sm:text-base text-[#faf6ef]/75 max-w-lg leading-relaxed">
-              Der Coach vergleicht, ob der Umkehrpunkt diesmal steht. Kamerawinkel beibehalten,
-              nur auf den einen Cue achten.
+              {t(
+                "Der Coach vergleicht, ob der Umkehrpunkt diesmal steht. Kamerawinkel beibehalten, nur auf den einen Cue achten.",
+                "The coach checks whether the turning point holds this time. Keep the camera angle, focus on the one cue."
+              )}
             </p>
 
             <div className="mt-5 flex flex-wrap items-center gap-2.5">
@@ -759,7 +811,7 @@ export const CoachFeedbackView: React.FC<CoachFeedbackViewProps> = ({
             onClick={() => onStartNextSet?.(data.exerciseName, data.korrektur)}
             className="shrink-0 self-start lg:self-auto px-8 py-4 rounded-full bg-[#faf6ef] hover:bg-[#e8e2d6] text-[#2e2c27] text-base font-semibold transition inline-flex items-center gap-2.5 active:scale-95"
           >
-            <span>Satz aufnehmen</span>
+            <span>{t("Satz aufnehmen", "Record set")}</span>
             <ArrowRight className="w-5 h-5" />
           </button>
         </div>

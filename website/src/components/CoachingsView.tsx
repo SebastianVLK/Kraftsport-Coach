@@ -8,6 +8,7 @@ import {
   ArrowRight,
   Loader2,
 } from "lucide-react";
+import { useLang, useT, localeOf, verdictLabel } from "../i18n";
 
 export interface CoachingSummary {
   id: string;
@@ -25,15 +26,11 @@ interface CoachingsViewProps {
   openingId: string | null;
 }
 
-const VERDICT_STYLE: Record<string, { dot: string; chip: string; label: string }> = {
-  gut: { dot: "#5f6b25", chip: "bg-[#5f6b25] text-[#faf6ef]", label: "Gut" },
-  brauchbar: { dot: "#8f6413", chip: "bg-[#8f6413] text-[#faf6ef]", label: "Brauchbar" },
-  mangelhaft: { dot: "#c33418", chip: "bg-[#c33418] text-[#faf6ef]", label: "Mangelhaft" },
-  nicht_beurteilbar: {
-    dot: "#6f6759",
-    chip: "bg-[#eee8dd] text-[#2e2c27]",
-    label: "Nicht beurteilbar",
-  },
+const VERDICT_STYLE: Record<string, { dot: string; chip: string }> = {
+  gut: { dot: "#5f6b25", chip: "bg-[#5f6b25] text-[#faf6ef]" },
+  brauchbar: { dot: "#8f6413", chip: "bg-[#8f6413] text-[#faf6ef]" },
+  mangelhaft: { dot: "#c33418", chip: "bg-[#c33418] text-[#faf6ef]" },
+  nicht_beurteilbar: { dot: "#6f6759", chip: "bg-[#eee8dd] text-[#2e2c27]" },
 };
 
 const style = (v: string) => VERDICT_STYLE[v] ?? VERDICT_STYLE.nicht_beurteilbar;
@@ -46,18 +43,12 @@ const dayKey = (iso: string) => {
   ).padStart(2, "0")}`;
 };
 
-const WEEKDAYS = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
-const MONTHS = [
-  "Januar", "Februar", "März", "April", "Mai", "Juni",
-  "Juli", "August", "September", "Oktober", "November", "Dezember",
-];
+const timeOf = (iso: string, locale: string) =>
+  new Date(iso).toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" });
 
-const timeOf = (iso: string) =>
-  new Date(iso).toLocaleTimeString("de-CH", { hour: "2-digit", minute: "2-digit" });
-
-const longDate = (key: string) => {
+const longDate = (key: string, locale: string) => {
   const [y, m, d] = key.split("-").map(Number);
-  return new Date(y, m - 1, d).toLocaleDateString("de-CH", {
+  return new Date(y, m - 1, d).toLocaleDateString(locale, {
     weekday: "long",
     day: "numeric",
     month: "long",
@@ -72,6 +63,10 @@ export const CoachingsView: React.FC<CoachingsViewProps> = ({
   onDelete,
   openingId,
 }) => {
+  const { lang } = useLang();
+  const t = useT();
+  const locale = localeOf(lang);
+  const weekdays = t("Mo Di Mi Do Fr Sa So", "Mo Tu We Th Fr Sa Su").split(" ");
   const [view, setView] = useState<"calendar" | "list">("calendar");
   const [cursor, setCursor] = useState(() => new Date());
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
@@ -118,12 +113,14 @@ export const CoachingsView: React.FC<CoachingsViewProps> = ({
     return (
       <div className="flex items-center gap-3 py-3.5">
         <span className={`shrink-0 px-2.5 py-1 rounded-full text-[11px] font-semibold ${s.chip}`}>
-          {s.label}
+          {verdictLabel(c.urteil, lang)}
         </span>
         <div className="min-w-0 flex-1">
           <p className="text-sm font-semibold text-[#2e2c27] truncate">{c.exercise}</p>
           <p className="text-xs text-[#6f6759]">
-            {timeOf(c.created_at)} Uhr{c.note ? ` · ${c.note}` : ""}
+            {timeOf(c.created_at, locale)}
+            {t(" Uhr", "")}
+            {c.note ? ` · ${c.note}` : ""}
           </p>
         </div>
         <button
@@ -137,12 +134,12 @@ export const CoachingsView: React.FC<CoachingsViewProps> = ({
           ) : (
             <ArrowRight className="w-3.5 h-3.5" />
           )}
-          <span>Öffnen</span>
+          <span>{t("Öffnen", "Open")}</span>
         </button>
         <button
           type="button"
           onClick={() => onDelete(c.id)}
-          aria-label="Coaching löschen"
+          aria-label={t("Coaching löschen", "Delete coaching")}
           className="shrink-0 p-2 rounded-full text-[#6f6759] hover:text-[#c33418] hover:bg-[#fbeae6] transition"
         >
           <Trash2 className="w-4 h-4" />
@@ -156,19 +153,22 @@ export const CoachingsView: React.FC<CoachingsViewProps> = ({
       <div className="flex flex-wrap items-center justify-between gap-4 mb-7">
         <div>
           <h3 className="text-2xl sm:text-3xl font-black uppercase tracking-[-0.02em] text-[#2e2c27]">
-            Meine Coachings
+            {t("Meine Coachings", "My coachings")}
           </h3>
           <p className="mt-1.5 text-sm text-[#6f6759]">
             {coachings.length === 0
-              ? "Noch nichts gespeichert."
-              : `${coachings.length} gespeicherte Analyse${coachings.length === 1 ? "" : "n"}.`}
+              ? t("Noch nichts gespeichert.", "Nothing saved yet.")
+              : t(
+                  `${coachings.length} gespeicherte Analyse${coachings.length === 1 ? "" : "n"}.`,
+                  `${coachings.length} saved analys${coachings.length === 1 ? "is" : "es"}.`
+                )}
           </p>
         </div>
 
         <div className="flex items-center gap-1 bg-[#eee8dd] p-1 rounded-full border border-[#2e2c27]/[0.08]">
           {([
-            { id: "calendar", label: "Kalender", Icon: CalendarDays },
-            { id: "list", label: "Liste", Icon: List },
+            { id: "calendar", label: t("Kalender", "Calendar"), Icon: CalendarDays },
+            { id: "list", label: t("Liste", "List"), Icon: List },
           ] as const).map(({ id, label, Icon }) => (
             <button
               key={id}
@@ -190,7 +190,7 @@ export const CoachingsView: React.FC<CoachingsViewProps> = ({
       {loading ? (
         <p className="py-10 text-center text-sm text-[#6f6759] inline-flex items-center gap-2 justify-center w-full">
           <Loader2 className="w-4 h-4 animate-spin" />
-          Coachings werden geladen…
+          {t("Coachings werden geladen…", "Loading coachings…")}
         </p>
       ) : view === "calendar" ? (
         <>
@@ -198,18 +198,18 @@ export const CoachingsView: React.FC<CoachingsViewProps> = ({
             <button
               type="button"
               onClick={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() - 1, 1))}
-              aria-label="Vorheriger Monat"
+              aria-label={t("Vorheriger Monat", "Previous month")}
               className="p-2 rounded-full text-[#6f6759] hover:text-[#2e2c27] hover:bg-[#eee8dd] transition"
             >
               <ChevronLeft className="w-5 h-5" />
             </button>
             <span className="text-base font-bold text-[#2e2c27]">
-              {MONTHS[cursor.getMonth()]} {cursor.getFullYear()}
+              {cursor.toLocaleDateString(locale, { month: "long", year: "numeric" })}
             </span>
             <button
               type="button"
               onClick={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1))}
-              aria-label="Nächster Monat"
+              aria-label={t("Nächster Monat", "Next month")}
               className="p-2 rounded-full text-[#6f6759] hover:text-[#2e2c27] hover:bg-[#eee8dd] transition"
             >
               <ChevronRight className="w-5 h-5" />
@@ -217,7 +217,7 @@ export const CoachingsView: React.FC<CoachingsViewProps> = ({
           </div>
 
           <div className="grid grid-cols-7 gap-1.5 sm:gap-2">
-            {WEEKDAYS.map((d) => (
+            {weekdays.map((d) => (
               <span
                 key={d}
                 className="text-center text-[11px] uppercase tracking-[0.1em] font-semibold text-[#6f6759] pb-1"
@@ -268,12 +268,15 @@ export const CoachingsView: React.FC<CoachingsViewProps> = ({
           </div>
 
           <p className="mt-4 text-center text-xs text-[#6f6759]">
-            Tippe auf einen Tag mit Punkten, um die Coachings dieses Tages zu öffnen.
+            {t(
+              "Tippe auf einen Tag mit Punkten, um die Coachings dieses Tages zu öffnen.",
+              "Tap a day with dots to open that day's coachings."
+            )}
           </p>
 
           {selectedDay && (
             <div ref={dayDetailRef} className="mt-7 pt-6 border-t border-[#2e2c27]/10 scroll-mt-24">
-              <h4 className="text-sm font-bold text-[#2e2c27] mb-1">{longDate(selectedDay)}</h4>
+              <h4 className="text-sm font-bold text-[#2e2c27] mb-1">{longDate(selectedDay, locale)}</h4>
               <p className="text-xs text-[#6f6759] mb-2">
                 {selected.length} Coaching{selected.length === 1 ? "" : "s"}
               </p>
@@ -287,14 +290,17 @@ export const CoachingsView: React.FC<CoachingsViewProps> = ({
         </>
       ) : coachings.length === 0 ? (
         <p className="py-10 text-center text-sm text-[#6f6759]">
-          Speichere eine Analyse, dann erscheint sie hier.
+          {t(
+            "Speichere eine Analyse, dann erscheint sie hier.",
+            "Save an analysis and it will appear here."
+          )}
         </p>
       ) : (
         <div className="space-y-6">
           {[...byDay.entries()].map(([key, entries]) => (
             <div key={key}>
               <h4 className="text-[11px] uppercase tracking-[0.14em] font-semibold text-[#6f6759] pb-1 border-b border-[#2e2c27]/10">
-                {longDate(key)} · {entries.length}
+                {longDate(key, locale)} · {entries.length}
               </h4>
               <div className="divide-y divide-[#2e2c27]/10">
                 {entries.map((c) => (
