@@ -284,8 +284,8 @@ export default function App() {
             onClick={() => goToTab("video")}
             className="justify-self-center flex items-center gap-2 group"
           >
-            <span className="text-sm sm:text-lg font-black uppercase tracking-[-0.02em] leading-none text-[#2e2c27] whitespace-nowrap group-hover:text-[#1f1d19] transition">
-              Kraftsport Coach
+            <span className="text-lg sm:text-2xl lg:text-3xl font-black uppercase tracking-[-0.02em] leading-none text-[#2e2c27] whitespace-nowrap group-hover:text-[#1f1d19] transition">
+              Form Coach
             </span>
           </button>
 
@@ -391,7 +391,7 @@ export default function App() {
               <div className="w-5 h-5 rounded-full border-2 border-[#c23a20] border-t-transparent animate-spin" />
               <div>
                 <p className="text-xs sm:text-sm font-semibold text-[#2e2c27]">
-                  Kraftsport-Coach analysiert die Bewegung...
+                  Form Coach analysiert die Bewegung...
                 </p>
                 <p className="text-[11px] text-[#6f6759]">
                   Phasen-Segmentierung, tiefster Punkt, Ellenbogenwinkel und Lastpfad.
@@ -519,7 +519,7 @@ export default function App() {
 
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3 text-[13px]">
             <span>
-              Copyright © 2026 Kraftsport-Coach. Alle Rechte vorbehalten.
+              Copyright © 2026 Form Coach. Alle Rechte vorbehalten.
             </span>
             <div className="flex flex-wrap items-center gap-4 text-[#000000]">
               <span>Schweiz (Deutsch)</span>
