@@ -424,6 +424,7 @@ Gib ausschließlich ein JSON-Objekt mit folgenden Feldern zurück:
     // Execute with resilient fallback:
     // 1st attempt: If video is <= 10MB base64 and frames present, pass both or video.
     // 2nd attempt (if 1st fails with payload or mime error): pass frames only!
+    const geminiStart = Date.now();
     let response: any;
     let cleanVideoData = hasVideo ? extractPureBase64(videoBase64) : "";
     const isVideoWithinLimit = cleanVideoData.length > 0 && cleanVideoData.length <= 10 * 1024 * 1024;
@@ -553,6 +554,17 @@ Gib ausschließlich ein JSON-Objekt mit folgenden Feldern zurück:
       }`
     );
     console.log(`[analyse] Begründung: ${String(parsed.begruendung ?? "").slice(0, 200)}`);
+    // What one analysis costs, in time and tokens — the basis for any cost estimate
+    const usage = response?.usageMetadata ?? {};
+    console.log(
+      `[analyse] Gemini ${((Date.now() - geminiStart) / 1000).toFixed(1)}s | Tokens ein=${
+        usage.promptTokenCount ?? "?"
+      } aus=${usage.candidatesTokenCount ?? "?"} denken=${usage.thoughtsTokenCount ?? 0} gesamt=${
+        usage.totalTokenCount ?? "?"
+      } | nach Art: ${JSON.stringify(
+        (usage.promptTokensDetails ?? []).map((d: any) => `${d.modality}:${d.tokenCount}`)
+      )}`
+    );
 
     res.json({ success: true, data: parsed });
   } catch (error: any) {
