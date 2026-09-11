@@ -725,7 +725,11 @@ Beziehe dich bei Fragen des Athleten direkt auf diesen Befund!`;
 async function setupServer() {
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
-      server: { middlewareMode: true },
+      server: {
+        middlewareMode: true,
+        // an ngrok tunnel arrives under its own host name, which Vite refuses by default
+        allowedHosts: [".ngrok-free.app", ".ngrok-free.dev", ".ngrok.app", ".ngrok.io"],
+      },
       appType: "spa",
     });
     app.use(vite.middlewares);
