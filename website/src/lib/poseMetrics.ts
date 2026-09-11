@@ -428,7 +428,14 @@ export async function measureClip(videoUrl: string): Promise<PoseMetrics | null>
         modelAssetPath: "/models/pose_landmarker_lite.task",
         delegate: "GPU",
       },
-      runningMode: "VIDEO",
+      // Each sample is judged on its own. VIDEO mode tracks the body from one
+      // frame to the next and smooths the result, which assumes neighbouring
+      // frames — these are a quarter of a second apart. On the reference clip
+      // that tracking flattened the turning points (8 of 10 repetitions
+      // counted, bottoms up to 15° too shallow) and carried a distorted pose
+      // into standing up at the end: elbows "flared" to 96°, a critical
+      // finding on a clean set. See docs/KALIBRIERUNG.md.
+      runningMode: "IMAGE",
       numPoses: 1,
     });
 
@@ -452,15 +459,13 @@ export async function measureClip(videoUrl: string): Promise<PoseMetrics | null>
     // second leaves a margin, capped so a long clip cannot stall the upload.
     const sampleCount = Math.min(120, Math.max(26, Math.round(duration * 4)));
     const samples: PoseSample[] = [];
-    let stamp = 0;
 
     for (let i = 0; i < sampleCount; i++) {
       const t = duration * (0.04 + (i * 0.92) / (sampleCount - 1));
       await seekTo(video, t);
-      stamp += 40; // must increase monotonically for VIDEO mode
       let result;
       try {
-        result = landmarker.detectForVideo(video, stamp);
+        result = landmarker.detect(video);
       } catch {
         continue;
       }

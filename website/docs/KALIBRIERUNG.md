@@ -200,6 +200,26 @@ Am 10-fps-Verlauf nachgerechnet, zählt der Automat ab 3.3 Bildern pro Sekunde
 bei jeder Phasenlage alle 10. Gemessen wird deshalb mit 4 Bildern pro Sekunde,
 mindestens 26 und höchstens 120.
 
+**Einzelbilder statt Videomodus:** MediaPipes Videomodus verfolgt den Körper
+von Bild zu Bild und glättet das Ergebnis — gedacht für aufeinanderfolgende
+Bilder, nicht für Stichproben im Viertelsekunden-Abstand. Im Browser gemessen,
+am sauberen Liegestütz-Clip (Referenz aus dem 10-fps-Verlauf: 10
+Wiederholungen, Tiefpunkte 62–78°):
+
+| Modus | Wdh. | Tiefpunkte | Oberarm/Rumpf max | Tiefen-Drift |
+| --- | --- | --- | --- | --- |
+| Video, 40-ms-Stempel (bis `b6ac39a`) | 8 | 65–93° | 96° | 27° |
+| Video, echte Zeitstempel | 10 | 63–88° | 98° | 21° |
+| **Einzelbild** | **10** | **59–76°** | **72°** | **7°** |
+
+Die 96° entstanden beim Aufstehen am Ende, das der Videomodus verzerrt
+weiterverfolgte. Zusammen mit der ebenso künstlichen Drift von 27° machte das
+aus dem sauberen Satz ein „mangelhaft" — mit „Ellenbogen flügeln" als
+kritischem Befund. Im Einzelbildmodus bleiben beide weg. Der fehlerhafte Clip
+behält seinen Befund (Beckenlage +0.103), und seine Wiederholungen werden
+vollständig gezählt: 7 statt 4. Das Skelett beim Abspielen bleibt im
+Videomodus, denn dort folgen die Bilder tatsächlich aufeinander.
+
 Vorher beschrieb das Modell Wiederholungen, die niemand gezählt hatte. Der
 Prompt sagt jetzt ausdrücklich, dass diese Zahlen gemessen sind und keine
 weiteren erfunden werden dürfen.
@@ -258,11 +278,12 @@ Das ist Absicht: Ein erfundener Befund wäre schlimmer als ein fehlender.
 - Das Seitenverhältnis des Plank-Datensatzes ist geschätzt (1.64), nicht
   bekannt. Die Grenzwerte sind deshalb so gewählt, dass sie für 4:3 und 16:9
   halten.
-- **Flache Wiederholungen werden nicht gezählt.** Das untere Tor (115° am
-  Ellenbogen) verwirft jede Wiederholung, die es nicht erreicht — im zweiten
-  Liegestütz-Clip 3 von 7. Ein Zähler über die Schwingungsweite statt über feste
-  Tore (25° hinunter und wieder hinauf) fand dort alle 7 und im sauberen Clip
-  dieselben 10. Zwei Clips sind zu wenig, um ihn schon einzubauen.
+- **Das untere Tor ist knapp.** Wiederholungen, die 115° am Ellenbogen nicht
+  erreichen, zählen nicht. Im Browser liegen die flachen Wiederholungen des
+  zweiten Liegestütz-Clips bei 101–110° und werden gezählt; das Python-Modell,
+  mit dem die Stichprobendichte bestimmt wurde, sah dieselben bei 115–123°.
+  Ein Zähler über die Schwingungsweite (25° hinunter und wieder hinauf) wäre
+  robuster, ist aber an zwei Clips nicht genug belegt, um ihn einzubauen.
 - Die Grenzwerte für Kniebeuge, Klimmzug und Ausfallschritt stammen aus einer
   fremden Implementierung, nicht aus gelabelten Daten. Nur die Beckenlage ist
   wirklich validiert.
