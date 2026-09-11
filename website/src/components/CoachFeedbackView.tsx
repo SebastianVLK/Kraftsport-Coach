@@ -34,7 +34,11 @@ import {
   WeightRecommendation,
   DrillRecommendation,
 } from "../types";
-import { findTechniqueVideo, youtubeSearchUrl } from "../data/techniqueVideos";
+import {
+  findTechniqueVideo,
+  youtubeSearchUrl,
+  type TechniqueVideo,
+} from "../data/techniqueVideos";
 
 interface CoachFeedbackViewProps {
   data: ExerciseAnalysisData;
@@ -56,6 +60,33 @@ export const CoachFeedbackView: React.FC<CoachFeedbackViewProps> = ({
 }) => {
   const [showDetails, setShowDetails] = useState<boolean>(false);
   const [videoStarted, setVideoStarted] = useState<boolean>(false);
+
+  // Outside the vetted catalogue — anything typed in by hand, and the picker
+  // entries without a clip — the top search result stands in, checked by the
+  // server against YouTube's oEmbed.
+  const catalogued = findTechniqueVideo(data.exerciseName);
+  const [searched, setSearched] = useState<TechniqueVideo | null>(null);
+  const [searching, setSearching] = useState<boolean>(false);
+
+  useEffect(() => {
+    setSearched(null);
+    setSearching(false);
+    if (catalogued || !data.exerciseName) return;
+    let cancelled = false;
+    setSearching(true);
+    fetch(`/api/technique-video?exercise=${encodeURIComponent(data.exerciseName)}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((body) => {
+        if (!cancelled) setSearched(body?.video ?? null);
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setSearching(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [data.exerciseName, catalogued]);
 
   // Active technique improvement workflow
   const [cueMemorized, setCueMemorized] = useState<boolean>(false);
@@ -177,7 +208,7 @@ export const CoachFeedbackView: React.FC<CoachFeedbackViewProps> = ({
   const VerdictIcon = verdict.icon;
   const WeightIcon = weight.icon;
 
-  const video = findTechniqueVideo(data.exerciseName);
+  const video = catalogued ?? searched;
   const searchUrl = youtubeSearchUrl(data.exerciseName);
 
   const positives = data.wasGutWar ?? [];
@@ -465,6 +496,11 @@ export const CoachFeedbackView: React.FC<CoachFeedbackViewProps> = ({
                       {video.title}
                     </p>
                     <p className="mt-1.5 text-sm text-[#6f6759]">{video.channel}</p>
+                    {!catalogued && (
+                      <p className="mt-1 text-xs text-[#6f6759]">
+                        Oberster YouTube-Treffer für „{data.exerciseName}" — nicht redaktionell geprüft.
+                      </p>
+                    )}
 
                     <div className="mt-5 relative rounded-2xl overflow-hidden bg-[#000000] aspect-video border border-[#2e2c27]/10">
                       {videoStarted ? (
@@ -519,11 +555,16 @@ export const CoachFeedbackView: React.FC<CoachFeedbackViewProps> = ({
                       </a>
                     </div>
                   </>
+                ) : searching ? (
+                  <p className="mt-2 text-base text-[#6f6759] inline-flex items-center gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Suche ein Technikvideo für „{data.exerciseName}"…</span>
+                  </p>
                 ) : (
                   <>
                     <p className="mt-2 text-base text-[#2e2c27] leading-relaxed">
-                      Für „{data.exerciseName}" ist kein geprüftes Technikvideo hinterlegt —
-                      hier eine YouTube-Suche statt eines womöglich falschen Clips.
+                      Für „{data.exerciseName}" wurde kein Technikvideo gefunden — hier die
+                      YouTube-Suche.
                     </p>
                     <a
                       href={searchUrl}

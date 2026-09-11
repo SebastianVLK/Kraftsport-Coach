@@ -19,6 +19,7 @@ import {
   updateProfile,
   requireUser,
 } from "./server/auth";
+import { findVideoBySearch } from "./server/techniqueVideoSearch";
 
 dotenv.config({ path: [".env.local", ".env"] });
 
@@ -151,6 +152,17 @@ app.get("/api/health", (_req, res) => {
     hasApiKey: Boolean(process.env.GEMINI_API_KEY),
     timestamp: new Date().toISOString(),
   });
+});
+
+// Technique video for an exercise outside the vetted catalogue
+app.get("/api/technique-video", async (req, res) => {
+  const exercise = String(req.query.exercise ?? "").slice(0, 120);
+  try {
+    res.json({ video: await findVideoBySearch(exercise) });
+  } catch (err) {
+    console.warn(`[video] Suche für "${exercise}" fehlgeschlagen:`, err);
+    res.json({ video: null });
+  }
 });
 
 // 0. Kraftsport Video Analysis API (Erfahrener Kraftsport-Coach KI Agent)

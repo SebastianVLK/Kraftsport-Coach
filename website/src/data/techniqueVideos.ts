@@ -7,7 +7,9 @@ export interface TechniqueVideo {
 /**
  * Every id below was verified against YouTube's oEmbed endpoint, so the titles
  * and channels are the real ones rather than remembered guesses. Exercises with
- * no vetted clip resolve to a YouTube search instead of a wrong video.
+ * no vetted clip get the top search result instead, found and checked by
+ * server/techniqueVideoSearch.ts and labelled as unvetted; only if that fails
+ * too does a plain search link remain.
  */
 const CATALOGUE: { test: RegExp; video?: TechniqueVideo }[] = [
   // must come before the generic deadlift rule — "Rumänisches Kreuzheben"
@@ -84,8 +86,13 @@ export function findTechniqueVideo(exerciseName: string): TechniqueVideo | null 
   return entry?.video ?? null;
 }
 
+/** What gets searched for without a vetted clip — shared by the link and the lookup. */
+export function techniqueSearchQuery(exerciseName: string): string {
+  return `${exerciseName} Technik richtig ausführen`;
+}
+
 export function youtubeSearchUrl(exerciseName: string): string {
   return `https://www.youtube.com/results?search_query=${encodeURIComponent(
-    `${exerciseName} Technik richtig ausführen`
+    techniqueSearchQuery(exerciseName)
   )}`;
 }
