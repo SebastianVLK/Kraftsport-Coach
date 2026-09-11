@@ -41,6 +41,19 @@ import {
 } from "../data/techniqueVideos";
 import { useLang, useT, verdictLabel } from "../i18n";
 
+/**
+ * The model tends to copy the phase names from its schema word for word, so an
+ * English verdict arrived with German headings. The phase ids are fixed, and
+ * the page names them itself.
+ */
+const PHASE_NAMES: Record<string, [string, string]> = {
+  triage: ["Perspektiven- & Sichtfeldprüfung", "Camera angle & field of view"],
+  segmentation: ["Phasen- & Umkehrpunkt-Erkennung", "Phases & turning point"],
+  biomechanics: ["Biomechanischer Regelprüfer", "Biomechanics check"],
+  verdict: ["Schiedsrichter-Urteil", "Verdict"],
+  drill: ["Korrektur-Drill Synthese", "Corrective drill"],
+};
+
 interface CoachFeedbackViewProps {
   data: ExerciseAnalysisData;
   onStartNextSet?: (exerciseName?: string, cue?: string) => void;
@@ -706,7 +719,7 @@ export const CoachFeedbackView: React.FC<CoachFeedbackViewProps> = ({
                       />
                       <div>
                         <span className="text-sm font-semibold text-[#2e2c27]">
-                          {phase.name}
+                          {PHASE_NAMES[phase.phaseId] ? t(...PHASE_NAMES[phase.phaseId]) : phase.name}
                         </span>
                         <p className="text-sm text-[#6f6759] leading-relaxed">
                           {phase.summary}
